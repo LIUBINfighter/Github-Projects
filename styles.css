@@ -785,10 +785,11 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	height: 300px;
+	justify-content: flex-start;
+	padding: var(--size-4-4) var(--size-4-2);
 	text-align: center;
 	color: var(--text-muted);
+	min-height: 200px;
 }
 
 .empty-icon {
@@ -1052,7 +1053,7 @@
 	text-decoration: none;
 }
 
-.more-issues a:hover {
+.more
 	text-decoration: underline;
 }
 
@@ -1210,4 +1211,40 @@
 	padding: var(--size-2-1) var(--size-2-2);
 	background: var(--background-modifier-form-field);
 	border-radius: var(--radius-s);
+}
+
+/* Issues Empty State Wrapper */
+.issues-empty-wrapper {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-height: 60vh;
+}
+
+/* Projects section specific empty state */
+.projects-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: var(--size-4-4) var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	margin-top: var(--size-4-2);
+}
+
+.projects-empty-state .empty-icon {
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--size-4-3);
+	opacity: 0.6;
+}
+
+.projects-empty-state h3 {
+	margin: 0 0 var(--size-2-2) 0;
+	color: var(--text-normal);
+}
+
+.projects-empty-state p {
+	margin: 0 0 var(--size-4-3) 0;
+	max-width: 300px;
 }

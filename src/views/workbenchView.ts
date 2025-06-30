@@ -196,15 +196,10 @@ export class IssueWorkbenchView extends ItemView {
 	}
 
 	private createProjectsContent(container: Element) {
-		if (this.projects.projects.length === 0) {
-			this.showProjectsEmptyState(container);
-			return;
-		}
-
-		// 创建项目概览
+		// 创建项目概览部分
 		this.createProjectsOverview(container);
 
-		// 创建项目列表
+		// 创建项目列表部分
 		this.createProjectsList(container);
 	}
 
@@ -215,7 +210,10 @@ export class IssueWorkbenchView extends ItemView {
 	}
 
 	private showEmptyState(container: Element) {
-		const emptyDiv = container.createDiv('empty-state');
+		// 创建一个包装容器，用于更好的布局控制
+		const emptyWrapper = container.createDiv('issues-empty-wrapper');
+		
+		const emptyDiv = emptyWrapper.createDiv('empty-state');
 		const iconDiv = emptyDiv.createDiv('empty-icon');
 		setIcon(iconDiv, 'folder-git-2');
 		
@@ -231,23 +229,6 @@ export class IssueWorkbenchView extends ItemView {
 			this.app.setting.open();
 			// @ts-ignore
 			this.app.setting.openTabById(this.plugin.manifest.id);
-		});
-	}
-
-	private showProjectsEmptyState(container: Element) {
-		const emptyDiv = container.createDiv('empty-state');
-		const iconDiv = emptyDiv.createDiv('empty-icon');
-		setIcon(iconDiv, 'kanban-square');
-		
-		emptyDiv.createEl('h3', { text: 'No GitHub Projects found' });
-		emptyDiv.createEl('p', { text: 'GitHub Projects are not available or no projects have been created in the configured repositories.' });
-		
-		const docsBtn = emptyDiv.createEl('button', {
-			cls: 'mod-cta',
-			text: 'Learn about GitHub Projects'
-		});
-		docsBtn.addEventListener('click', () => {
-			window.open('https://docs.github.com/en/issues/planning-and-tracking-with-projects', '_blank');
 		});
 	}
 
@@ -588,11 +569,29 @@ export class IssueWorkbenchView extends ItemView {
 		const projectsSection = container.createDiv('projects-section');
 		projectsSection.createEl('h3', { text: 'Projects', cls: 'section-title' });
 
-		const projectsList = projectsSection.createDiv('projects-list');
+		if (this.projects.projects.length === 0) {
+			// 显示空白状态，移除悬浮效果
+			const emptyState = projectsSection.createDiv('projects-empty-state');
+			const iconDiv = emptyState.createDiv('empty-icon');
+			setIcon(iconDiv, 'kanban-square');
+			
+			emptyState.createEl('h3', { text: 'No GitHub Projects found' });
+			emptyState.createEl('p', { text: 'GitHub Projects are not available or no projects have been created in the configured repositories.' });
+			
+			const docsBtn = emptyState.createEl('button', {
+				cls: 'mod-cta',
+				text: 'Learn about GitHub Projects'
+			});
+			docsBtn.addEventListener('click', () => {
+				window.open('https://docs.github.com/en/issues/planning-and-tracking-with-projects', '_blank');
+			});
+		} else {
+			const projectsList = projectsSection.createDiv('projects-list');
 
-		this.projects.projects.forEach(project => {
-			this.createProjectCard(projectsList, project);
-		});
+			this.projects.projects.forEach(project => {
+				this.createProjectCard(projectsList, project);
+			});
+		}
 	}
 
 	private createProjectCard(container: Element, project: GitHubProject) {
