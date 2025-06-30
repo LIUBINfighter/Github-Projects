@@ -20,11 +20,39 @@ interface RepositoryOverview {
 	issues: GitHubIssue[];
 }
 
+interface GitHubProject {
+	id: number;
+	number: number;
+	title: string;
+	body: string;
+	state: 'open' | 'closed';
+	creator: {
+		login: string;
+		avatar_url: string;
+	};
+	created_at: string;
+	updated_at: string;
+	html_url: string;
+	repository: {
+		owner: string;
+		name: string;
+	};
+}
+
+interface ProjectsOverview {
+	projects: GitHubProject[];
+	lastSync?: string;
+}
+
+type WorkbenchTab = 'issues' | 'projects';
+
 export class IssueWorkbenchView extends ItemView {
 	plugin: GithubProjectsPlugin;
 	private repositories: RepositoryOverview[] = [];
+	private projects: ProjectsOverview = { projects: [] };
 	private isLoading = false;
 	private currentUser = '';
+	private activeTab: WorkbenchTab = 'issues';
 
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
 		super(leaf);
@@ -67,6 +95,9 @@ export class IssueWorkbenchView extends ItemView {
 		// 创建头部
 		this.createHeader(container);
 
+		// 创建标签页导航
+		this.createTabNavigation(container);
+
 		// 创建主要内容区域
 		this.createMainContent(container);
 	}
@@ -107,6 +138,32 @@ export class IssueWorkbenchView extends ItemView {
 		});
 	}
 
+	private createTabNavigation(container: Element) {
+		const tabNav = container.createDiv('workbench-tab-nav');
+
+		const tabs = [
+			{ id: 'issues' as WorkbenchTab, name: 'Issues Overview', icon: 'list' },
+			{ id: 'projects' as WorkbenchTab, name: 'GitHub Projects', icon: 'kanban-square' }
+		];
+
+		tabs.forEach(tab => {
+			const tabButton = tabNav.createEl('button', {
+				cls: `workbench-tab ${this.activeTab === tab.id ? 'active' : ''}`,
+				text: tab.name
+			});
+
+			const tabIcon = tabButton.createDiv('tab-icon');
+			setIcon(tabIcon, tab.icon);
+
+			tabButton.addEventListener('click', () => {
+				if (this.activeTab !== tab.id) {
+					this.activeTab = tab.id;
+					this.renderView();
+				}
+			});
+		});
+	}
+
 	private createMainContent(container: Element) {
 		const mainContent = container.createDiv('workbench-main');
 
@@ -115,16 +172,40 @@ export class IssueWorkbenchView extends ItemView {
 			return;
 		}
 
+		switch (this.activeTab) {
+			case 'issues':
+				this.createIssuesContent(mainContent);
+				break;
+			case 'projects':
+				this.createProjectsContent(mainContent);
+				break;
+		}
+	}
+
+	private createIssuesContent(container: Element) {
 		if (this.repositories.length === 0) {
-			this.showEmptyState(mainContent);
+			this.showEmptyState(container);
 			return;
 		}
 
 		// 创建统计概览
-		this.createStatsOverview(mainContent);
+		this.createStatsOverview(container);
 
 		// 创建仓库卡片网格
-		this.createRepositoryGrid(mainContent);
+		this.createRepositoryGrid(container);
+	}
+
+	private createProjectsContent(container: Element) {
+		if (this.projects.projects.length === 0) {
+			this.showProjectsEmptyState(container);
+			return;
+		}
+
+		// 创建项目概览
+		this.createProjectsOverview(container);
+
+		// 创建项目列表
+		this.createProjectsList(container);
 	}
 
 	private showLoadingState(container: Element) {
@@ -150,6 +231,23 @@ export class IssueWorkbenchView extends ItemView {
 			this.app.setting.open();
 			// @ts-ignore
 			this.app.setting.openTabById(this.plugin.manifest.id);
+		});
+	}
+
+	private showProjectsEmptyState(container: Element) {
+		const emptyDiv = container.createDiv('empty-state');
+		const iconDiv = emptyDiv.createDiv('empty-icon');
+		setIcon(iconDiv, 'kanban-square');
+		
+		emptyDiv.createEl('h3', { text: 'No GitHub Projects found' });
+		emptyDiv.createEl('p', { text: 'GitHub Projects are not available or no projects have been created in the configured repositories.' });
+		
+		const docsBtn = emptyDiv.createEl('button', {
+			cls: 'mod-cta',
+			text: 'Learn about GitHub Projects'
+		});
+		docsBtn.addEventListener('click', () => {
+			window.open('https://docs.github.com/en/issues/planning-and-tracking-with-projects', '_blank');
 		});
 	}
 
@@ -298,35 +396,85 @@ export class IssueWorkbenchView extends ItemView {
 		try {
 			const activeRepos = this.plugin.getActiveRepositories();
 			this.repositories = [];
-
-			for (const repo of activeRepos) {
-				const repoKey = `${repo.owner}/${repo.repo}`;
-				const cache = this.plugin.getRepositoryCache(repoKey);
-				
-				if (cache) {
-					const stats = this.calculateStats(cache.issues || []);
-					this.repositories.push({
-						name: repo.name,
-						key: repoKey,
-						stats,
-						lastSync: cache.last_sync,
-						issues: (cache.issues || []).slice(0, 5) // 只保留前5个用于显示
-					});
-				} else {
-					// 没有缓存数据，创建空的统计
-					this.repositories.push({
-						name: repo.name,
-						key: repoKey,
-						stats: {
-							totalIssues: 0,
-							openIssues: 0,
-							closedIssues: 0,
-							assignedToMe: 0,
-							recentlyUpdated: 0
-						},
-						issues: []
-					});
+			
+			// 加载仓库和 Issue 数据
+			if (this.activeTab === 'issues') {
+				for (const repo of activeRepos) {
+					const repoKey = `${repo.owner}/${repo.repo}`;
+					const cache = this.plugin.getRepositoryCache(repoKey);
+					
+					if (cache) {
+						const stats = this.calculateStats(cache.issues || []);
+						this.repositories.push({
+							name: repo.name,
+							key: repoKey,
+							stats,
+							lastSync: cache.last_sync,
+							issues: (cache.issues || []).slice(0, 5) // 只保留前5个用于显示
+						});
+					} else {
+						// 没有缓存数据，创建空的统计
+						this.repositories.push({
+							name: repo.name,
+							key: repoKey,
+							stats: {
+								totalIssues: 0,
+								openIssues: 0,
+								closedIssues: 0,
+								assignedToMe: 0,
+								recentlyUpdated: 0
+							},
+							issues: []
+						});
+					}
 				}
+			}
+			
+			// 加载项目数据
+			if (this.activeTab === 'projects') {
+				// 临时模拟项目数据
+				// TODO: 实现从 GitHub API 获取真实的项目数据
+				this.projects = {
+					projects: [
+						{
+							id: 1,
+							number: 1,
+							title: "Q3 Development Roadmap",
+							body: "Track development progress for Q3 2025",
+							state: 'open',
+							creator: {
+								login: "demo-user",
+								avatar_url: "https://github.com/github.png"
+							},
+							created_at: "2025-06-01T00:00:00Z",
+							updated_at: "2025-06-30T00:00:00Z",
+							html_url: "https://github.com/orgs/demo/projects/1",
+							repository: {
+								owner: "demo",
+								name: "project"
+							}
+						},
+						{
+							id: 2,
+							number: 2,
+							title: "Bug Tracking Board",
+							body: "Manage and prioritize bug fixes",
+							state: 'open',
+							creator: {
+								login: "demo-user",
+								avatar_url: "https://github.com/github.png"
+							},
+							created_at: "2025-06-15T00:00:00Z",
+							updated_at: "2025-06-30T00:00:00Z",
+							html_url: "https://github.com/orgs/demo/projects/2",
+							repository: {
+								owner: "demo",
+								name: "project"
+							}
+						}
+					],
+					lastSync: new Date().toISOString()
+				};
 			}
 		} catch (error) {
 			console.error('Failed to load workbench data:', error);
@@ -401,5 +549,116 @@ export class IssueWorkbenchView extends ItemView {
 		} else {
 			return 'Just now';
 		}
+	}
+
+	private createProjectsOverview(container: Element) {
+		const projectsSection = container.createDiv('projects-overview');
+		projectsSection.createEl('h3', { text: 'GitHub Projects Overview', cls: 'section-title' });
+
+		const projectsGrid = projectsSection.createDiv('stats-grid');
+
+		// 计算项目统计
+		const openProjects = this.projects.projects.filter(p => p.state === 'open').length;
+		const closedProjects = this.projects.projects.filter(p => p.state === 'closed').length;
+		const totalProjects = this.projects.projects.length;
+
+		// 创建统计卡片
+		this.createStatCard(projectsGrid, 'Total Projects', totalProjects, 'kanban-square');
+		this.createStatCard(projectsGrid, 'Open Projects', openProjects, 'circle-dot', 'open');
+		this.createStatCard(projectsGrid, 'Closed Projects', closedProjects, 'check-circle', 'closed');
+
+		// 最后同步时间
+		if (this.projects.lastSync) {
+			const lastSyncDate = new Date(this.projects.lastSync);
+			const timeAgo = this.getTimeAgo(lastSyncDate);
+			
+			const syncInfo = projectsSection.createDiv('sync-info');
+			syncInfo.createEl('span', { 
+				text: `Last synced: ${timeAgo}`,
+				cls: 'sync-time-info'
+			});
+		}
+	}
+
+	private createProjectsList(container: Element) {
+		const projectsSection = container.createDiv('projects-section');
+		projectsSection.createEl('h3', { text: 'Projects', cls: 'section-title' });
+
+		const projectsList = projectsSection.createDiv('projects-list');
+
+		this.projects.projects.forEach(project => {
+			this.createProjectCard(projectsList, project);
+		});
+	}
+
+	private createProjectCard(container: Element, project: GitHubProject) {
+		const card = container.createDiv('project-card');
+
+		// 卡片头部
+		const cardHeader = card.createDiv('card-header');
+		const titleDiv = cardHeader.createDiv('card-title');
+		
+		const iconDiv = titleDiv.createDiv('project-icon');
+		setIcon(iconDiv, 'kanban-square');
+		
+		titleDiv.createEl('h4', { text: project.title });
+
+		// 项目状态
+		const statusDiv = cardHeader.createDiv('project-status');
+		const statusBadge = statusDiv.createDiv(`status-badge status-${project.state}`);
+		statusBadge.createEl('span', { text: project.state.charAt(0).toUpperCase() + project.state.slice(1) });
+
+		// 项目信息
+		const projectInfo = card.createDiv('project-info');
+		
+		// 创建者信息
+		const creatorDiv = projectInfo.createDiv('project-meta-item');
+		const creatorIcon = creatorDiv.createDiv('project-meta-icon');
+		setIcon(creatorIcon, 'user');
+		creatorDiv.createEl('span', { text: `Created by ${project.creator.login}` });
+
+		// 仓库信息
+		const repoDiv = projectInfo.createDiv('project-meta-item');
+		const repoIcon = repoDiv.createDiv('project-meta-icon');
+		setIcon(repoIcon, 'folder-git-2');
+		repoDiv.createEl('span', { text: `${project.repository.owner}/${project.repository.name}` });
+
+		// 创建时间
+		const dateDiv = projectInfo.createDiv('project-meta-item');
+		const dateIcon = dateDiv.createDiv('project-meta-icon');
+		setIcon(dateIcon, 'calendar');
+		const createdDate = new Date(project.created_at).toLocaleDateString();
+		dateDiv.createEl('span', { text: `Created ${createdDate}` });
+
+		// 项目描述（如果有的话）
+		if (project.body && project.body.trim()) {
+			const descDiv = card.createDiv('project-description');
+			const maxLength = 150;
+			const description = project.body.length > maxLength 
+				? project.body.substring(0, maxLength) + '...' 
+				: project.body;
+			descDiv.createEl('p', { text: description });
+		}
+
+		// 卡片操作
+		const cardActions = card.createDiv('card-actions');
+		
+		const viewBtn = cardActions.createEl('button', {
+			cls: 'mod-cta',
+			text: 'View Project'
+		});
+		viewBtn.addEventListener('click', () => {
+			window.open(project.html_url, '_blank');
+		});
+
+		const copyBtn = cardActions.createEl('button', {
+			text: 'Copy URL'
+		});
+		setIcon(copyBtn, 'copy');
+		copyBtn.addEventListener('click', () => {
+			navigator.clipboard.writeText(project.html_url).then(() => {
+				new Notice('Project URL copied to clipboard');
+			});
+		});
 	}
 }
