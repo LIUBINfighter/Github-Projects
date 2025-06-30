@@ -55,7 +55,7 @@ export default class GithubProjectsPlugin extends Plugin {
 		this.addRibbonIcon('github', 'GitHub Issues', (evt: MouseEvent) => {
 			// 创建菜单
 			const menu = new Menu();
-			
+
 			menu.addItem((item) => {
 				item.setTitle('Open Issues Panel')
 					.setIcon('list')
@@ -63,7 +63,7 @@ export default class GithubProjectsPlugin extends Plugin {
 						this.activateView();
 					});
 			});
-			
+
 			menu.addItem((item) => {
 				item.setTitle('Open Workbench')
 					.setIcon('layout-dashboard')
@@ -71,9 +71,37 @@ export default class GithubProjectsPlugin extends Plugin {
 						this.activateWorkbenchView();
 					});
 			});
-			
+
+			// 1. 固定命令区
+			// 已有的 Issues/Workbench 两项
+
+			// 2. 分割线（仅当有 IDE 动态项时）
+			let hasIde = false;
+			if (!Platform.isMobile) {
+				const activeRepositories = this.getActiveRepositories();
+				if (activeRepositories.some(r => r.ideCommand)) {
+					menu.addSeparator();
+					hasIde = true;
+				}
+				// 3. 动态 IDE 命令项
+				activeRepositories.forEach(repo => {
+					if (repo.ideCommand) {
+						menu.addItem((item) => {
+							item.setTitle(`Open in IDE: ${repo.name}`)
+								.setIcon('monitor')
+								.onClick(async () => {
+									if (repo.ideCommand) {
+										await this.executeIdeCommand(repo.ideCommand);
+									}
+								});
+						});
+					}
+				});
+			}
+
+			// 4. 再加一条分割线，区分下方的同步命令
 			menu.addSeparator();
-			
+
 			menu.addItem((item) => {
 				item.setTitle('Sync All Repositories')
 					.setIcon('refresh-cw')
