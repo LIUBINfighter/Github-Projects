@@ -93,8 +93,11 @@ export default class GithubProjectsPlugin extends Plugin {
 			return {};
 		}
 
-		if (this.settings.repositories.length === 0) {
-			console.warn('No repositories configured');
+		// 过滤出未禁用的仓库
+		const activeRepositories = this.settings.repositories.filter(repo => !repo.isDisabled);
+		
+		if (activeRepositories.length === 0) {
+			console.warn('No active repositories configured');
 			return {};
 		}
 
@@ -102,7 +105,7 @@ export default class GithubProjectsPlugin extends Plugin {
 		
 		try {
 			const { cache, results } = await sync.syncAllRepositories(
-				this.settings.repositories,
+				activeRepositories,
 				this.settings.issueCache
 			);
 
@@ -216,5 +219,12 @@ export default class GithubProjectsPlugin extends Plugin {
 	restartAutoSync() {
 		this.stopAutoSync();
 		this.startAutoSync();
+	}
+
+	/**
+	 * 获取所有活跃（未禁用）的仓库
+	 */
+	getActiveRepositories() {
+		return this.settings.repositories.filter(repo => !repo.isDisabled);
 	}
 }

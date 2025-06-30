@@ -7,6 +7,7 @@ export interface GithubRepository {
 	owner: string; // GitHub用户名或组织名
 	repo: string; // 仓库名
 	isDefault: boolean; // 是否为默认仓库
+	isDisabled?: boolean; // 是否禁用（不显示在下拉栏，不同步）
 }
 
 export interface GithubProjectsSettings {
@@ -335,7 +336,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				name,
 				owner,
 				repo,
-				isDefault: this.plugin.settings.repositories.length === 0 // 第一个仓库自动设为默认
+				isDefault: this.plugin.settings.repositories.length === 0, // 第一个仓库自动设为默认
+				isDisabled: false // 新仓库默认启用
 			};
 
 			this.plugin.settings.repositories.push(newRepo);
@@ -369,7 +371,16 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				repoDiv.style.padding = '12px';
 				repoDiv.style.border = '1px solid var(--background-modifier-border)';
 				repoDiv.style.borderRadius = 'var(--radius-s)';
-				repoDiv.style.backgroundColor = repository.isDefault ? 'var(--background-modifier-hover)' : 'transparent';
+				
+				// 根据状态设置背景色
+				if (repository.isDisabled) {
+					repoDiv.style.backgroundColor = 'var(--background-modifier-border)';
+					repoDiv.style.opacity = '0.6';
+				} else if (repository.isDefault) {
+					repoDiv.style.backgroundColor = 'var(--background-modifier-hover)';
+				} else {
+					repoDiv.style.backgroundColor = 'transparent';
+				}
 
 				const repoHeader = repoDiv.createDiv();
 				repoHeader.style.display = 'flex';
@@ -378,10 +389,16 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				repoHeader.style.marginBottom = '8px';
 
 				const repoTitle = repoHeader.createEl('h5');
-				repoTitle.textContent = `${repository.name} ${repository.isDefault ? '(Default)' : ''}`;
+				let titleText = repository.name;
+				if (repository.isDefault) titleText += ' (Default)';
+				if (repository.isDisabled) titleText += ' (Disabled)';
+				repoTitle.textContent = titleText;
 				repoTitle.style.margin = '0';
 				repoTitle.style.fontSize = 'var(--font-ui-small)';
 				repoTitle.style.fontWeight = 'var(--font-weight-medium)';
+				if (repository.isDisabled) {
+					repoTitle.style.color = 'var(--text-muted)';
+				}
 
 				const actionsDiv = repoHeader.createDiv();
 				actionsDiv.style.display = 'flex';
@@ -398,10 +415,32 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 						this.plugin.settings.repositories.forEach(repo => repo.isDefault = false);
 						// 设置当前仓库为默认
 						repository.isDefault = true;
+						// 如果设为默认，自动启用
+						repository.isDisabled = false;
 						await this.plugin.saveSettings();
 						this.display();
 					});
 				}
+
+				// 禁用/启用按钮
+				const toggleButton = actionsDiv.createEl('button', {
+					text: repository.isDisabled ? 'Enable' : 'Disable',
+					cls: repository.isDisabled ? 'mod-cta' : 'mod-muted'
+				});
+				toggleButton.addEventListener('click', async () => {
+					repository.isDisabled = !repository.isDisabled;
+					// 如果禁用了默认仓库，需要设置另一个为默认
+					if (repository.isDisabled && repository.isDefault) {
+						repository.isDefault = false;
+						// 找到第一个未禁用的仓库设为默认
+						const activeRepos = this.plugin.settings.repositories.filter(r => !r.isDisabled);
+						if (activeRepos.length > 0) {
+							activeRepos[0].isDefault = true;
+						}
+					}
+					await this.plugin.saveSettings();
+					this.display();
+				});
 
 				// 删除按钮
 				const deleteButton = actionsDiv.createEl('button', {
@@ -411,9 +450,12 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				deleteButton.title = 'Delete repository';
 				deleteButton.addEventListener('click', async () => {
 					this.plugin.settings.repositories.splice(index, 1);
-					// 如果删除的是默认仓库且还有其他仓库，设置第一个为默认
+					// 如果删除的是默认仓库且还有其他仓库，设置第一个未禁用的为默认
 					if (repository.isDefault && this.plugin.settings.repositories.length > 0) {
-						this.plugin.settings.repositories[0].isDefault = true;
+						const activeRepos = this.plugin.settings.repositories.filter(r => !r.isDisabled);
+						if (activeRepos.length > 0) {
+							activeRepos[0].isDefault = true;
+						}
 					}
 					await this.plugin.saveSettings();
 					this.display();
@@ -555,7 +597,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		const syncHelpDiv = containerEl.createDiv();
 		syncHelpDiv.style.marginTop = '20px';
 		syncHelpDiv.createEl('h4', {text: 'Sync Information'});
-		syncHelpDiv.createEl('p', {text: 'Auto sync will periodically fetch issues from all configured repositories.'});
+		syncHelpDiv.createEl('p', {text: 'Auto sync will periodically fetch issues from all enabled repositories.'});
+		syncHelpDiv.createEl('p', {text: 'Disabled repositories will not be synced and won\'t appear in the repository selector.'});
 		syncHelpDiv.createEl('p', {text: 'You can also manually sync issues using plugin commands or the button above.'});
 		syncHelpDiv.createEl('p', {text: 'Data is cached locally for offline access and fast searching.'});
 	}

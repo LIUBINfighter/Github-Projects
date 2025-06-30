@@ -158,8 +158,9 @@ export class IssueView extends ItemView {
 		});
 		defaultOption.disabled = true;
 
-		// 填充仓库选项
-		this.plugin.settings.repositories.forEach(repo => {
+		// 填充仓库选项（只显示活跃的仓库）
+		const activeRepositories = this.plugin.getActiveRepositories();
+		activeRepositories.forEach(repo => {
 			const repoKey = `${repo.owner}/${repo.repo}`;
 			select.createEl('option', {
 				text: `${repo.name || repo.repo} (${repoKey})`,
@@ -169,15 +170,27 @@ export class IssueView extends ItemView {
 
 		// 设置当前选中的仓库，如果没有选中的仓库则使用第一个可用仓库
 		if (this.selectedRepo) {
-			select.value = this.selectedRepo;
-		} else if (this.plugin.settings.repositories.length > 0) {
-			// 如果没有选中的仓库，默认选择第一个仓库
-			const firstRepo = this.plugin.settings.repositories[0];
+			// 检查当前选中的仓库是否仍然活跃
+			const selectedRepoExists = activeRepositories.some(repo => 
+				`${repo.owner}/${repo.repo}` === this.selectedRepo
+			);
+			if (selectedRepoExists) {
+				select.value = this.selectedRepo;
+			} else {
+				// 如果当前选中的仓库被禁用了，重置选择
+				this.selectedRepo = '';
+				select.value = '';
+			}
+		}
+		
+		if (!this.selectedRepo && activeRepositories.length > 0) {
+			// 如果没有选中的仓库，默认选择第一个活跃仓库
+			const firstRepo = activeRepositories[0];
 			const firstRepoKey = `${firstRepo.owner}/${firstRepo.repo}`;
 			this.selectedRepo = firstRepoKey;
 			select.value = firstRepoKey;
-		} else {
-			// 如果没有配置任何仓库，选中默认选项但保持禁用状态
+		} else if (activeRepositories.length === 0) {
+			// 如果没有活跃的仓库，选中默认选项但保持禁用状态
 			select.value = '';
 		}
 
@@ -373,17 +386,18 @@ export class IssueView extends ItemView {
 	}
 
 	private async loadDefaultRepository() {
-		// 首先尝试找到默认仓库
-		const defaultRepo = this.plugin.settings.repositories.find(repo => repo.isDefault);
+		// 首先尝试找到默认且活跃的仓库
+		const activeRepositories = this.plugin.getActiveRepositories();
+		const defaultRepo = activeRepositories.find(repo => repo.isDefault);
 		
 		if (defaultRepo) {
 			this.selectedRepo = `${defaultRepo.owner}/${defaultRepo.repo}`;
-		} else if (this.plugin.settings.repositories.length > 0) {
-			// 如果没有默认仓库，选择第一个可用的仓库
-			const firstRepo = this.plugin.settings.repositories[0];
+		} else if (activeRepositories.length > 0) {
+			// 如果没有默认仓库，选择第一个可用的活跃仓库
+			const firstRepo = activeRepositories[0];
 			this.selectedRepo = `${firstRepo.owner}/${firstRepo.repo}`;
 		} else {
-			// 如果没有任何仓库，清空选择
+			// 如果没有任何活跃仓库，清空选择
 			this.selectedRepo = '';
 			this.updateRepositorySelector();
 			return;
