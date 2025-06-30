@@ -1,6 +1,7 @@
-import { Plugin } from 'obsidian';
+import { Plugin, Menu } from 'obsidian';
 import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } from './views/settingTab';
 import { IssueView, ISSUE_VIEW_TYPE } from './views/issueView';
+import { IssueWorkbenchView, WORKBENCH_VIEW_TYPE } from './views/workbenchView';
 import { GitHubDataSync, GitHubSyncResult } from './github/dataSync';
 
 export default class GithubProjectsPlugin extends Plugin {
@@ -16,12 +17,27 @@ export default class GithubProjectsPlugin extends Plugin {
 			(leaf) => new IssueView(leaf, this)
 		);
 
+		// 注册 Workbench 视图
+		this.registerView(
+			WORKBENCH_VIEW_TYPE,
+			(leaf) => new IssueWorkbenchView(leaf, this)
+		);
+
 		// 添加打开 Issue 视图的命令
 		this.addCommand({
 			id: 'open-github-issues',
 			name: 'Open GitHub Issues',
 			callback: () => {
 				this.activateView();
+			}
+		});
+
+		// 添加打开 Workbench 视图的命令
+		this.addCommand({
+			id: 'open-github-workbench',
+			name: 'Open GitHub Workbench',
+			callback: () => {
+				this.activateWorkbenchView();
 			}
 		});
 
@@ -36,7 +52,36 @@ export default class GithubProjectsPlugin extends Plugin {
 
 		// 添加功能区图标
 		this.addRibbonIcon('github', 'GitHub Issues', (evt: MouseEvent) => {
-			this.activateView();
+			// 创建菜单
+			const menu = new Menu();
+			
+			menu.addItem((item) => {
+				item.setTitle('Open Issues Panel')
+					.setIcon('list')
+					.onClick(() => {
+						this.activateView();
+					});
+			});
+			
+			menu.addItem((item) => {
+				item.setTitle('Open Workbench')
+					.setIcon('layout-dashboard')
+					.onClick(() => {
+						this.activateWorkbenchView();
+					});
+			});
+			
+			menu.addSeparator();
+			
+			menu.addItem((item) => {
+				item.setTitle('Sync All Repositories')
+					.setIcon('refresh-cw')
+					.onClick(() => {
+						this.syncAllRepositories();
+					});
+			});
+
+			menu.showAtMouseEvent(evt);
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
@@ -49,6 +94,7 @@ export default class GithubProjectsPlugin extends Plugin {
 	onunload() {
 		// 清理视图
 		this.app.workspace.detachLeavesOfType(ISSUE_VIEW_TYPE);
+		this.app.workspace.detachLeavesOfType(WORKBENCH_VIEW_TYPE);
 		
 		// 清理自动同步定时器
 		this.stopAutoSync();
@@ -70,6 +116,21 @@ export default class GithubProjectsPlugin extends Plugin {
 				leaf = workspace.getLeaf('split');
 				await leaf.setViewState({ type: ISSUE_VIEW_TYPE, active: true });
 			}
+		}
+
+		// 激活视图
+		workspace.revealLeaf(leaf);
+	}
+
+	async activateWorkbenchView() {
+		const { workspace } = this.app;
+
+		let leaf = workspace.getLeavesOfType(WORKBENCH_VIEW_TYPE)[0];
+
+		if (!leaf) {
+			// Workbench 视图适合作为主要工作区，创建在中心面板
+			leaf = workspace.getLeaf('tab');
+			await leaf.setViewState({ type: WORKBENCH_VIEW_TYPE, active: true });
 		}
 
 		// 激活视图
@@ -174,9 +235,19 @@ export default class GithubProjectsPlugin extends Plugin {
 	 * 刷新所有 Issue 视图
 	 */
 	private refreshIssueViews() {
-		const leaves = this.app.workspace.getLeavesOfType(ISSUE_VIEW_TYPE);
-		leaves.forEach(leaf => {
+		// 刷新传统的 Issue 视图
+		const issueLeaves = this.app.workspace.getLeavesOfType(ISSUE_VIEW_TYPE);
+		issueLeaves.forEach(leaf => {
 			const view = leaf.view as IssueView;
+			if (view && view.refreshData) {
+				view.refreshData();
+			}
+		});
+
+		// 刷新 Workbench 视图
+		const workbenchLeaves = this.app.workspace.getLeavesOfType(WORKBENCH_VIEW_TYPE);
+		workbenchLeaves.forEach(leaf => {
+			const view = leaf.view as IssueWorkbenchView;
 			if (view && view.refreshData) {
 				view.refreshData();
 			}
