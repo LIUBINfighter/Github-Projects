@@ -146,6 +146,33 @@ export default class GithubProjectsPlugin extends Plugin {
 	}
 
 	/**
+	 * 验证 GitHub Token 并获取用户信息
+	 */
+	async validateAndUpdateUserInfo(): Promise<boolean> {
+		if (!this.settings.githubToken) {
+			return false;
+		}
+
+		const sync = new GitHubDataSync(this.settings.githubToken);
+		const result = await sync.validateToken();
+
+		if (result.success && result.user) {
+			this.settings.currentUser = result.user;
+			await this.saveSettings();
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * 获取当前用户信息
+	 */
+	getCurrentUser() {
+		return this.settings.currentUser;
+	}
+
+	/**
 	 * 同步所有配置的仓库
 	 */
 	async syncAllRepositories(): Promise<Record<string, GitHubSyncResult>> {

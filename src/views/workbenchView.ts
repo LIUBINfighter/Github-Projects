@@ -51,7 +51,6 @@ export class IssueWorkbenchView extends ItemView {
 	private repositories: RepositoryOverview[] = [];
 	private projects: ProjectsOverview = { projects: [] };
 	private isLoading = false;
-	private currentUser = '';
 	private activeTab: WorkbenchTab = 'issues';
 
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
@@ -375,6 +374,11 @@ export class IssueWorkbenchView extends ItemView {
 		this.renderView();
 
 		try {
+			// 确保用户信息已经加载
+			if (!this.plugin.getCurrentUser() && this.plugin.settings.githubToken) {
+				await this.plugin.validateAndUpdateUserInfo();
+			}
+
 			const activeRepos = this.plugin.getActiveRepositories();
 			this.repositories = [];
 			this.projects = { projects: [] }; // 重置项目数据
@@ -473,13 +477,14 @@ export class IssueWorkbenchView extends ItemView {
 	private calculateStats(issues: GitHubIssue[]): WorkbenchStats {
 		const now = new Date();
 		const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+		const currentUser = this.plugin.getCurrentUser();
 
 		return {
 			totalIssues: issues.length,
 			openIssues: issues.filter(issue => issue.state === 'open').length,
 			closedIssues: issues.filter(issue => issue.state === 'closed').length,
 			assignedToMe: issues.filter(issue => 
-				issue.assignee?.login === this.currentUser
+				issue.assignee?.login === currentUser?.login
 			).length,
 			recentlyUpdated: issues.filter(issue => 
 				new Date(issue.updated_at) > oneDayAgo

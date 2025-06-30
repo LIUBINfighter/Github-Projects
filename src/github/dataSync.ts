@@ -7,6 +7,11 @@ export interface GitHubSyncResult {
 	issuesCount?: number;
 	rateLimitRemaining?: number;
 	issues?: GitHubIssue[];
+	user?: {
+		login: string;
+		name?: string;
+		avatar_url: string;
+	};
 }
 
 export interface GitHubRepoCache {
@@ -76,10 +81,16 @@ export class GitHubDataSync {
 			});
 
 			if (response.ok) {
+				const userData = await response.json();
 				const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
 				return {
 					success: true,
-					rateLimitRemaining
+					rateLimitRemaining,
+					user: {
+						login: userData.login,
+						name: userData.name,
+						avatar_url: userData.avatar_url
+					}
 				};
 			} else {
 				return {

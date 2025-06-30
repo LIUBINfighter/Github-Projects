@@ -42,6 +42,11 @@ interface GitHubProjectDetails {
 
 export interface GithubProjectsSettings {
 	githubToken: string;
+	currentUser?: {
+		login: string;
+		name?: string;
+		avatar_url: string;
+	};
 	repositories: GithubRepository[]; // 多仓库列表
 	projects: GithubProject[]; // 多项目列表
 	autoSync: boolean;
@@ -52,6 +57,7 @@ export interface GithubProjectsSettings {
 
 export const DEFAULT_SETTINGS: GithubProjectsSettings = {
 	githubToken: '',
+	currentUser: undefined,
 	repositories: [],
 	projects: [],
 	autoSync: false,
@@ -139,6 +145,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.githubToken)
 				.onChange(async (value) => {
 					this.plugin.settings.githubToken = value;
+					// 清除用户信息，将在下次验证时重新获取
+					this.plugin.settings.currentUser = undefined;
 					await this.plugin.saveSettings();
 					// Token 改变时重置状态
 					this.tokenStatus = 'untested';
@@ -914,13 +922,28 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			const result = await sync.validateToken();
 
 			if (result.success) {
+				// 更新用户信息
+				if (result.user) {
+					this.plugin.settings.currentUser = result.user;
+					await this.plugin.saveSettings();
+				}
+				
 				this.tokenStatus = 'valid';
-				this.tokenTestResult = `✓ Token is valid! (Rate limit remaining: ${result.rateLimitRemaining || 'Unknown'})`;
+				const userInfo = result.user ? ` (User: ${result.user.login})` : '';
+				this.tokenTestResult = `✓ Token is valid!${userInfo} (Rate limit remaining: ${result.rateLimitRemaining || 'Unknown'})`;
 			} else {
+				// 清除用户信息
+				this.plugin.settings.currentUser = undefined;
+				await this.plugin.saveSettings();
+				
 				this.tokenStatus = 'invalid';
 				this.tokenTestResult = `✗ ${result.error}`;
 			}
 		} catch (error) {
+			// 清除用户信息
+			this.plugin.settings.currentUser = undefined;
+			await this.plugin.saveSettings();
+			
 			this.tokenStatus = 'invalid';
 			this.tokenTestResult = `✗ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`;
 		}
