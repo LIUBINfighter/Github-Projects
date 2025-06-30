@@ -18,7 +18,8 @@
 
 .header-actions {
 	display: flex;
-	gap: var(--size-2-1);
+	gap: var(--size-2-2);
+	align-items: center;
 }
 
 .repo-selector-container {
@@ -258,11 +259,7 @@
 	border-color: var(--background-modifier-border-hover);
 }
 
-/* 过滤按钮活跃状态 */
-.header-actions .clickable-icon.filter-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
+/* 过滤按钮活跃状态 - 已移除，使用统一的 clickable-icon-button.filter-active */
 
 /* 响应式设计 */
 @media (max-width: 600px) {
@@ -314,28 +311,48 @@
 }
 
 .clickable-icon-button {
-	width: var(--icon-size);
-	height: var(--icon-size);
+	width: 32px;
+	height: 32px;
 	padding: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: transparent;
-	border: none;
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
 	cursor: pointer;
-	color: var(--icon-color);
+	color: var(--text-normal);
 	transition: all 0.1s ease;
 }
 
 .clickable-icon-button:hover {
 	background: var(--background-modifier-hover);
-	color: var(--icon-color-hover);
+	border-color: var(--background-modifier-border-hover);
+	color: var(--text-normal);
 }
 
 .clickable-icon-button.filter-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* Header button icon styles */
+.header-button-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+	flex-shrink: 0;
+}
+
+/* Loading state for buttons */
+.clickable-icon-button.is-loading {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading .header-button-icon {
+	animation: spin 1s linear infinite;
 }
 
 /* Repository selector styles */
@@ -584,43 +601,11 @@
 	flex-wrap: wrap;
 }
 
-.issue-action-button {
-	padding: var(--size-2-1) var(--size-2-3);
-	font-size: var(--font-ui-small);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	cursor: pointer;
+/* Issue action buttons - 现在使用 Obsidian 标准按钮类 */
+.mod-secondary, .mod-cta {
 	display: flex;
 	align-items: center;
 	gap: var(--size-2-1);
-	transition: all 0.1s ease;
-}
-
-.issue-action-button:hover {
-	background: var(--background-modifier-hover);
-}
-
-.issue-action-button.primary {
-	border-color: var(--interactive-accent);
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.issue-action-button.primary:hover {
-	background: var(--interactive-accent-hover);
-}
-
-.issue-action-button.danger {
-	border-color: var(--text-error);
-	background: transparent;
-	color: var(--text-error);
-}
-
-.issue-action-button.danger:hover {
-	background: var(--text-error);
-	color: var(--text-on-accent);
 }
 
 .issue-action-icon {

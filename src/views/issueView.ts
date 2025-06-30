@@ -586,7 +586,7 @@ export class IssueView extends ItemView {
 		const actionsSection = content.createDiv('issue-actions');
 
 		// 在浏览器中打开按钮
-		const openButton = actionsSection.createEl('button', { cls: 'issue-action-button' });
+		const openButton = actionsSection.createEl('button', { cls: 'mod-secondary' });
 
 		const openIcon = openButton.createDiv('issue-action-icon');
 		setIcon(openIcon, 'external-link');
@@ -598,7 +598,7 @@ export class IssueView extends ItemView {
 		});
 
 		// 创建 Obsidian 笔记按钮
-		const createNoteButton = actionsSection.createEl('button', { cls: 'issue-action-button primary' });
+		const createNoteButton = actionsSection.createEl('button', { cls: 'mod-cta' });
 
 		const noteIcon = createNoteButton.createDiv('issue-action-icon');
 		setIcon(noteIcon, 'file-plus');
@@ -966,17 +966,10 @@ export class IssueView extends ItemView {
 			justify-content: flex-end;
 		`;
 
-		const resetBtn = filterGroup.createEl('button', { text: 'Reset Filters' });
-		resetBtn.style.cssText = `
-			padding: var(--size-2-1) var(--size-2-3);
-			border: var(--border-width) solid var(--background-modifier-border);
-			border-radius: var(--radius-s);
-			background: var(--background-primary);
-			color: var(--text-normal);
-			cursor: pointer;
-			font-size: var(--font-ui-small);
-			margin-top: auto;
-		`;
+		const resetBtn = filterGroup.createEl('button', { 
+			text: 'Reset Filters',
+			cls: 'mod-cta'
+		});
 
 		resetBtn.addEventListener('click', () => {
 			this.resetFilters();
