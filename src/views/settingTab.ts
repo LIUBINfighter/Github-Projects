@@ -636,7 +636,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 					testStatus.style.fontSize = 'var(--font-ui-smaller)';
 					testStatus.style.color = 'var(--text-muted)';
 
-					// 测试按钮点击事件
+					// 测试按钮点击事件，直接运行命令
 					testButton.addEventListener('click', async () => {
 						const command = ideInput.value.trim();
 						if (!command) {
@@ -645,12 +645,12 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 							return;
 						}
 
-						testStatus.textContent = 'Testing...';
+						testStatus.textContent = 'Running...';
 						testStatus.style.color = 'var(--text-muted)';
 						testButton.disabled = true;
 
 						try {
-							const success = await this.plugin.testIdeCommand(command);
+							const success = await this.plugin.executeIdeCommand(command);
 							if (success) {
 								testStatus.textContent = 'Command executed successfully';
 								testStatus.style.color = 'var(--color-green)';
