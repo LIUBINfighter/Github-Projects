@@ -10,20 +10,54 @@ export interface GithubRepository {
 	isDisabled?: boolean; // 是否禁用（不显示在下拉栏，不同步）
 }
 
+export interface GithubProject {
+	name: string; // 显示名称
+	owner: string; // GitHub用户名或组织名
+	projectNumber: number; // Project 编号
+	isDefault: boolean; // 是否为默认项目
+	isDisabled?: boolean; // 是否禁用（不显示在下拉栏，不同步）
+}
+
+export interface GitHubProjectCache {
+	[projectKey: string]: {
+		last_sync: string;
+		project: GitHubProjectDetails; // 项目详情数据
+	};
+}
+
+interface GitHubProjectDetails {
+	id: number;
+	number: number;
+	title: string;
+	body: string | null;
+	state: 'open' | 'closed';
+	creator: {
+		login: string;
+		avatar_url: string;
+	};
+	created_at: string;
+	updated_at: string;
+	html_url: string;
+}
+
 export interface GithubProjectsSettings {
 	githubToken: string;
 	repositories: GithubRepository[]; // 多仓库列表
+	projects: GithubProject[]; // 多项目列表
 	autoSync: boolean;
 	syncInterval: number; // in minutes
 	issueCache: GitHubIssueCache; // Issue 缓存数据
+	projectCache: GitHubProjectCache; // Project 缓存数据
 }
 
 export const DEFAULT_SETTINGS: GithubProjectsSettings = {
 	githubToken: '',
 	repositories: [],
+	projects: [],
 	autoSync: false,
 	syncInterval: 5,
-	issueCache: {}
+	issueCache: {},
+	projectCache: {}
 }
 
 export class GithubProjectsSettingTab extends PluginSettingTab {
@@ -50,6 +84,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		const tabs = [
 			{ id: 'basic', name: 'Token Setup' },
 			{ id: 'repositories', name: 'Repositories' },
+			{ id: 'projects', name: 'Projects' },
 			{ id: 'sync', name: 'Sync Options' }
 		];
 
@@ -80,6 +115,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				break;
 			case 'repositories':
 				this.displayRepositorySettings(containerEl);
+				break;
+			case 'projects':
+				this.displayProjectsSettings(containerEl);
 				break;
 			case 'sync':
 				this.displaySyncSettings(containerEl);
@@ -535,109 +573,316 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		}
 	}
 
-	private displaySyncSettings(containerEl: HTMLElement): void {
-		// 自动同步设置
-		new Setting(containerEl)
-			.setName('Auto Sync')
-			.setDesc('Automatically sync issues from GitHub')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.autoSync)
-				.onChange(async (value) => {
-					this.plugin.settings.autoSync = value;
-					await this.plugin.saveSettings();
-					// 重启自动同步
-					this.plugin.restartAutoSync();
-				}));
+	private displayProjectsSettings(containerEl: HTMLElement): void {
+		containerEl.createEl('h3', { text: 'Project Management' });
 
-		// 同步间隔设置
-		new Setting(containerEl)
-			.setName('Sync Interval')
-			.setDesc('How often to sync issues (in minutes)')
-			.addSlider(slider => slider
-				.setLimits(1, 60, 1)
-				.setValue(this.plugin.settings.syncInterval)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.syncInterval = value;
-					await this.plugin.saveSettings();
-					// 重启自动同步
-					this.plugin.restartAutoSync();
-				}));
+		// 添加新项目区域
+		const addProjectContainer = containerEl.createDiv();
+		addProjectContainer.style.marginBottom = 'var(--size-4-3)';
+		addProjectContainer.style.padding = 'var(--size-4-2)';
+		addProjectContainer.style.border = '1px solid var(--background-modifier-border)';
+		addProjectContainer.style.borderRadius = 'var(--radius-s)';
+		addProjectContainer.style.backgroundColor = 'var(--background-secondary)';
 
-		// 手动同步按钮
-		new Setting(containerEl)
-			.setName('Manual Sync')
-			.setDesc('Sync all repositories now')
-			.addButton(button => button
-				.setButtonText('Sync Now')
-				.setCta()
-				.onClick(async () => {
-					button.setButtonText('Syncing...');
-					button.setDisabled(true);
-					
-					try {
-						const results = await this.plugin.syncAllRepositories();
-						const successCount = Object.values(results).filter(r => r.success).length;
-						const totalCount = Object.keys(results).length;
-						
-						if (successCount === totalCount) {
-							new Notice(`Successfully synced all ${totalCount} repositories`);
-						} else {
-							new Notice(`Synced ${successCount}/${totalCount} repositories. Check console for errors.`);
-						}
-					} catch (error) {
-						new Notice(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-					} finally {
-						button.setButtonText('Sync Now');
-						button.setDisabled(false);
-					}
-				}));
+		addProjectContainer.createEl('h4', { text: 'Add New Project' });
 
-		// 同步说明
-		const syncHelpDiv = containerEl.createDiv();
-		syncHelpDiv.style.marginTop = '20px';
-		syncHelpDiv.createEl('h4', {text: 'Sync Information'});
-		syncHelpDiv.createEl('p', {text: 'Auto sync will periodically fetch issues from all enabled repositories.'});
-		syncHelpDiv.createEl('p', {text: 'Disabled repositories will not be synced and won\'t appear in the repository selector.'});
-		syncHelpDiv.createEl('p', {text: 'You can also manually sync issues using plugin commands or the button above.'});
-		syncHelpDiv.createEl('p', {text: 'Data is cached locally for offline access and fast searching.'});
+		// Project URL 输入
+		const projectUrlInput = addProjectContainer.createEl('input', {
+			type: 'text',
+			placeholder: 'GitHub Project URL (e.g., https://github.com/orgs/myorg/projects/1)'
+		});
+		projectUrlInput.style.width = '100%';
+		projectUrlInput.style.marginBottom = 'var(--size-2-2)';
+		projectUrlInput.style.padding = 'var(--size-2-2)';
+		projectUrlInput.style.borderRadius = 'var(--radius-s)';
+		projectUrlInput.style.border = '1px solid var(--background-modifier-border)';
+		projectUrlInput.style.fontSize = 'var(--font-ui-small)';
+
+		const orDiv = addProjectContainer.createDiv();
+		orDiv.textContent = 'OR';
+		orDiv.style.textAlign = 'center';
+		orDiv.style.margin = 'var(--size-2-2) 0';
+		orDiv.style.color = 'var(--text-muted)';
+		orDiv.style.fontSize = 'var(--font-ui-smaller)';
+
+		// 手动输入区域
+		const manualInputDiv = addProjectContainer.createDiv();
+		manualInputDiv.style.marginTop = 'var(--size-2-2)';
+
+		const projectNameInput = manualInputDiv.createEl('input', {
+			type: 'text',
+			placeholder: 'Project display name (e.g., Q3 Roadmap)'
+		});
+		projectNameInput.style.width = '100%';
+		projectNameInput.style.marginBottom = 'var(--size-2-2)';
+		projectNameInput.style.padding = 'var(--size-2-2)';
+		projectNameInput.style.borderRadius = 'var(--radius-s)';
+		projectNameInput.style.border = '1px solid var(--background-modifier-border)';
+		projectNameInput.style.fontSize = 'var(--font-ui-small)';
+
+		const ownerInput = manualInputDiv.createEl('input', {
+			type: 'text',
+			placeholder: 'Owner/Organization (e.g., myorg)'
+		});
+		ownerInput.style.width = '48%';
+		ownerInput.style.marginRight = '4%';
+		ownerInput.style.marginBottom = 'var(--size-2-2)';
+		ownerInput.style.padding = 'var(--size-2-2)';
+		ownerInput.style.borderRadius = 'var(--radius-s)';
+		ownerInput.style.border = '1px solid var(--background-modifier-border)';
+		ownerInput.style.fontSize = 'var(--font-ui-small)';
+
+		const projectNumberInput = manualInputDiv.createEl('input', {
+			type: 'number',
+			placeholder: 'Project number (e.g., 1)'
+		});
+		projectNumberInput.style.width = '48%';
+		projectNumberInput.style.marginBottom = 'var(--size-2-2)';
+		projectNumberInput.style.padding = 'var(--size-2-2)';
+		projectNumberInput.style.borderRadius = 'var(--radius-s)';
+		projectNumberInput.style.border = '1px solid var(--background-modifier-border)';
+		projectNumberInput.style.fontSize = 'var(--font-ui-small)';
+
+		// URL 解析逻辑
+		projectUrlInput.addEventListener('input', () => {
+			const url = projectUrlInput.value.trim();
+			const parsed = this.parseGitHubProjectUrl(url);
+			if (parsed) {
+				projectNameInput.value = parsed.name;
+				ownerInput.value = parsed.owner;
+				projectNumberInput.value = parsed.projectNumber.toString();
+				
+				// 成功解析时的视觉反馈
+				projectNameInput.style.borderColor = 'var(--color-green)';
+				ownerInput.style.borderColor = 'var(--color-green)';
+				projectNumberInput.style.borderColor = 'var(--color-green)';
+			} else if (url.length > 0) {
+				// 重置样式
+				projectNameInput.style.borderColor = '';
+				ownerInput.style.borderColor = '';
+				projectNumberInput.style.borderColor = '';
+			}
+		});
+
+		// 手动输入时清空 URL
+		[projectNameInput, ownerInput, projectNumberInput].forEach(input => {
+			input.addEventListener('input', () => {
+				if (input.value.trim()) {
+					projectUrlInput.value = '';
+				}
+			});
+		});
+
+		// 添加按钮
+		const addButton = addProjectContainer.createEl('button', {
+			text: 'Add Project',
+			cls: 'mod-cta'
+		});
+		addButton.addEventListener('click', async () => {
+			let name = projectNameInput.value.trim();
+			let owner = ownerInput.value.trim();
+			let projectNumber = parseInt(projectNumberInput.value.trim());
+
+			// 如果有 URL，尝试解析
+			if (!name || !owner || !projectNumber) {
+				const parsed = this.parseGitHubProjectUrl(projectUrlInput.value.trim());
+				if (parsed) {
+					name = name || parsed.name;
+					owner = owner || parsed.owner;
+					projectNumber = projectNumber || parsed.projectNumber;
+				}
+			}
+
+			if (!name || !owner || !projectNumber) {
+				const errorMsg = addProjectContainer.createDiv();
+				errorMsg.className = 'error-message';
+				errorMsg.textContent = 'Please provide a valid GitHub Project URL or fill in all fields manually.';
+				errorMsg.style.color = 'var(--text-error)';
+				errorMsg.style.fontSize = '12px';
+				errorMsg.style.marginTop = '5px';
+				setTimeout(() => errorMsg.remove(), 3000);
+				return;
+			}
+
+			const newProject: GithubProject = {
+				name,
+				owner,
+				projectNumber,
+				isDefault: this.plugin.settings.projects.length === 0,
+				isDisabled: false
+			};
+
+			this.plugin.settings.projects.push(newProject);
+			await this.plugin.saveSettings();
+
+			// 清空输入
+			projectUrlInput.value = '';
+			projectNameInput.value = '';
+			ownerInput.value = '';
+			projectNumberInput.value = '';
+
+			// 重新渲染
+			this.display();
+		});
+
+		// 显示已配置的项目
+		if (this.plugin.settings.projects.length > 0) {
+			containerEl.createEl('h4', { text: 'Configured Projects' });
+
+			this.plugin.settings.projects.forEach((project, index) => {
+				this.createProjectConfigCard(containerEl, project, index);
+			});
+		}
 	}
 
-	private parseGitHubUrl(url: string): {name: string, owner: string, repo: string} | null {
+	private createProjectConfigCard(container: HTMLElement, project: GithubProject, index: number) {
+		const card = container.createDiv();
+		card.style.marginBottom = '12px';
+		card.style.padding = '12px';
+		card.style.border = '1px solid var(--background-modifier-border)';
+		card.style.borderRadius = 'var(--radius-s)';
+
+		if (project.isDisabled) {
+			card.style.backgroundColor = 'var(--background-modifier-border)';
+			card.style.opacity = '0.6';
+		} else if (project.isDefault) {
+			card.style.backgroundColor = 'var(--background-modifier-hover)';
+		} else {
+			card.style.backgroundColor = 'transparent';
+		}
+
+		// 卡片头部
+		const header = card.createDiv();
+		header.style.display = 'flex';
+		header.style.justifyContent = 'space-between';
+		header.style.alignItems = 'center';
+		header.style.marginBottom = '8px';
+
+		const title = header.createEl('h5');
+		let titleText = project.name;
+		if (project.isDefault) titleText += ' (Default)';
+		if (project.isDisabled) titleText += ' (Disabled)';
+		title.textContent = titleText;
+		title.style.margin = '0';
+		title.style.fontSize = 'var(--font-ui-small)';
+		title.style.fontWeight = 'var(--font-weight-medium)';
+		if (project.isDisabled) {
+			title.style.color = 'var(--text-muted)';
+		}
+
+		// 操作按钮区域
+		const actions = header.createDiv();
+		actions.style.display = 'flex';
+		actions.style.gap = 'var(--size-2-2)';
+
+		// 设为默认按钮
+		if (!project.isDefault) {
+			const defaultBtn = actions.createEl('button', {
+				text: 'Set Default',
+				cls: 'mod-cta'
+			});
+			defaultBtn.addEventListener('click', async () => {
+				this.plugin.settings.projects.forEach(p => p.isDefault = false);
+				project.isDefault = true;
+				project.isDisabled = false;
+				await this.plugin.saveSettings();
+				this.display();
+			});
+		}
+
+		// 启用/禁用按钮
+		const toggleBtn = actions.createEl('button', {
+			text: project.isDisabled ? 'Enable' : 'Disable',
+			cls: project.isDisabled ? 'mod-cta' : 'mod-muted'
+		});
+		toggleBtn.addEventListener('click', async () => {
+			project.isDisabled = !project.isDisabled;
+			if (project.isDisabled && project.isDefault) {
+				project.isDefault = false;
+				const activeProjects = this.plugin.settings.projects.filter(p => !p.isDisabled);
+				if (activeProjects.length > 0) {
+					activeProjects[0].isDefault = true;
+				}
+			}
+			await this.plugin.saveSettings();
+			this.display();
+		});
+
+		// 删除按钮
+		const deleteBtn = actions.createEl('button', { cls: 'mod-warning' });
+		deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+		deleteBtn.title = 'Delete project';
+		deleteBtn.addEventListener('click', async () => {
+			this.plugin.settings.projects.splice(index, 1);
+			if (project.isDefault && this.plugin.settings.projects.length > 0) {
+				const activeProjects = this.plugin.settings.projects.filter(p => !p.isDisabled);
+				if (activeProjects.length > 0) {
+					activeProjects[0].isDefault = true;
+				}
+			}
+			await this.plugin.saveSettings();
+			this.display();
+		});
+
+		// 项目信息
+		const info = card.createDiv();
+		info.style.display = 'flex';
+		info.style.alignItems = 'center';
+		info.style.gap = 'var(--size-2-2)';
+
+		const label = info.createEl('span');
+		label.innerHTML = '<strong>Project:</strong>';
+		label.style.fontSize = 'var(--font-ui-smaller)';
+		label.style.color = 'var(--text-muted)';
+
+		const projectUrl = `https://github.com/orgs/${project.owner}/projects/${project.projectNumber}`;
+		const link = info.createEl('a');
+		link.textContent = projectUrl;
+		link.href = projectUrl;
+		link.style.color = 'var(--text-accent)';
+		link.style.textDecoration = 'none';
+		link.style.fontFamily = 'var(--font-monospace)';
+		link.style.fontSize = 'var(--font-ui-smaller)';
+		link.title = 'Click to copy URL';
+		
+		link.addEventListener('click', (e) => {
+			e.preventDefault();
+			navigator.clipboard.writeText(projectUrl).then(() => {
+				new Notice('Project URL copied to clipboard');
+			});
+		});
+	}
+
+	private parseGitHubProjectUrl(url: string): { name: string; owner: string; projectNumber: number } | null {
 		if (!url) return null;
-		
-		// 支持多种 GitHub URL 格式
+
+		// 匹配各种可能的 GitHub Project URL 格式
 		const patterns = [
-			// https://github.com/owner/repo
-			/^https?:\/\/github\.com\/([^/]+)\/([^/?#]+)/,
-			// github.com/owner/repo
-			/^github\.com\/([^/]+)\/([^/?#]+)/,
-			// owner/repo
-			/^([^/]+)\/([^/?#]+)$/
+			// https://github.com/orgs/owner/projects/123
+			/^https?:\/\/github\.com\/orgs\/([^/]+)\/projects\/(\d+)/,
+			// github.com/orgs/owner/projects/123
+			/^github\.com\/orgs\/([^/]+)\/projects\/(\d+)/,
+			// orgs/owner/projects/123
+			/^orgs\/([^/]+)\/projects\/(\d+)/,
+			// 用户项目: https://github.com/users/username/projects/123
+			/^https?:\/\/github\.com\/users\/([^/]+)\/projects\/(\d+)/,
+			/^github\.com\/users\/([^/]+)\/projects\/(\d+)/,
+			/^users\/([^/]+)\/projects\/(\d+)/
 		];
-		
+
 		for (const pattern of patterns) {
 			const match = url.match(pattern);
 			if (match) {
 				const owner = match[1];
-				const repo = match[2];
-				
-				// 移除常见的后缀
-				const cleanRepo = repo.replace(/\.(git|zip)$/, '');
-				
-				// 生成显示名称（保持原始大小写，仅替换连字符为空格）
-				const displayName = cleanRepo
-					.split(/[-_]/)
-					.join(' ');
-				
+				const projectNumber = parseInt(match[2]);
 				return {
-					name: displayName,
-					owner: owner,
-					repo: cleanRepo
+					name: `${owner} Project ${projectNumber}`,
+					owner,
+					projectNumber
 				};
 			}
 		}
-		
+
 		return null;
 	}
 

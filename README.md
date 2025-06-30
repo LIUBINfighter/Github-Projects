@@ -67,9 +67,20 @@ github issue <-> obsidian markdown
 3. 选择同步偏好设置
 
 ### 2. 使用 Workbench
-- 点击功能区的 GitHub 图标 → "Open Workbench"
-- 或使用命令面板：`GitHub Projects: Open GitHub Workbench`
 
-### 3. 查看详细 Issues
-- 在 Workbench 中点击 "View Issues" 
-- 或使用命令面板：`GitHub Projects: Open GitHub Issues`
+Workbench 提供两个主要标签页：
+
+#### Issues Overview
+- 显示所有仓库的 Issue 统计概览
+- 按仓库分类查看最新 Issues
+- 快速访问和同步功能
+
+#### GitHub Projects
+- 查看所有项目看板
+- 项目状态和进度追踪
+- 快速访问项目详情
+
+### 3. 快捷操作
+- 点击功能区的 GitHub 图标 → "Open Workbench"
+- 使用命令面板：`GitHub Projects: Open GitHub Workbench`
+- 在任意视图中通过设置图标快速访问配置

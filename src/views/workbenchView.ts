@@ -396,85 +396,89 @@ export class IssueWorkbenchView extends ItemView {
 		try {
 			const activeRepos = this.plugin.getActiveRepositories();
 			this.repositories = [];
-			
-			// 加载仓库和 Issue 数据
-			if (this.activeTab === 'issues') {
+			this.projects = { projects: [] }; // 重置项目数据
+			let allProjects: GitHubProject[] = [];
+			let lastProjectSync: string | undefined;
+
+			for (const repo of activeRepos) {
+				const repoKey = `${repo.owner}/${repo.repo}`;
+				const cache = this.plugin.getRepositoryCache(repoKey);
+
+				if (cache) {
+					// 处理 Issues 数据
+					const stats = this.calculateStats(cache.issues || []);
+					this.repositories.push({
+						name: repo.name,
+						key: repoKey,
+						stats,
+						lastSync: cache.last_sync,
+						issues: (cache.issues || []).slice(0, 5)
+					});
+
+					// 聚合所有仓库的 Projects 数据
+					if (cache.projects && cache.projects.length > 0) {
+						allProjects.push(...cache.projects);
+					}
+					
+					// 找到最近的同步时间
+					if (cache.last_sync && (!lastProjectSync || new Date(cache.last_sync) > new Date(lastProjectSync))) {
+						lastProjectSync = cache.last_sync;
+					}
+
+				} else {
+					// 没有缓存数据，创建空的统计
+					this.repositories.push({
+						name: repo.name,
+						key: repoKey,
+						stats: {
+							totalIssues: 0,
+							openIssues: 0,
+							closedIssues: 0,
+							assignedToMe: 0,
+							recentlyUpdated: 0
+						},
+						issues: []
+					});
+				}
+			}
+
+			// 更新总的项目数据
+			this.projects = {
+				projects: allProjects,
+				lastSync: lastProjectSync
+			};
+
+			// 加载项目数据
+			if (this.activeTab === 'projects') {
+				this.projects = { projects: [], lastSync: undefined };
+				let oldestSync: Date | undefined = undefined;
+
 				for (const repo of activeRepos) {
 					const repoKey = `${repo.owner}/${repo.repo}`;
 					const cache = this.plugin.getRepositoryCache(repoKey);
-					
-					if (cache) {
-						const stats = this.calculateStats(cache.issues || []);
-						this.repositories.push({
-							name: repo.name,
-							key: repoKey,
-							stats,
-							lastSync: cache.last_sync,
-							issues: (cache.issues || []).slice(0, 5) // 只保留前5个用于显示
-						});
-					} else {
-						// 没有缓存数据，创建空的统计
-						this.repositories.push({
-							name: repo.name,
-							key: repoKey,
-							stats: {
-								totalIssues: 0,
-								openIssues: 0,
-								closedIssues: 0,
-								assignedToMe: 0,
-								recentlyUpdated: 0
-							},
-							issues: []
-						});
-					}
-				}
-			}
-			
-			// 加载项目数据
-			if (this.activeTab === 'projects') {
-				// 临时模拟项目数据
-				// TODO: 实现从 GitHub API 获取真实的项目数据
-				this.projects = {
-					projects: [
-						{
-							id: 1,
-							number: 1,
-							title: "Q3 Development Roadmap",
-							body: "Track development progress for Q3 2025",
-							state: 'open',
-							creator: {
-								login: "demo-user",
-								avatar_url: "https://github.com/github.png"
-							},
-							created_at: "2025-06-01T00:00:00Z",
-							updated_at: "2025-06-30T00:00:00Z",
-							html_url: "https://github.com/orgs/demo/projects/1",
+
+					if (cache && cache.projects) {
+						// 为每个项目附加仓库信息，以便在卡片中显示
+						const projectsWithRepoInfo = cache.projects.map((p: any) => ({
+							...p,
 							repository: {
-								owner: "demo",
-								name: "project"
+								owner: repo.owner,
+								name: repo.repo
 							}
-						},
-						{
-							id: 2,
-							number: 2,
-							title: "Bug Tracking Board",
-							body: "Manage and prioritize bug fixes",
-							state: 'open',
-							creator: {
-								login: "demo-user",
-								avatar_url: "https://github.com/github.png"
-							},
-							created_at: "2025-06-15T00:00:00Z",
-							updated_at: "2025-06-30T00:00:00Z",
-							html_url: "https://github.com/orgs/demo/projects/2",
-							repository: {
-								owner: "demo",
-								name: "project"
+						}));
+						this.projects.projects.push(...projectsWithRepoInfo);
+						
+						if (cache.last_sync) {
+							const syncDate = new Date(cache.last_sync);
+							if (!oldestSync || syncDate < oldestSync) {
+								oldestSync = syncDate;
 							}
 						}
-					],
-					lastSync: new Date().toISOString()
-				};
+					}
+				}
+				if (oldestSync) {
+					this.projects.lastSync = oldestSync.toISOString();
+				}
 			}
 		} catch (error) {
 			console.error('Failed to load workbench data:', error);
