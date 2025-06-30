@@ -1,9 +1,9 @@
 {
 	"id": "github-projects",
 	"name": "Github Projects",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"minAppVersion": "1.18.0",
-	"description": "Manage Github issue and projects.",
+	"description": "Bridge Obsidian and GitHub with powerful issue management and workbench views. Features: Issue sync, local drafts, context linking, and seamless workflow integration.",
 	"author": "Jay Bridge",
 	"authorUrl": "",
 	"fundingUrl": "",

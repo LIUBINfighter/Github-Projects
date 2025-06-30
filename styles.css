@@ -608,48 +608,216 @@
 	gap: var(--size-2-1);
 }
 
-.issue-action-icon {
-	width: var(--icon-size-xs);
-	height: var(--icon-size-xs);
+/* GitHub Workbench View Styles */
+.github-workbench-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	font-size: var(--font-ui-small);
 }
 
-/* Filter toolbar styles */
-.filter-toolbar-container {
+.workbench-main-layout {
+	display: flex;
+	height: 100%;
+	gap: 1px;
+	background: var(--background-modifier-border);
+}
+
+/* ===== 智能队列面板 (左侧) ===== */
+.workbench-queue-panel {
+	width: 280px;
+	min-width: 200px;
+	background: var(--background-primary);
+	border-right: var(--border-width) solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.queue-header {
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.queue-title {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-weight-medium);
+}
+
+.queue-actions {
+	display: flex;
+	gap: var(--size-2-2);
+}
+
+.grouped-issues {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-2-1);
+}
+
+.issue-group {
+	margin-bottom: var(--size-4-2);
+}
+
+.issue-group-header {
+	padding: var(--size-2-2) var(--size-2-3);
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	font-weight: var(--font-weight-medium);
+	font-size: var(--font-ui-small);
+	margin-bottom: var(--size-2-1);
+}
+
+.issue-group-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.issue-group-content {
+	margin-left: var(--size-2-3);
+}
+
+.issue-group-content.collapsed {
+	display: none;
+}
+
+.queue-issue-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	padding: var(--size-2-2) var(--size-2-3);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	margin-bottom: var(--size-2-1);
+	transition: background-color 0.1s ease;
+}
+
+.queue-issue-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.queue-issue-item.selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.queue-issue-item .issue-status-icon {
+	flex-shrink: 0;
+}
+
+.queue-issue-item .issue-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.queue-issue-item .issue-title {
+	display: block;
+	font-weight: var(--font-weight-medium);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.queue-issue-item .issue-meta {
+	display: flex;
+	gap: var(--size-2-1);
+	font-size: var(--font-ui-smaller);
+	opacity: 0.7;
+	margin-top: var(--size-2-1);
+}
+
+.queue-issue-item .issue-number {
+	color: var(--text-muted);
+}
+
+.queue-issue-item .issue-repo {
+	color: var(--text-muted);
+}
+
+.draft-indicator {
+	flex-shrink: 0;
+	color: var(--color-orange);
+}
+
+.group-empty-state {
+	padding: var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* ===== 核心编辑区面板 (中心) ===== */
+.workbench-editor-panel {
+	flex: 1;
+	background: var(--background-primary);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.editor-empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	padding: var(--size-4-6);
+}
+
+.editor-empty-state .empty-content {
+	text-align: center;
+	max-width: 400px;
+}
+
+.editor-empty-state .empty-icon {
+	margin-bottom: var(--size-4-3);
+	color: var(--text-faint);
+}
+
+.editor-empty-state .empty-icon svg {
+	width: var(--icon-size-xl);
+	height: var(--icon-size-xl);
+}
+
+.editor-header {
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.editor-header h2 {
+	margin: 0;
+	font-size: var(--font-ui-large);
+}
+
+/* 元数据面板 */
+.metadata-panel {
+	padding: var(--size-4-3);
 	background: var(--background-secondary);
 	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	overflow: hidden;
-	transition: max-height 0.3s ease;
-}
-
-.filter-toolbar-container.collapsed {
-	max-height: 0;
-}
-
-.filter-toolbar-container.expanded {
-	max-height: 300px;
-}
-
-.filter-content-grid {
-	padding: var(--size-4-3);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 	gap: var(--size-4-3);
 }
 
-.filter-group-container {
+.metadata-group {
 	display: flex;
 	flex-direction: column;
 	gap: var(--size-2-1);
 }
 
-.filter-group-label {
+.metadata-group label {
 	font-size: var(--font-ui-small);
-	font-weight: var(--font-medium);
+	font-weight: var(--font-weight-medium);
 	color: var(--text-normal);
 }
 
-.filter-input,
-.filter-select {
+.metadata-input,
+.metadata-select {
 	padding: var(--size-2-1) var(--size-2-3);
 	border: var(--border-width) solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
@@ -658,68 +826,234 @@
 	font-size: var(--font-ui-small);
 }
 
-.filter-input:focus,
-.filter-select:focus {
+.metadata-input:focus,
+.metadata-select:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
 }
 
-.filter-group-actions {
+/* Markdown 编辑器 */
+.markdown-editor-area {
+	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: var(--size-2-1);
-	justify-content: flex-end;
+	overflow: hidden;
 }
 
-.filter-reset-button {
-	padding: var(--size-2-1) var(--size-2-3);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
+.editor-toolbar {
+	padding: var(--size-4-2) var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: var(--background-secondary);
+}
+
+.editor-toolbar h4 {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+}
+
+.editor-toolbar-buttons {
+	display: flex;
+	gap: var(--size-2-2);
+}
+
+.markdown-editor {
+	flex: 1;
+	border: none;
+	outline: none;
+	resize: none;
+	padding: var(--size-4-3);
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
 	background: var(--background-primary);
 	color: var(--text-normal);
-	cursor: pointer;
+}
+
+/* 操作面板 */
+.draft-actions-panel,
+.viewer-actions-panel {
+	padding: var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	display: flex;
+	gap: var(--size-4-2);
+	flex-wrap: wrap;
+}
+
+/* 查看器样式 */
+.viewer-header {
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.viewer-title-section {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-2);
+}
+
+.viewer-title-section h2 {
+	margin: 0;
+	flex: 1;
+}
+
+.issue-status-badge {
+	padding: var(--size-2-1) var(--size-2-3);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-weight-medium);
+}
+
+.issue-status-badge.open {
+	background: var(--color-green);
+	color: white;
+}
+
+.issue-status-badge.closed {
+	background: var(--color-red);
+	color: white;
+}
+
+.viewer-meta-section {
+	margin-bottom: var(--size-4-2);
+}
+
+.issue-meta-text {
+	color: var(--text-muted);
 	font-size: var(--font-ui-small);
-	margin-top: auto;
-	transition: all 0.1s ease;
 }
 
-.filter-reset-button:hover {
-	background: var(--background-modifier-hover);
-	border-color: var(--background-modifier-border-hover);
+.viewer-labels {
+	display: flex;
+	gap: var(--size-2-1);
+	flex-wrap: wrap;
 }
 
-/* 仓库输入框样式增强 */
-.repo-selector-container input {
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.viewer-content-area {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-4-3);
 }
 
-.repo-selector-container input[style*="border-color: var(--color-green)"] {
-	border-width: 2px;
-	box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2);
+.issue-content {
+	line-height: var(--line-height-normal);
 }
 
-/* 仓库卡片样式 */
-.repo-info {
+/* ===== 本地上下文面板 (右侧) ===== */
+.workbench-context-panel {
+	width: 300px;
+	min-width: 250px;
+	background: var(--background-primary);
+	border-left: var(--border-width) solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.context-header {
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.context-header h3 {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-weight-medium);
+}
+
+.context-empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	padding: var(--size-4-3);
+	text-align: center;
+}
+
+.context-section {
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+}
+
+.context-section-header {
+	padding: var(--size-4-2) var(--size-4-3);
+	background: var(--background-secondary);
+}
+
+.context-section-header h4 {
+	margin: 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-weight-medium);
+}
+
+.context-section-content {
+	padding: var(--size-4-2);
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+.context-item {
+	padding: var(--size-2-2) var(--size-2-3);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	margin-bottom: var(--size-2-1);
 	display: flex;
 	align-items: center;
 	gap: var(--size-2-2);
 }
 
-.repo-info a {
-	transition: color 0.2s ease;
+.context-item:hover {
+	background: var(--background-modifier-hover);
 }
 
-.repo-info a:hover {
-	color: var(--text-accent-hover);
-	text-decoration: underline;
+.context-item-title {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-/* 加载状态样式 */
-.clickable-icon-button.is-loading {
+.context-item-title.completed {
+	text-decoration: line-through;
 	opacity: 0.6;
-	pointer-events: none;
 }
 
-.clickable-icon-button.is-loading svg {
-	animation: spin 1s linear infinite;
+.context-item-meta {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+	.workbench-context-panel {
+		width: 250px;
+		min-width: 200px;
+	}
+}
+
+@media (max-width: 900px) {
+	.workbench-queue-panel {
+		width: 240px;
+		min-width: 180px;
+	}
+	
+	.workbench-context-panel {
+		width: 220px;
+		min-width: 180px;
+	}
+}
+
+/* 按钮样式覆盖 */
+.workbench-editor-panel .mod-cta,
+.workbench-editor-panel .mod-secondary,
+.workbench-editor-panel .mod-warning {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
 }
