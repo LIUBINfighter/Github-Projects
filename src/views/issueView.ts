@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, setIcon } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 
 export const ISSUE_VIEW_TYPE = 'github-issues-view';
@@ -84,79 +84,100 @@ export class IssueView extends ItemView {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			padding: 16px;
-			border-bottom: 1px solid var(--background-modifier-border);
+			padding: var(--size-4-2) var(--size-4-3);
+			border-bottom: var(--border-width) solid var(--background-modifier-border);
+			background: var(--background-primary);
+			min-height: var(--input-height);
 		`;
 
 		// 标题
 		const title = header.createEl('h2', { text: 'GitHub Issues' });
 		title.style.cssText = `
 			margin: 0;
-			font-size: 18px;
-			font-weight: 600;
+			font-size: var(--font-ui-medium);
+			font-weight: var(--font-semibold);
+			color: var(--text-normal);
 		`;
 
 		// 操作按钮容器
 		const actions = header.createDiv('header-actions');
 		actions.style.cssText = `
 			display: flex;
-			gap: 8px;
+			gap: var(--size-2-1);
 		`;
 
 		// 刷新按钮
-		const refreshBtn = actions.createEl('button', { text: '🔄 Refresh' });
+		const refreshBtn = actions.createEl('button', { 
+			cls: 'clickable-icon',
+			attr: { 'aria-label': 'Refresh issues' }
+		});
 		refreshBtn.style.cssText = `
-			padding: 6px 12px;
-			font-size: 12px;
-			background: var(--interactive-accent);
-			color: var(--text-on-accent);
+			width: var(--icon-size);
+			height: var(--icon-size);
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: transparent;
 			border: none;
-			border-radius: 4px;
+			border-radius: var(--radius-s);
 			cursor: pointer;
-			transition: all 0.2s ease;
+			color: var(--icon-color);
 		`;
+		setIcon(refreshBtn, 'refresh-cw');
 		refreshBtn.addEventListener('click', () => this.refreshIssues());
 
 		// 新建Issue按钮
-		const newIssueBtn = actions.createEl('button', { text: '➕ New Issue' });
+		const newIssueBtn = actions.createEl('button', { 
+			cls: 'clickable-icon',
+			attr: { 'aria-label': 'Create new issue' }
+		});
 		newIssueBtn.style.cssText = `
-			padding: 6px 12px;
-			font-size: 12px;
-			background: var(--color-green);
-			color: white;
+			width: var(--icon-size);
+			height: var(--icon-size);
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: transparent;
 			border: none;
-			border-radius: 4px;
+			border-radius: var(--radius-s);
 			cursor: pointer;
-			transition: all 0.2s ease;
+			color: var(--icon-color);
 		`;
+		setIcon(newIssueBtn, 'plus');
 		newIssueBtn.addEventListener('click', () => this.createNewIssue());
 	}
 
 	private createRepositorySelector(container: Element) {
 		const selectorContainer = container.createDiv('repo-selector-container');
 		selectorContainer.style.cssText = `
-			padding: 12px 16px;
+			padding: var(--size-4-2) var(--size-4-3);
 			background: var(--background-secondary);
-			border-bottom: 1px solid var(--background-modifier-border);
+			border-bottom: var(--border-width) solid var(--background-modifier-border);
+			display: flex;
+			align-items: center;
+			gap: var(--size-4-2);
 		`;
 
-		const label = selectorContainer.createEl('label', { text: 'Repository: ' });
-		label.style.cssText = `
-			font-size: 12px;
-			font-weight: 500;
-			color: var(--text-muted);
-			margin-right: 8px;
+		const iconContainer = selectorContainer.createDiv();
+		iconContainer.style.cssText = `
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+			color: var(--icon-color);
 		`;
+		setIcon(iconContainer, 'folder-git-2');
 
 		const select = selectorContainer.createEl('select');
 		select.style.cssText = `
-			padding: 4px 8px;
-			border: 1px solid var(--background-modifier-border);
-			border-radius: 4px;
+			flex: 1;
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
 			background: var(--background-primary);
 			color: var(--text-normal);
-			font-size: 12px;
-			min-width: 200px;
+			font-size: var(--font-ui-small);
+			height: var(--input-height);
 		`;
 
 		// 添加默认选项
@@ -191,7 +212,7 @@ export class IssueView extends ItemView {
 		listContainer.style.cssText = `
 			flex: 1;
 			overflow-y: auto;
-			padding: 16px;
+			padding: var(--size-4-2);
 		`;
 
 		this.updateIssuesListContent(listContainer);
@@ -222,15 +243,28 @@ export class IssueView extends ItemView {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			padding: 40px;
+			padding: var(--size-4-6);
 			color: var(--text-muted);
 		`;
-		loading.innerHTML = `
-			<div style="text-align: center;">
-				<div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
-				<div>Loading issues...</div>
-			</div>
+		
+		const loadingContent = loading.createDiv();
+		loadingContent.style.cssText = `
+			display: flex;
+			align-items: center;
+			gap: var(--size-4-2);
+			font-size: var(--font-ui-small);
 		`;
+		
+		const iconDiv = loadingContent.createDiv();
+		iconDiv.style.cssText = `
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+			color: var(--icon-color);
+		`;
+		setIcon(iconDiv, 'loader-2');
+		iconDiv.style.animation = 'spin 1s linear infinite';
+		
+		loadingContent.createSpan({ text: 'Loading issues...' });
 	}
 
 	private renderEmptyState(container: Element) {
@@ -240,26 +274,62 @@ export class IssueView extends ItemView {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			padding: 40px;
+			padding: var(--size-4-6);
 			color: var(--text-muted);
 			text-align: center;
 		`;
 		
+		const emptyContent = empty.createDiv();
+		emptyContent.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: var(--size-4-3);
+		`;
+		
+		const iconDiv = emptyContent.createDiv();
+		iconDiv.style.cssText = `
+			width: var(--icon-size-lg);
+			height: var(--icon-size-lg);
+			color: var(--icon-color-hover);
+		`;
+		
+		const messageDiv = emptyContent.createDiv();
+		messageDiv.style.cssText = `
+			font-size: var(--font-ui-small);
+			line-height: var(--line-height-normal);
+		`;
+		
 		if (!this.selectedRepo) {
-			empty.innerHTML = `
-				<div>
-					<div style="font-size: 24px; margin-bottom: 8px;">📁</div>
-					<div>Select a repository to view issues</div>
-				</div>
-			`;
+			setIcon(iconDiv, 'folder-open');
+			messageDiv.textContent = 'Select a repository to view issues';
 		} else {
-			empty.innerHTML = `
-				<div>
-					<div style="font-size: 24px; margin-bottom: 8px;">📭</div>
-					<div>No issues found in this repository</div>
-					<button onclick="this.createNewIssue()" style="margin-top: 12px; padding: 6px 12px; border: none; border-radius: 4px; background: var(--interactive-accent); color: var(--text-on-accent); cursor: pointer;">Create First Issue</button>
-				</div>
+			setIcon(iconDiv, 'inbox');
+			messageDiv.textContent = 'No issues found in this repository';
+			
+			const createBtn = emptyContent.createEl('button');
+			createBtn.style.cssText = `
+				padding: var(--size-2-1) var(--size-4-2);
+				font-size: var(--font-ui-small);
+				border: var(--border-width) solid var(--background-modifier-border);
+				border-radius: var(--radius-s);
+				background: var(--background-primary);
+				color: var(--text-normal);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
 			`;
+			
+			const btnIcon = createBtn.createDiv();
+			btnIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(btnIcon, 'plus');
+			
+			createBtn.createSpan({ text: 'Create First Issue' });
+			createBtn.addEventListener('click', () => this.createNewIssue());
 		}
 	}
 
@@ -269,18 +339,19 @@ export class IssueView extends ItemView {
 		this.issues.forEach(issue => {
 			const issueItem = container.createDiv('issue-item');
 			issueItem.style.cssText = `
-				border: 1px solid var(--background-modifier-border);
-				border-radius: 6px;
-				padding: 16px;
-				margin-bottom: 12px;
+				border: var(--border-width) solid var(--background-modifier-border);
+				border-radius: var(--radius-s);
+				padding: var(--size-4-2);
+				margin-bottom: var(--size-2-1);
 				background: var(--background-primary);
 				cursor: pointer;
-				transition: all 0.2s ease;
+				transition: all 0.1s ease;
+				font-size: var(--font-ui-small);
 			`;
 
 			// 悬停效果
 			issueItem.addEventListener('mouseenter', () => {
-				issueItem.style.backgroundColor = 'var(--background-secondary)';
+				issueItem.style.backgroundColor = 'var(--background-modifier-hover)';
 				issueItem.style.borderColor = 'var(--background-modifier-border-hover)';
 			});
 			issueItem.addEventListener('mouseleave', () => {
@@ -288,43 +359,49 @@ export class IssueView extends ItemView {
 				issueItem.style.borderColor = 'var(--background-modifier-border)';
 			});
 
-			// Issue 头部（标题和状态）
+			// Issue 头部（状态图标、标题和编号）
 			const issueHeader = issueItem.createDiv('issue-header');
 			issueHeader.style.cssText = `
 				display: flex;
-				justify-content: space-between;
-				align-items: flex-start;
-				margin-bottom: 8px;
+				align-items: center;
+				gap: var(--size-2-3);
+				margin-bottom: var(--size-2-1);
 			`;
 
+			// 状态图标
+			const statusIcon = issueHeader.createDiv();
+			statusIcon.style.cssText = `
+				width: var(--icon-size-sm);
+				height: var(--icon-size-sm);
+				flex-shrink: 0;
+				color: ${issue.state === 'open' ? 'var(--color-green)' : 'var(--color-red)'};
+			`;
+			setIcon(statusIcon, issue.state === 'open' ? 'circle-dot' : 'check-circle');
+
+			// 标题容器
 			const titleContainer = issueHeader.createDiv();
-			const title = titleContainer.createEl('h3', { text: issue.title });
+			titleContainer.style.cssText = `
+				flex: 1;
+				min-width: 0;
+			`;
+			
+			const title = titleContainer.createEl('span', { text: issue.title });
 			title.style.cssText = `
-				margin: 0 0 4px 0;
-				font-size: 14px;
-				font-weight: 600;
+				font-weight: var(--font-medium);
 				color: var(--text-normal);
-				line-height: 1.3;
+				line-height: var(--line-height-tight);
+				display: block;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			`;
 
-			const issueNumber = titleContainer.createEl('span', { text: `#${issue.number}` });
+			// Issue编号
+			const issueNumber = issueHeader.createEl('span', { text: `#${issue.number}` });
 			issueNumber.style.cssText = `
-				font-size: 12px;
 				color: var(--text-muted);
 				font-weight: normal;
-			`;
-
-			// 状态标签
-			const statusBadge = issueHeader.createEl('span', { text: issue.state });
-			statusBadge.style.cssText = `
-				padding: 2px 8px;
-				font-size: 11px;
-				font-weight: 500;
-				border-radius: 12px;
-				text-transform: uppercase;
-				${issue.state === 'open' ? 
-					'background: var(--color-green); color: white;' : 
-					'background: var(--color-red); color: white;'}
+				flex-shrink: 0;
 			`;
 
 			// Issue 元信息
@@ -332,40 +409,61 @@ export class IssueView extends ItemView {
 			issueMeta.style.cssText = `
 				display: flex;
 				align-items: center;
-				gap: 12px;
-				font-size: 12px;
+				gap: var(--size-4-3);
 				color: var(--text-muted);
-				margin-bottom: 8px;
+				margin-bottom: var(--size-2-1);
 			`;
 
 			// 作者信息
-			const authorSpan = issueMeta.createEl('span');
-			authorSpan.innerHTML = `👤 ${issue.user.login}`;
+			const authorContainer = issueMeta.createDiv();
+			authorContainer.style.cssText = `
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+			`;
+			const authorIcon = authorContainer.createDiv();
+			authorIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(authorIcon, 'user');
+			authorContainer.createSpan({ text: issue.user.login });
 
 			// 创建时间
-			const createdSpan = issueMeta.createEl('span');
+			const timeContainer = issueMeta.createDiv();
+			timeContainer.style.cssText = `
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+			`;
+			const timeIcon = timeContainer.createDiv();
+			timeIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(timeIcon, 'clock');
 			const createdDate = new Date(issue.created_at).toLocaleDateString();
-			createdSpan.innerHTML = `📅 ${createdDate}`;
+			timeContainer.createSpan({ text: createdDate });
 
 			// 标签
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueItem.createDiv('issue-labels');
 				labelsContainer.style.cssText = `
 					display: flex;
-					gap: 4px;
+					gap: var(--size-2-1);
 					flex-wrap: wrap;
-					margin-top: 8px;
 				`;
 
 				issue.labels.forEach(label => {
 					const labelSpan = labelsContainer.createEl('span', { text: label.name });
 					labelSpan.style.cssText = `
-						padding: 2px 6px;
-						font-size: 10px;
-						border-radius: 4px;
-						background: #${label.color}20;
+						padding: var(--size-2-1) var(--size-2-1);
+						font-size: var(--font-ui-smaller);
+						border-radius: var(--radius-xs);
+						background: #${label.color}15;
 						color: #${label.color};
-						border: 1px solid #${label.color}40;
+						border: var(--border-width) solid #${label.color}30;
+						line-height: 1;
 					`;
 				});
 			}

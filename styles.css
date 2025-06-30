@@ -1,8 +1,156 @@
-/*
+/* GitHub Issues View Styles - VSCode-like */
+.github-issues-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	font-size: var(--font-ui-small);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.issues-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--size-4-2) var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-primary);
+	min-height: var(--input-height);
+}
 
-If your plugin does not need CSS, delete this file.
+.header-actions {
+	display: flex;
+	gap: var(--size-2-1);
+}
 
-*/
+.repo-selector-container {
+	padding: var(--size-4-2) var(--size-4-3);
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.issues-list-container {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-4-2);
+}
+
+.issue-item {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	margin-bottom: var(--size-2-1);
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.1s ease;
+	font-size: var(--font-ui-small);
+}
+
+.issue-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.issue-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-3);
+	margin-bottom: var(--size-2-1);
+}
+
+.issue-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-3);
+	color: var(--text-muted);
+	margin-bottom: var(--size-2-1);
+}
+
+.issue-labels {
+	display: flex;
+	gap: var(--size-2-1);
+	flex-wrap: wrap;
+}
+
+.loading-state,
+.empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: var(--size-4-6);
+	color: var(--text-muted);
+	text-align: center;
+}
+
+/* 图标按钮样式 */
+.github-issues-view .clickable-icon {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	color: var(--icon-color);
+	transition: all 0.1s ease;
+}
+
+.github-issues-view .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+	color: var(--icon-color-hover);
+}
+
+/* 旋转动画 */
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* 选择框样式 */
+.repo-selector-container select {
+	flex: 1;
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	height: var(--input-height);
+}
+
+.repo-selector-container select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+	.issues-header {
+		padding: var(--size-2-3) var(--size-4-2);
+	}
+	
+	.repo-selector-container {
+		padding: var(--size-2-3) var(--size-4-2);
+	}
+	
+	.issues-list-container {
+		padding: var(--size-2-3);
+	}
+	
+	.issue-item {
+		padding: var(--size-2-3);
+	}
+	
+	.issue-meta {
+		flex-wrap: wrap;
+		gap: var(--size-4-2);
+	}
+}
