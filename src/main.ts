@@ -3,8 +3,7 @@ import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } fr
 import { IssueView, ISSUE_VIEW_TYPE } from './views/issueView';
 import { IssueWorkbenchView, WORKBENCH_VIEW_TYPE } from './views/workbenchView';
 import { GitHubDataSync, GitHubSyncResult } from './github/dataSync';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { IdeCommandTool } from './utils/ideCommandTool';
 
 export default class GithubProjectsPlugin extends Plugin {
 	settings: GithubProjectsSettings;
@@ -332,60 +331,13 @@ export default class GithubProjectsPlugin extends Plugin {
 	 * 测试 IDE 命令是否可以执行
 	 */
 	async testIdeCommand(command: string): Promise<boolean> {
-		if (Platform.isMobile) {
-			throw new Error('IDE commands are not supported on mobile devices');
-		}
-
-		if (!command.trim()) {
-			throw new Error('Command cannot be empty');
-		}
-
-		return new Promise((resolve) => {
-			const execAsync = promisify(exec);
-			
-			// 在 Windows 上，我们可能需要稍微不同的处理方式
-			// 这里我们只是尝试执行命令的第一部分来测试可用性
-			const commandParts = command.trim().split(' ');
-			const executable = commandParts[0];
-			
-			// 在 Windows 上测试命令是否存在
-			const testCommand = process.platform === 'win32' 
-				? `where "${executable}"` 
-				: `which "${executable}"`;
-
-			execAsync(testCommand, { timeout: 5000 })
-				.then(() => {
-					resolve(true);
-				})
-				.catch(() => {
-					resolve(false);
-				});
-		});
+		return IdeCommandTool.testCommand(command);
 	}
 
 	/**
 	 * 执行 IDE 命令打开仓库
 	 */
 	async executeIdeCommand(command: string): Promise<boolean> {
-		if (Platform.isMobile) {
-			new Notice('IDE commands are not supported on mobile devices');
-			return false;
-		}
-
-		if (!command.trim()) {
-			new Notice('No IDE command configured for this repository');
-			return false;
-		}
-
-		try {
-			const execAsync = promisify(exec);
-			await execAsync(command, { timeout: 10000 });
-			new Notice('IDE command executed successfully');
-			return true;
-		} catch (error) {
-			console.error('Failed to execute IDE command:', error);
-			new Notice(`Failed to execute IDE command: ${error instanceof Error ? error.message : 'Unknown error'}`);
-			return false;
-		}
+		return IdeCommandTool.executeCommand(command);
 	}
 }

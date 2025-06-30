@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting, Notice, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 import { GitHubIssueCache, GitHubDataSync } from '../github/dataSync';
+import { IdeCommandTool } from '../utils/ideCommandTool';
 
 export interface GithubRepository {
 	name: string; // 显示名称
