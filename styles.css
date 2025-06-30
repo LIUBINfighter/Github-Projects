@@ -148,6 +148,7 @@
 	cursor: pointer;
 	color: var(--icon-color);
 	transition: all 0.1s ease;
+	text-decoration: underline; /* 添加修复 */
 }
 
 .github-issues-view .clickable-icon:hover {
@@ -890,7 +891,7 @@
 
 .repository-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 	gap: var(--size-4-3);
 }
 
@@ -1055,7 +1056,7 @@
 	text-decoration: none;
 }
 
-.more
+.more-issues a:hover {
 	text-decoration: underline;
 }
 
@@ -1123,7 +1124,7 @@
 
 .projects-list {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 	gap: var(--size-4-3);
 }
 
@@ -1288,4 +1289,20 @@
 /* 卡片中的 IDE 按钮 */
 .card-actions .ide-button {
 	display: inline-flex;
+}
+
+/* 样式：仓库卡片按钮排列 */
+.repository-card .card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px; /* 按钮之间的间距 */
+}
+
+.repository-card .card-actions button {
+    width: auto;
+    padding: 6px 12px; /* 按钮的内边距 */
+    white-space: nowrap; /* 防止按钮内容换行 */
+    flex-grow: 0;
+    flex-shrink: 0;
 }
