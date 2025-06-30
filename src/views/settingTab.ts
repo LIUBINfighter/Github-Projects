@@ -25,6 +25,8 @@ export const DEFAULT_SETTINGS: GithubProjectsSettings = {
 export class GithubProjectsSettingTab extends PluginSettingTab {
 	plugin: GithubProjectsPlugin;
 	private activeTab = 'basic';
+	private tokenStatus: 'untested' | 'testing' | 'valid' | 'invalid' = 'untested';
+	private tokenTestResult = '';
 
 	constructor(app: App, plugin: GithubProjectsPlugin) {
 		super(app, plugin);
@@ -42,7 +44,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		tabNav.style.borderBottom = '1px solid var(--background-modifier-border)';
 
 		const tabs = [
-			{ id: 'basic', name: 'Basic Settings' },
+			{ id: 'basic', name: 'Token Setup' },
 			{ id: 'repositories', name: 'Repositories' },
 			{ id: 'sync', name: 'Sync Options' }
 		];
@@ -82,8 +84,12 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 	}
 
 	private displayBasicSettings(containerEl: HTMLElement): void {
+		// GitHub Token 设置容器
+		const tokenContainer = containerEl.createDiv();
+		tokenContainer.style.marginBottom = '20px';
+
 		// GitHub Token 设置
-		new Setting(containerEl)
+		new Setting(tokenContainer)
 			.setName('GitHub Personal Access Token')
 			.setDesc('Enter your GitHub personal access token.')
 			.addText(text => text
@@ -92,22 +98,91 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.githubToken = value;
 					await this.plugin.saveSettings();
+					// Token 改变时重置状态
+					this.tokenStatus = 'untested';
+					this.tokenTestResult = '';
+					this.updateTokenStatus(tokenContainer);
 				}));
 
-		// 添加创建token的链接
-		const tokenLinkDiv = containerEl.createDiv();
-		tokenLinkDiv.style.marginTop = '-10px';
-		tokenLinkDiv.style.marginBottom = '20px';
-		tokenLinkDiv.style.fontSize = '12px';
-		tokenLinkDiv.style.color = 'var(--text-muted)';
-		tokenLinkDiv.innerHTML = 'Don\'t have a token? <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--text-accent);">Create one here</a> (requires repo permissions)';
+		// 测试按钮和状态指示器容器
+		const testContainer = tokenContainer.createDiv();
+		testContainer.style.display = 'flex';
+		testContainer.style.alignItems = 'center';
+		testContainer.style.marginTop = '10px';
+		testContainer.style.gap = '10px';
+
+		// 测试按钮
+		const testButton = testContainer.createEl('button', {text: 'Test Token'});
+		testButton.style.padding = '6px 12px';
+		testButton.style.fontSize = '12px';
+		testButton.style.backgroundColor = 'var(--interactive-accent)';
+		testButton.style.color = 'var(--text-on-accent)';
+		testButton.style.border = 'none';
+		testButton.style.borderRadius = '3px';
+		testButton.style.cursor = 'pointer';
+		testButton.style.transition = 'all 0.2s ease';
+
+		// 鼠标悬停效果
+		testButton.addEventListener('mouseenter', () => {
+			if (!testButton.disabled) {
+				testButton.style.backgroundColor = 'var(--interactive-accent-hover)';
+			}
+		});
+		testButton.addEventListener('mouseleave', () => {
+			if (!testButton.disabled) {
+				testButton.style.backgroundColor = 'var(--interactive-accent)';
+			}
+		});
+
+		// 状态指示灯
+		const statusIndicator = testContainer.createDiv();
+		statusIndicator.style.width = '12px';
+		statusIndicator.style.height = '12px';
+		statusIndicator.style.borderRadius = '50%';
+		statusIndicator.style.flexShrink = '0';
+
+		// 状态文本
+		const statusText = testContainer.createDiv();
+		statusText.style.fontSize = '12px';
+		statusText.style.flex = '1';
+
+		// 绑定测试按钮事件
+		testButton.addEventListener('click', async () => {
+			await this.testGitHubToken(tokenContainer);
+		});
+
+		// 初始化状态显示
+		this.updateTokenStatus(tokenContainer);
+
+		// 添加创建token的链接和权限说明
+		const tokenInfoDiv = containerEl.createDiv();
+		tokenInfoDiv.style.marginTop = '10px';
+		tokenInfoDiv.style.marginBottom = '20px';
+		tokenInfoDiv.style.padding = '10px';
+		tokenInfoDiv.style.backgroundColor = 'var(--background-secondary)';
+		tokenInfoDiv.style.borderRadius = '5px';
+		tokenInfoDiv.style.fontSize = '12px';
+		tokenInfoDiv.style.color = 'var(--text-muted)';
+
+		const tokenLinkP = tokenInfoDiv.createEl('p');
+		tokenLinkP.style.margin = '0 0 8px 0';
+		tokenLinkP.innerHTML = 'Don\'t have a token? <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--text-accent);">Create one here</a>';
+
+		const permissionP = tokenInfoDiv.createEl('p');
+		permissionP.style.margin = '0';
+		permissionP.innerHTML = '<strong>Required permissions:</strong> repo (for private repos) or public_repo (for public repos only)';
+
+		// 添加令牌格式说明
+		const formatP = tokenInfoDiv.createEl('p');
+		formatP.style.margin = '8px 0 0 0';
+		formatP.innerHTML = '<strong>Token format:</strong> Should start with "ghp_" followed by 36 characters';
 
 		// 添加说明文档
 		const helpDiv = containerEl.createDiv();
 		helpDiv.style.marginTop = '30px';
 		helpDiv.createEl('h3', {text: 'Setup Instructions'});
 		helpDiv.createEl('p', {text: '1. Create a GitHub Personal Access Token with repo permissions'});
-		helpDiv.createEl('p', {text: '2. Enter the token above'});
+		helpDiv.createEl('p', {text: '2. Enter the token above and test it'});
 		helpDiv.createEl('p', {text: '3. Switch to Repositories tab to add your repositories'});
 		helpDiv.createEl('p', {text: '4. Configure sync preferences in Sync Options tab'});
 	}
@@ -124,7 +199,28 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		addRepoContainer.createEl('h4', {text: 'Add New Repository'});
 
-		const nameInput = addRepoContainer.createEl('input', {
+		// URL 输入框
+		const urlInput = addRepoContainer.createEl('input', {
+			type: 'text',
+			placeholder: 'GitHub URL (e.g., https://github.com/username/reponame)'
+		});
+		urlInput.style.width = '100%';
+		urlInput.style.marginBottom = '10px';
+		urlInput.style.padding = '8px';
+
+		// 或分隔线
+		const orDiv = addRepoContainer.createDiv();
+		orDiv.textContent = 'OR';
+		orDiv.style.textAlign = 'center';
+		orDiv.style.margin = '10px 0';
+		orDiv.style.color = 'var(--text-muted)';
+		orDiv.style.fontSize = '12px';
+
+		// 手动输入区域
+		const manualDiv = addRepoContainer.createDiv();
+		manualDiv.style.marginTop = '10px';
+
+		const nameInput = manualDiv.createEl('input', {
 			type: 'text',
 			placeholder: 'Repository display name (e.g., My Project)'
 		});
@@ -132,7 +228,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		nameInput.style.marginBottom = '10px';
 		nameInput.style.padding = '8px';
 
-		const ownerInput = addRepoContainer.createEl('input', {
+		const ownerInput = manualDiv.createEl('input', {
 			type: 'text',
 			placeholder: 'Owner/Organization (e.g., username)'
 		});
@@ -141,13 +237,49 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		ownerInput.style.marginBottom = '10px';
 		ownerInput.style.padding = '8px';
 
-		const repoInput = addRepoContainer.createEl('input', {
+		const repoInput = manualDiv.createEl('input', {
 			type: 'text',
 			placeholder: 'Repository name (e.g., my-repo)'
 		});
 		repoInput.style.width = '48%';
 		repoInput.style.marginBottom = '10px';
 		repoInput.style.padding = '8px';
+
+		// URL 自动解析功能
+		urlInput.addEventListener('input', () => {
+			const url = urlInput.value.trim();
+			const parsed = this.parseGitHubUrl(url);
+			
+			if (parsed) {
+				nameInput.value = parsed.name;
+				ownerInput.value = parsed.owner;
+				repoInput.value = parsed.repo;
+				
+				// 给手动输入框添加视觉提示
+				nameInput.style.backgroundColor = 'var(--background-modifier-success)';
+				ownerInput.style.backgroundColor = 'var(--background-modifier-success)';
+				repoInput.style.backgroundColor = 'var(--background-modifier-success)';
+			} else if (url.length > 0) {
+				// 如果有输入但解析失败，显示错误提示
+				nameInput.style.backgroundColor = '';
+				ownerInput.style.backgroundColor = '';
+				repoInput.style.backgroundColor = '';
+			} else {
+				// 清空时重置样式
+				nameInput.style.backgroundColor = '';
+				ownerInput.style.backgroundColor = '';
+				repoInput.style.backgroundColor = '';
+			}
+		});
+
+		// 当手动输入框被修改时，清除 URL 输入框
+		[nameInput, ownerInput, repoInput].forEach(input => {
+			input.addEventListener('input', () => {
+				if (input.value.trim()) {
+					urlInput.value = '';
+				}
+			});
+		});
 
 		const addButton = addRepoContainer.createEl('button', {text: 'Add Repository'});
 		addButton.style.padding = '8px 16px';
@@ -158,12 +290,39 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		addButton.style.cursor = 'pointer';
 
 		addButton.addEventListener('click', async () => {
-			const name = nameInput.value.trim();
-			const owner = ownerInput.value.trim();
-			const repo = repoInput.value.trim();
+			let name = nameInput.value.trim();
+			let owner = ownerInput.value.trim();
+			let repo = repoInput.value.trim();
+
+			// 如果没有手动输入，尝试从URL解析
+			if ((!name || !owner || !repo) && urlInput.value.trim()) {
+				const parsed = this.parseGitHubUrl(urlInput.value.trim());
+				if (parsed) {
+					name = name || parsed.name;
+					owner = owner || parsed.owner;
+					repo = repo || parsed.repo;
+				}
+			}
 
 			if (!name || !owner || !repo) {
-				// 这里可以添加错误提示
+				// 创建错误提示
+				const errorDiv = addRepoContainer.querySelector('.error-message') as HTMLElement;
+				if (errorDiv) {
+					errorDiv.remove();
+				}
+				
+				const newErrorDiv = addRepoContainer.createDiv();
+				newErrorDiv.className = 'error-message';
+				newErrorDiv.textContent = 'Please provide a valid GitHub URL or fill in all fields manually.';
+				newErrorDiv.style.color = 'var(--text-error)';
+				newErrorDiv.style.fontSize = '12px';
+				newErrorDiv.style.marginTop = '5px';
+				
+				// 3秒后自动删除错误提示
+				setTimeout(() => {
+					newErrorDiv.remove();
+				}, 3000);
+				
 				return;
 			}
 
@@ -178,9 +337,15 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			await this.plugin.saveSettings();
 
 			// 清空输入框
+			urlInput.value = '';
 			nameInput.value = '';
 			ownerInput.value = '';
 			repoInput.value = '';
+			
+			// 重置输入框样式
+			nameInput.style.backgroundColor = '';
+			ownerInput.style.backgroundColor = '';
+			repoInput.style.backgroundColor = '';
 
 			// 重新渲染页面
 			this.display();
@@ -283,5 +448,165 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		syncHelpDiv.createEl('h4', {text: 'Sync Information'});
 		syncHelpDiv.createEl('p', {text: 'Auto sync will periodically fetch issues from all configured repositories.'});
 		syncHelpDiv.createEl('p', {text: 'You can also manually sync issues using plugin commands.'});
+	}
+
+	private parseGitHubUrl(url: string): {name: string, owner: string, repo: string} | null {
+		if (!url) return null;
+		
+		// 支持多种 GitHub URL 格式
+		const patterns = [
+			// https://github.com/owner/repo
+			/^https?:\/\/github\.com\/([^/]+)\/([^/?#]+)/,
+			// github.com/owner/repo
+			/^github\.com\/([^/]+)\/([^/?#]+)/,
+			// owner/repo
+			/^([^/]+)\/([^/?#]+)$/
+		];
+		
+		for (const pattern of patterns) {
+			const match = url.match(pattern);
+			if (match) {
+				const owner = match[1];
+				const repo = match[2];
+				
+				// 移除常见的后缀
+				const cleanRepo = repo.replace(/\.(git|zip)$/, '');
+				
+				// 生成显示名称（首字母大写，替换连字符为空格）
+				const displayName = cleanRepo
+					.split(/[-_]/)
+					.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+					.join(' ');
+				
+				return {
+					name: displayName,
+					owner: owner,
+					repo: cleanRepo
+				};
+			}
+		}
+		
+		return null;
+	}
+
+	private async testGitHubToken(containerEl: HTMLElement): Promise<void> {
+		const token = this.plugin.settings.githubToken.trim();
+		
+		if (!token) {
+			this.tokenStatus = 'invalid';
+			this.tokenTestResult = 'Please enter a token first';
+			this.updateTokenStatus(containerEl);
+			return;
+		}
+
+		// 基本格式验证
+		if (!token.startsWith('ghp_') || token.length !== 40) {
+			this.tokenStatus = 'invalid';
+			this.tokenTestResult = '✗ Invalid token format (should start with "ghp_" and be 40 characters long)';
+			this.updateTokenStatus(containerEl);
+			return;
+		}
+
+		this.tokenStatus = 'testing';
+		this.tokenTestResult = 'Testing token...';
+		this.updateTokenStatus(containerEl);
+
+		try {
+			const response = await fetch('https://api.github.com/user', {
+				method: 'GET',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Accept': 'application/vnd.github.v3+json',
+					'User-Agent': 'Obsidian-GitHub-Projects'
+				}
+			});
+
+			if (response.ok) {
+				const userData = await response.json();
+				this.tokenStatus = 'valid';
+				this.tokenTestResult = `✓ Token valid! Authenticated as: ${userData.login}`;
+				
+				// 检查权限
+				const scopes = response.headers.get('X-OAuth-Scopes');
+				if (scopes && (scopes.includes('repo') || scopes.includes('public_repo'))) {
+					this.tokenTestResult += ' (✓ Has repository permissions)';
+				} else {
+					this.tokenTestResult += ' (⚠ May lack repository permissions)';
+				}
+			} else if (response.status === 401) {
+				this.tokenStatus = 'invalid';
+				this.tokenTestResult = '✗ Invalid token or expired';
+			} else if (response.status === 403) {
+				this.tokenStatus = 'invalid';
+				this.tokenTestResult = '✗ Rate limit exceeded or insufficient permissions';
+			} else {
+				this.tokenStatus = 'invalid';
+				this.tokenTestResult = `✗ Error: ${response.status} ${response.statusText}`;
+			}
+		} catch (error) {
+			this.tokenStatus = 'invalid';
+			if (error instanceof TypeError && error.message.includes('fetch')) {
+				this.tokenTestResult = '✗ Network error: Please check your internet connection';
+			} else {
+				this.tokenTestResult = `✗ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+			}
+		}
+
+		this.updateTokenStatus(containerEl);
+	}
+
+	private updateTokenStatus(containerEl: HTMLElement): void {
+		const testContainer = containerEl.querySelector('div[style*="display: flex"]') as HTMLElement;
+		if (!testContainer) return;
+
+		const testButton = testContainer.querySelector('button') as HTMLButtonElement;
+		const statusIndicator = testContainer.children[1] as HTMLElement;
+		const statusText = testContainer.children[2] as HTMLElement;
+
+		if (!statusIndicator || !statusText || !testButton) return;
+
+		// 更新按钮状态
+		if (this.tokenStatus === 'testing') {
+			testButton.disabled = true;
+			testButton.textContent = 'Testing...';
+			testButton.style.backgroundColor = 'var(--text-muted)';
+			testButton.style.cursor = 'not-allowed';
+		} else {
+			testButton.disabled = false;
+			testButton.textContent = 'Test Token';
+			testButton.style.backgroundColor = 'var(--interactive-accent)';
+			testButton.style.cursor = 'pointer';
+		}
+
+		// 更新状态指示灯和文本
+		switch (this.tokenStatus) {
+			case 'untested':
+				statusIndicator.style.backgroundColor = 'var(--text-muted)';
+				statusIndicator.style.boxShadow = 'none';
+				statusText.textContent = 'Click "Test Token" to verify';
+				statusText.style.color = 'var(--text-muted)';
+				break;
+			case 'testing':
+				statusIndicator.style.backgroundColor = 'var(--text-accent)';
+				statusIndicator.style.boxShadow = '0 0 8px var(--text-accent)';
+				statusIndicator.style.animation = 'pulse 1.5s infinite';
+				statusText.textContent = 'Testing token...';
+				statusText.style.color = 'var(--text-accent)';
+				break;
+			case 'valid':
+				statusIndicator.style.backgroundColor = '#10b981'; // 使用固定的绿色
+				statusIndicator.style.boxShadow = '0 0 8px #10b981';
+				statusIndicator.style.animation = 'none';
+				statusText.textContent = this.tokenTestResult;
+				statusText.style.color = '#10b981';
+				break;
+			case 'invalid':
+				statusIndicator.style.backgroundColor = '#ef4444'; // 使用固定的红色
+				statusIndicator.style.boxShadow = 'none';
+				statusIndicator.style.animation = 'none';
+				statusText.textContent = this.tokenTestResult;
+				statusText.style.color = '#ef4444';
+				break;
+		}
 	}
 }
