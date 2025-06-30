@@ -11,3 +11,8 @@
 0.引导设置github token
 1.同步并查看远程仓库的 Issues
 2.编写issue并推送
+
+## Inspired by
+
+- githobs
+- vscode extension

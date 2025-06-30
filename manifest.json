@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"id": "github-projects",
+	"name": "Github Projects",
+	"version": "0.0.1",
+	"minAppVersion": "1.18.0",
+	"description": "Manage Github issue and projects.",
+	"author": "Jay Bridge",
+	"authorUrl": "",
+	"fundingUrl": "",
 	"isDesktopOnly": false
 }
