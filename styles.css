@@ -1,4 +1,6 @@
 /* GitHub Issues View Styles - VSCode-like */
+@import url('ide-button.css');
+
 .github-issues-view {
 	display: flex;
 	flex-direction: column;
@@ -1247,4 +1249,43 @@
 .projects-empty-state p {
 	margin: 0 0 var(--size-4-3) 0;
 	max-width: 300px;
+}
+
+.ide-button {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	padding: var(--size-2-2) var(--size-4-2);
+	background-color: var(--interactive-normal);
+	color: var(--text-normal);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.2s ease;
+}
+
+.ide-button:hover:not(:disabled) {
+	background-color: var(--interactive-hover);
+	color: var(--text-on-accent);
+}
+
+.ide-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ide-button svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* 仓库选择器中的 IDE 按钮 */
+.repo-selector-container .ide-button {
+	margin-left: var(--size-2-2);
+}
+
+/* 卡片中的 IDE 按钮 */
+.card-actions .ide-button {
+	display: inline-flex;
 }

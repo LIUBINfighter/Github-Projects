@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, setIcon, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 import { GitHubIssue } from './issueView';
 
@@ -361,6 +361,29 @@ export class IssueWorkbenchView extends ItemView {
 		});
 		setIcon(syncBtn, 'refresh-cw');
 		syncBtn.addEventListener('click', () => this.syncRepository(repo.key));
+
+		// 添加 IDE 按钮（仅在桌面端显示）
+		if (!Platform.isMobile) {
+			// 查找这个仓库的配置
+			const repoConfig = this.plugin.settings.repositories.find(r => 
+				`${r.owner}/${r.repo}` === repo.key
+			);
+
+			// 只有配置了 IDE 命令的仓库才显示 IDE 按钮
+			if (repoConfig?.ideCommand) {
+				const ideBtn = cardActions.createEl('button', {
+					text: 'Open IDE',
+					cls: 'ide-button'
+				});
+				setIcon(ideBtn, 'monitor');
+				ideBtn.title = `Open in IDE: ${repoConfig.ideCommand}`;
+				ideBtn.addEventListener('click', async () => {
+					if (repoConfig.ideCommand) {
+						await this.plugin.executeIdeCommand(repoConfig.ideCommand);
+					}
+				});
+			}
+		}
 	}
 
 	private createMiniStat(container: Element, value: number, label: string, type?: string) {

@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 import { GitHubIssueCache, GitHubDataSync } from '../github/dataSync';
 
@@ -8,6 +8,7 @@ export interface GithubRepository {
 	repo: string; // 仓库名
 	isDefault: boolean; // 是否为默认仓库
 	isDisabled?: boolean; // 是否禁用（不显示在下拉栏，不同步）
+	ideCommand?: string; // IDE 打开命令（完整的命令行）
 }
 
 export interface GithubProject {
@@ -578,6 +579,106 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				externalIcon.addEventListener('click', () => {
 					window.open(repoUrl, '_blank');
 				});
+
+				// IDE 命令配置区域（仅在桌面端显示）
+				if (!Platform.isMobile) {
+					const ideSection = repoDiv.createDiv();
+					ideSection.style.marginTop = 'var(--size-2-3)';
+					ideSection.style.paddingTop = 'var(--size-2-3)';
+					ideSection.style.borderTop = '1px solid var(--background-modifier-border)';
+
+					const ideHeader = ideSection.createDiv();
+					ideHeader.style.display = 'flex';
+					ideHeader.style.alignItems = 'center';
+					ideHeader.style.gap = 'var(--size-2-2)';
+					ideHeader.style.marginBottom = 'var(--size-2-2)';
+
+					const ideLabel = ideHeader.createSpan();
+					ideLabel.innerHTML = '<strong>IDE Command:</strong>';
+					ideLabel.style.fontSize = 'var(--font-ui-smaller)';
+					ideLabel.style.color = 'var(--text-muted)';
+					ideLabel.style.minWidth = 'fit-content';
+
+					const ideInput = ideSection.createEl('input', {
+						type: 'text',
+						placeholder: 'e.g., code D:\\Projects\\my-repo or webstorm D:\\Projects\\my-repo'
+					});
+					ideInput.style.width = '100%';
+					ideInput.style.marginBottom = 'var(--size-2-2)';
+					ideInput.style.padding = 'var(--size-2-2)';
+					ideInput.style.borderRadius = 'var(--radius-s)';
+					ideInput.style.border = '1px solid var(--background-modifier-border)';
+					ideInput.style.fontSize = 'var(--font-ui-smaller)';
+					ideInput.style.fontFamily = 'var(--font-monospace)';
+					ideInput.value = repository.ideCommand || '';
+
+					// IDE 命令输入框变化处理
+					ideInput.addEventListener('change', async () => {
+						repository.ideCommand = ideInput.value.trim() || undefined;
+						await this.plugin.saveSettings();
+					});
+
+					// 测试按钮容器
+					const testButtonContainer = ideSection.createDiv();
+					testButtonContainer.style.display = 'flex';
+					testButtonContainer.style.alignItems = 'center';
+					testButtonContainer.style.gap = 'var(--size-2-2)';
+
+					const testButton = testButtonContainer.createEl('button', {
+						cls: 'clickable-icon-button'
+					});
+					testButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+					testButton.title = 'Test IDE command';
+					testButton.style.padding = 'var(--size-2-2)';
+
+					const testStatus = testButtonContainer.createSpan();
+					testStatus.style.fontSize = 'var(--font-ui-smaller)';
+					testStatus.style.color = 'var(--text-muted)';
+
+					// 测试按钮点击事件
+					testButton.addEventListener('click', async () => {
+						const command = ideInput.value.trim();
+						if (!command) {
+							testStatus.textContent = 'Please enter a command first';
+							testStatus.style.color = 'var(--text-error)';
+							return;
+						}
+
+						testStatus.textContent = 'Testing...';
+						testStatus.style.color = 'var(--text-muted)';
+						testButton.disabled = true;
+
+						try {
+							const success = await this.plugin.testIdeCommand(command);
+							if (success) {
+								testStatus.textContent = 'Command executed successfully';
+								testStatus.style.color = 'var(--color-green)';
+							} else {
+								testStatus.textContent = 'Command failed to execute';
+								testStatus.style.color = 'var(--text-error)';
+							}
+						} catch (error) {
+							testStatus.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+							testStatus.style.color = 'var(--text-error)';
+						} finally {
+							testButton.disabled = false;
+							// 3秒后清除状态
+							setTimeout(() => {
+								testStatus.textContent = '';
+							}, 3000);
+						}
+					});
+
+					// 如果没有命令，禁用测试按钮
+					if (!repository.ideCommand) {
+						testButton.disabled = true;
+					}
+
+					// 监听输入框变化来启用/禁用测试按钮
+					ideInput.addEventListener('input', () => {
+						testButton.disabled = !ideInput.value.trim();
+					});
+				}
 			});
 		}
 	}

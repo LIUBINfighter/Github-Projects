@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, setIcon, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 
 export const ISSUE_VIEW_TYPE = 'github-issues-view';
@@ -192,6 +192,50 @@ export class IssueView extends ItemView {
 		} else if (activeRepositories.length === 0) {
 			// 如果没有活跃的仓库，选中默认选项但保持禁用状态
 			select.value = '';
+		}
+
+		// 添加 IDE 按钮（仅在桌面端显示）
+		if (!Platform.isMobile) {
+			const ideButton = selectorContainer.createEl('button', {
+				cls: 'clickable-icon-button ide-button',
+				attr: { 'aria-label': 'Open in IDE' }
+			});
+			setIcon(ideButton, 'monitor');
+			
+			// 更新 IDE 按钮状态
+			const updateIdeButton = () => {
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						ideButton.disabled = false;
+						ideButton.title = `Open in IDE: ${repo.ideCommand}`;
+					} else {
+						ideButton.disabled = true;
+						ideButton.title = 'No IDE command configured for this repository';
+					}
+				} else {
+					ideButton.disabled = true;
+					ideButton.title = 'Select a repository first';
+				}
+			};
+
+			// 初始化按钮状态
+			updateIdeButton();
+
+			// IDE 按钮点击事件
+			ideButton.addEventListener('click', async () => {
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						await this.plugin.executeIdeCommand(repo.ideCommand);
+					}
+				}
+			});
+
+			// 当仓库选择变化时更新 IDE 按钮状态
+			select.addEventListener('change', () => {
+				updateIdeButton();
+			});
 		}
 
 		select.addEventListener('change', (e) => {
@@ -754,6 +798,7 @@ export class IssueView extends ItemView {
 			color: var(--text-normal);
 		`;
 
+		// const select = filterGroup.createEl('select');
 		const select = filterGroup.createEl('select');
 		select.style.cssText = `
 			padding: var(--size-2-1) var(--size-2-3);
