@@ -656,6 +656,34 @@ export class IssueView extends ItemView {
 			padding: var(--size-4-3);
 		`;
 
+		// Issue 完整标题
+		const titleSection = content.createDiv();
+		titleSection.style.cssText = `
+			margin-bottom: var(--size-4-3);
+		`;
+
+		const titleHeader = titleSection.createEl('h4', { text: 'Title' });
+		titleHeader.style.cssText = `
+			margin: 0 0 var(--size-2-2) 0;
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-semibold);
+			color: var(--text-normal);
+		`;
+
+		const titleContent = titleSection.createDiv();
+		titleContent.style.cssText = `
+			background: var(--background-primary);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			padding: var(--size-4-2);
+			font-size: var(--font-ui-small);
+			line-height: var(--line-height-normal);
+			color: var(--text-normal);
+			font-weight: var(--font-small);
+			word-wrap: break-word;
+		`;
+		titleContent.textContent = issue.title;
+
 		// Issue 描述
 		if (issue.body && issue.body.trim()) {
 			const descriptionSection = content.createDiv();
@@ -1273,10 +1301,10 @@ export class IssueView extends ItemView {
 
 	private hasActiveFilters(): boolean {
 		return this.filters.titleContains !== '' ||
-			   this.filters.selectedLabels.length > 0 ||
-			   this.filters.selectedMilestone !== 'all' ||
-			   this.filters.selectedAssignee !== 'all' ||
-			   this.filters.selectedState !== 'all';
+			this.filters.selectedLabels.length > 0 ||
+			this.filters.selectedMilestone !== 'all' ||
+			this.filters.selectedAssignee !== 'all' ||
+			this.filters.selectedState !== 'all';
 	}
 
 	private extractFilterData() {
