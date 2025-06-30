@@ -1,6 +1,11 @@
 # vscode
 .vscode 
 
+# cache
+merged.txt
+merged*.mix.txt
+merged-*.mix.txt
+
 # Intellij
 *.iml
 .idea
@@ -16,6 +21,8 @@ main.js
 *.map
 
 # obsidian
+.obsidian
+*/.obsidian
 data.json
 
 # Exclude macOS Finder (System Explorer) View States
