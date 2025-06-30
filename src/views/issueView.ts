@@ -29,6 +29,8 @@ export interface GitHubIssue {
 	created_at: string;
 	updated_at: string;
 	html_url: string;
+	comments: number;
+	commits_count?: number; // 相关提交数，可选字段
 	repository?: {
 		owner: string;
 		name: string;
@@ -522,6 +524,38 @@ export class IssueView extends ItemView {
 			const createdDate = new Date(issue.created_at).toLocaleDateString();
 			timeContainer.createSpan({ text: createdDate });
 
+			// 评论数
+			const commentsContainer = issueMeta.createDiv();
+			commentsContainer.style.cssText = `
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+			`;
+			const commentsIcon = commentsContainer.createDiv();
+			commentsIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(commentsIcon, 'message-circle');
+			commentsContainer.createSpan({ text: issue.comments.toString() });
+
+			// 提交数（暂时显示为占位符，实际需要额外API调用）
+			const commitsContainer = issueMeta.createDiv();
+			commitsContainer.style.cssText = `
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+			`;
+			const commitsIcon = commitsContainer.createDiv();
+			commitsIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(commitsIcon, 'git-commit');
+			// 显示提交数，如果没有则显示占位符
+			const commitsCount = issue.commits_count !== undefined ? issue.commits_count.toString() : '-';
+			commitsContainer.createSpan({ text: commitsCount });
+
 			// 标签
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueContent.createDiv('issue-labels');
@@ -609,6 +643,9 @@ export class IssueView extends ItemView {
 			
 			// 应用当前过滤器
 			this.applyFilters();
+			
+			// 异步加载提交数（不阻塞主要显示）
+			this.loadCommitCounts();
 			
 		} catch (error) {
 			console.error('Error loading issues:', error);
@@ -769,6 +806,44 @@ export class IssueView extends ItemView {
 		setIcon(updateIcon, 'calendar');
 		const updatedDate = new Date(issue.updated_at).toLocaleDateString();
 		updateInfo.createSpan({ text: `Updated ${updatedDate}` });
+
+		// 评论数详细信息
+		const commentsDetailInfo = metaGrid.createDiv();
+		commentsDetailInfo.style.cssText = `
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			color: var(--text-muted);
+		`;
+		const commentsDetailIcon = commentsDetailInfo.createDiv();
+		commentsDetailIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(commentsDetailIcon, 'message-circle');
+		commentsDetailInfo.createSpan({ 
+			text: `${issue.comments} comment${issue.comments !== 1 ? 's' : ''}` 
+		});
+
+		// 提交数详细信息
+		const commitsDetailInfo = metaGrid.createDiv();
+		commitsDetailInfo.style.cssText = `
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			color: var(--text-muted);
+		`;
+		const commitsDetailIcon = commitsDetailInfo.createDiv();
+		commitsDetailIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(commitsDetailIcon, 'git-commit');
+		// 显示相关提交数
+		const commitsText = issue.commits_count !== undefined 
+			? `${issue.commits_count} related commit${issue.commits_count !== 1 ? 's' : ''}`
+			: 'Related commits: Loading...';
+		commitsDetailInfo.createSpan({ text: commitsText });
 
 		// 操作按钮区域
 		const actionsSection = content.createDiv();
@@ -1334,5 +1409,54 @@ export class IssueView extends ItemView {
 			}
 		});
 		this.availableAssignees = Array.from(assigneesSet).sort();
+	}
+
+	private async fetchIssueCommits(issue: GitHubIssue): Promise<number> {
+		if (!this.plugin.settings.githubToken || !issue.repository) {
+			return 0;
+		}
+
+		try {
+			// 搜索包含Issue编号的提交
+			const searchQuery = `repo:${issue.repository.owner}/${issue.repository.name} #${issue.number}`;
+			const response = await fetch(`https://api.github.com/search/commits?q=${encodeURIComponent(searchQuery)}`, {
+				headers: {
+					'Authorization': `Bearer ${this.plugin.settings.githubToken}`,
+					'Accept': 'application/vnd.github.v3+json',
+					'User-Agent': 'Obsidian-GitHub-Projects'
+				}
+			});
+
+			if (!response.ok) {
+				console.warn(`Failed to fetch commits for issue #${issue.number}`);
+				return 0;
+			}
+
+			const data = await response.json();
+			return data.total_count || 0;
+		} catch (error) {
+			console.warn(`Error fetching commits for issue #${issue.number}:`, error);
+			return 0;
+		}
+	}
+
+	private async loadCommitCounts() {
+		if (this.issues.length === 0) return;
+
+		// 为前10个Issue异步加载提交数（避免API限制）
+		const issuesToProcess = this.issues.slice(0, 10);
+		
+		for (const issue of issuesToProcess) {
+			try {
+				const commitsCount = await this.fetchIssueCommits(issue);
+				issue.commits_count = commitsCount;
+			} catch (error) {
+				console.warn(`Failed to load commits for issue #${issue.number}`, error);
+				issue.commits_count = 0;
+			}
+		}
+
+		// 更新显示
+		this.updateIssuesList();
 	}
 }
