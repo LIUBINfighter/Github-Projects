@@ -761,7 +761,8 @@ export class IssueView extends ItemView {
 			createNoteButton.style.backgroundColor = 'var(--interactive-accent)';
 		});
 
-		// 如果是开放状态，添加关闭按钮
+		// TODO: 如果是开放状态，添加关闭按钮（暂时注释掉，功能未实现）
+		/*
 		if (issue.state === 'open') {
 			const closeButton = actionsSection.createEl('button');
 			closeButton.style.cssText = `
@@ -800,6 +801,7 @@ export class IssueView extends ItemView {
 				closeButton.style.color = 'var(--text-error)';
 			});
 		}
+		*/
 	}
 
 	private createIssueNote(issue: GitHubIssue) {
