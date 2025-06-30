@@ -372,14 +372,14 @@ export class IssueWorkbenchView extends ItemView {
 			// 只有配置了 IDE 命令的仓库才显示 IDE 按钮
 			if (repoConfig?.ideCommand) {
 				const ideBtn = cardActions.createEl('button', {
-					text: 'Open IDE',
-					cls: 'ide-button'
+					text: 'Open in IDE'
 				});
-				setIcon(ideBtn, 'monitor');
-				ideBtn.title = `Open in IDE: ${repoConfig.ideCommand}`;
-				ideBtn.addEventListener('click', async () => {
+				setIcon(ideBtn, 'code');
+				ideBtn.addEventListener('click', () => {
 					if (repoConfig.ideCommand) {
-						await this.plugin.executeIdeCommand(repoConfig.ideCommand);
+						this.plugin.executeIdeCommand(repoConfig.ideCommand);
+					} else {
+						new Notice('IDE command is not configured.');
 					}
 				});
 			}
