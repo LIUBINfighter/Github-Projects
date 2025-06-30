@@ -39,12 +39,23 @@
 .issue-item {
 	border: var(--border-width) solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
-	padding: var(--size-4-2);
 	margin-bottom: var(--size-2-1);
 	background: var(--background-primary);
 	cursor: pointer;
-	transition: all 0.1s ease;
+	transition: all 0.2s ease;
 	font-size: var(--font-ui-small);
+	overflow: hidden;
+}
+
+.issue-content {
+	padding: var(--size-4-2);
+}
+
+.issue-expanded {
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
 }
 
 .issue-item:hover {
@@ -145,7 +156,7 @@
 		padding: var(--size-2-3);
 	}
 	
-	.issue-item {
+	.issue-content {
 		padding: var(--size-2-3);
 	}
 	
@@ -153,4 +164,19 @@
 		flex-wrap: wrap;
 		gap: var(--size-4-2);
 	}
+	
+	.issue-expanded {
+		font-size: var(--font-ui-smaller);
+	}
+}
+
+/* 展开/收起动画 */
+.issue-item .issue-header div:first-child {
+	transition: transform 0.2s ease;
+}
+
+/* 展开内容中的操作按钮样式 */
+.issue-expanded button:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

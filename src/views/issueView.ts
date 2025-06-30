@@ -35,6 +35,7 @@ export class IssueView extends ItemView {
 	private issues: GitHubIssue[] = [];
 	private isLoading = false;
 	private selectedRepo = '';
+	private expandedIssues = new Set<number>(); // 跟踪展开的 issue
 
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
 		super(leaf);
@@ -341,32 +342,53 @@ export class IssueView extends ItemView {
 			issueItem.style.cssText = `
 				border: var(--border-width) solid var(--background-modifier-border);
 				border-radius: var(--radius-s);
-				padding: var(--size-4-2);
 				margin-bottom: var(--size-2-1);
 				background: var(--background-primary);
 				cursor: pointer;
-				transition: all 0.1s ease;
+				transition: all 0.2s ease;
 				font-size: var(--font-ui-small);
+				overflow: hidden;
+			`;
+
+			// 创建主要内容区域
+			const issueContent = issueItem.createDiv('issue-content');
+			issueContent.style.cssText = `
+				padding: var(--size-4-2);
 			`;
 
 			// 悬停效果
-			issueItem.addEventListener('mouseenter', () => {
+			issueContent.addEventListener('mouseenter', () => {
 				issueItem.style.backgroundColor = 'var(--background-modifier-hover)';
 				issueItem.style.borderColor = 'var(--background-modifier-border-hover)';
 			});
-			issueItem.addEventListener('mouseleave', () => {
+			issueContent.addEventListener('mouseleave', () => {
 				issueItem.style.backgroundColor = 'var(--background-primary)';
 				issueItem.style.borderColor = 'var(--background-modifier-border)';
 			});
 
 			// Issue 头部（状态图标、标题和编号）
-			const issueHeader = issueItem.createDiv('issue-header');
+			const issueHeader = issueContent.createDiv('issue-header');
 			issueHeader.style.cssText = `
 				display: flex;
 				align-items: center;
 				gap: var(--size-2-3);
 				margin-bottom: var(--size-2-1);
 			`;
+
+			// 展开/收起图标
+			const expandIcon = issueHeader.createDiv();
+			expandIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+				flex-shrink: 0;
+				color: var(--icon-color);
+				transition: transform 0.2s ease;
+			`;
+			const isExpanded = this.expandedIssues.has(issue.id);
+			setIcon(expandIcon, 'chevron-right');
+			if (isExpanded) {
+				expandIcon.style.transform = 'rotate(90deg)';
+			}
 
 			// 状态图标
 			const statusIcon = issueHeader.createDiv();
@@ -405,7 +427,7 @@ export class IssueView extends ItemView {
 			`;
 
 			// Issue 元信息
-			const issueMeta = issueItem.createDiv('issue-meta');
+			const issueMeta = issueContent.createDiv('issue-meta');
 			issueMeta.style.cssText = `
 				display: flex;
 				align-items: center;
@@ -447,7 +469,7 @@ export class IssueView extends ItemView {
 
 			// 标签
 			if (issue.labels && issue.labels.length > 0) {
-				const labelsContainer = issueItem.createDiv('issue-labels');
+				const labelsContainer = issueContent.createDiv('issue-labels');
 				labelsContainer.style.cssText = `
 					display: flex;
 					gap: var(--size-2-1);
@@ -468,9 +490,24 @@ export class IssueView extends ItemView {
 				});
 			}
 
-			// 点击事件 - 打开Issue详情
-			issueItem.addEventListener('click', () => {
-				this.openIssueDetail(issue);
+			// 创建展开区域
+			const expandedArea = issueItem.createDiv('issue-expanded');
+			expandedArea.style.cssText = `
+				border-top: var(--border-width) solid var(--background-modifier-border);
+				background: var(--background-secondary);
+				max-height: ${isExpanded ? '500px' : '0'};
+				overflow: hidden;
+				transition: max-height 0.3s ease;
+			`;
+
+			if (isExpanded) {
+				this.renderExpandedContent(expandedArea, issue);
+			}
+
+			// 点击事件 - 切换展开/收起
+			issueContent.addEventListener('click', (e) => {
+				e.stopPropagation();
+				this.toggleIssueExpanded(issue, expandIcon, expandedArea);
 			});
 		});
 	}
@@ -532,8 +569,246 @@ export class IssueView extends ItemView {
 		new Notice('Create new issue feature coming soon!');
 	}
 
-	private openIssueDetail(issue: GitHubIssue) {
-		// TODO: 实现打开Issue详情的功能
-		window.open(issue.html_url, '_blank');
+	private toggleIssueExpanded(issue: GitHubIssue, expandIcon: HTMLElement, expandedArea: HTMLElement) {
+		const isExpanded = this.expandedIssues.has(issue.id);
+		
+		if (isExpanded) {
+			// 收起
+			this.expandedIssues.delete(issue.id);
+			expandIcon.style.transform = 'rotate(0deg)';
+			expandedArea.style.maxHeight = '0';
+			expandedArea.empty();
+		} else {
+			// 展开
+			this.expandedIssues.add(issue.id);
+			expandIcon.style.transform = 'rotate(90deg)';
+			expandedArea.style.maxHeight = '500px';
+			this.renderExpandedContent(expandedArea, issue);
+		}
+	}
+
+	private renderExpandedContent(container: HTMLElement, issue: GitHubIssue) {
+		container.empty();
+		
+		const content = container.createDiv();
+		content.style.cssText = `
+			padding: var(--size-4-3);
+		`;
+
+		// Issue 描述
+		if (issue.body && issue.body.trim()) {
+			const descriptionSection = content.createDiv();
+			descriptionSection.style.cssText = `
+				margin-bottom: var(--size-4-3);
+			`;
+
+			const descTitle = descriptionSection.createEl('h4', { text: 'Description' });
+			descTitle.style.cssText = `
+				margin: 0 0 var(--size-2-2) 0;
+				font-size: var(--font-ui-small);
+				font-weight: var(--font-semibold);
+				color: var(--text-normal);
+			`;
+
+			const descContent = descriptionSection.createDiv();
+			descContent.style.cssText = `
+				background: var(--background-primary);
+				border: var(--border-width) solid var(--background-modifier-border);
+				border-radius: var(--radius-s);
+				padding: var(--size-4-2);
+				max-height: 200px;
+				overflow-y: auto;
+				font-size: var(--font-ui-small);
+				line-height: var(--line-height-normal);
+				color: var(--text-muted);
+				white-space: pre-wrap;
+			`;
+			
+			// 限制描述长度并提供截断
+			const maxLength = 500;
+			const truncatedBody = issue.body.length > maxLength 
+				? issue.body.substring(0, maxLength) + '...' 
+				: issue.body;
+			descContent.textContent = truncatedBody;
+		}
+
+		// 扩展信息
+		const metaSection = content.createDiv();
+		metaSection.style.cssText = `
+			margin-bottom: var(--size-4-3);
+		`;
+
+		const metaGrid = metaSection.createDiv();
+		metaGrid.style.cssText = `
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: var(--size-4-2);
+			font-size: var(--font-ui-small);
+		`;
+
+		// 受让人信息
+		const assigneeInfo = metaGrid.createDiv();
+		assigneeInfo.style.cssText = `
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			color: var(--text-muted);
+		`;
+		const assigneeIcon = assigneeInfo.createDiv();
+		assigneeIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(assigneeIcon, 'user-check');
+		assigneeInfo.createSpan({ 
+			text: issue.assignee ? issue.assignee.login : 'Unassigned' 
+		});
+
+		// 更新时间
+		const updateInfo = metaGrid.createDiv();
+		updateInfo.style.cssText = `
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			color: var(--text-muted);
+		`;
+		const updateIcon = updateInfo.createDiv();
+		updateIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(updateIcon, 'calendar');
+		const updatedDate = new Date(issue.updated_at).toLocaleDateString();
+		updateInfo.createSpan({ text: `Updated ${updatedDate}` });
+
+		// 操作按钮区域
+		const actionsSection = content.createDiv();
+		actionsSection.style.cssText = `
+			display: flex;
+			gap: var(--size-2-2);
+			flex-wrap: wrap;
+		`;
+
+		// 在浏览器中打开按钮
+		const openButton = actionsSection.createEl('button');
+		openButton.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			font-size: var(--font-ui-small);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			transition: all 0.1s ease;
+		`;
+
+		const openIcon = openButton.createDiv();
+		openIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(openIcon, 'external-link');
+		openButton.createSpan({ text: 'Open in GitHub' });
+		
+		openButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			window.open(issue.html_url, '_blank');
+		});
+
+		openButton.addEventListener('mouseenter', () => {
+			openButton.style.backgroundColor = 'var(--background-modifier-hover)';
+		});
+		openButton.addEventListener('mouseleave', () => {
+			openButton.style.backgroundColor = 'var(--background-primary)';
+		});
+
+		// 创建 Obsidian 笔记按钮
+		const createNoteButton = actionsSection.createEl('button');
+		createNoteButton.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			font-size: var(--font-ui-small);
+			border: var(--border-width) solid var(--interactive-accent);
+			border-radius: var(--radius-s);
+			background: var(--interactive-accent);
+			color: var(--text-on-accent);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: var(--size-2-1);
+			transition: all 0.1s ease;
+		`;
+
+		const noteIcon = createNoteButton.createDiv();
+		noteIcon.style.cssText = `
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		`;
+		setIcon(noteIcon, 'file-plus');
+		createNoteButton.createSpan({ text: 'Create Note' });
+
+		createNoteButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			this.createIssueNote(issue);
+		});
+
+		createNoteButton.addEventListener('mouseenter', () => {
+			createNoteButton.style.backgroundColor = 'var(--interactive-accent-hover)';
+		});
+		createNoteButton.addEventListener('mouseleave', () => {
+			createNoteButton.style.backgroundColor = 'var(--interactive-accent)';
+		});
+
+		// 如果是开放状态，添加关闭按钮
+		if (issue.state === 'open') {
+			const closeButton = actionsSection.createEl('button');
+			closeButton.style.cssText = `
+				padding: var(--size-2-1) var(--size-2-3);
+				font-size: var(--font-ui-small);
+				border: var(--border-width) solid var(--text-error);
+				border-radius: var(--radius-s);
+				background: transparent;
+				color: var(--text-error);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				gap: var(--size-2-1);
+				transition: all 0.1s ease;
+			`;
+
+			const closeIcon = closeButton.createDiv();
+			closeIcon.style.cssText = `
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			`;
+			setIcon(closeIcon, 'x-circle');
+			closeButton.createSpan({ text: 'Close Issue' });
+
+			closeButton.addEventListener('click', (e) => {
+				e.stopPropagation();
+				this.closeIssue(issue);
+			});
+
+			closeButton.addEventListener('mouseenter', () => {
+				closeButton.style.backgroundColor = 'var(--text-error)';
+				closeButton.style.color = 'var(--text-on-accent)';
+			});
+			closeButton.addEventListener('mouseleave', () => {
+				closeButton.style.backgroundColor = 'transparent';
+				closeButton.style.color = 'var(--text-error)';
+			});
+		}
+	}
+
+	private createIssueNote(issue: GitHubIssue) {
+		// TODO: 实现创建 Obsidian 笔记功能
+		new Notice(`Creating note for issue #${issue.number}: ${issue.title}`);
+	}
+
+	private async closeIssue(issue: GitHubIssue) {
+		// TODO: 实现关闭 Issue 功能
+		new Notice(`Close issue #${issue.number} feature coming soon!`);
 	}
 }

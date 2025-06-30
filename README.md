@@ -6,6 +6,12 @@
 
 这个插件是为了高效桥接 Obsidian 和 Github 而设计的
 
+## 哲学
+
+以远端仓库为唯一真相 Single source of truth
+
+本地增强管理能力和与obsidian的联动能力
+
 ## mvp阶段
 
 0.引导设置github token
