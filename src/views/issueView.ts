@@ -52,7 +52,7 @@ export class IssueView extends ItemView {
 	private isLoading = false;
 	private selectedRepo = '';
 	private expandedIssues = new Set<number>(); // 跟踪展开的 issue
-	private isFilterExpanded = false;
+	private isFilterExpanded = false; // 默认展开筛选器
 	private availableLabels: string[] = [];
 	private availableMilestones: string[] = [];
 	private availableAssignees: string[] = [];
@@ -61,7 +61,7 @@ export class IssueView extends ItemView {
 		selectedLabels: [],
 		selectedMilestone: 'all',
 		selectedAssignee: 'all',
-		selectedState: 'all'
+		selectedState: 'open' // 默认显示Open状态的issue
 	};
 
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
@@ -1368,7 +1368,7 @@ export class IssueView extends ItemView {
 			selectedLabels: [],
 			selectedMilestone: 'all',
 			selectedAssignee: 'all',
-			selectedState: 'all'
+			selectedState: 'open' // 重置时也保持显示Open状态
 		};
 		this.filteredIssues = [...this.issues];
 		this.renderView();
@@ -1379,7 +1379,7 @@ export class IssueView extends ItemView {
 			this.filters.selectedLabels.length > 0 ||
 			this.filters.selectedMilestone !== 'all' ||
 			this.filters.selectedAssignee !== 'all' ||
-			this.filters.selectedState !== 'all';
+			this.filters.selectedState !== 'open'; // 更新判断条件，现在默认是'open'
 	}
 
 	private extractFilterData() {
