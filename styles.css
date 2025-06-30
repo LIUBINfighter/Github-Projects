@@ -702,3 +702,29 @@
 	background: var(--background-modifier-hover);
 	border-color: var(--background-modifier-border-hover);
 }
+
+/* 仓库输入框样式增强 */
+.repo-selector-container input {
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.repo-selector-container input[style*="border-color: var(--color-green)"] {
+	border-width: 2px;
+	box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2);
+}
+
+/* 仓库卡片样式 */
+.repo-info {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.repo-info a {
+	transition: color 0.2s ease;
+}
+
+.repo-info a:hover {
+	color: var(--text-accent-hover);
+	text-decoration: underline;
+}

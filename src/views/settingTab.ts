@@ -115,26 +115,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		testContainer.style.gap = '10px';
 
 		// 测试按钮
-		const testButton = testContainer.createEl('button', {text: 'Test Token'});
-		testButton.style.padding = '6px 12px';
-		testButton.style.fontSize = '12px';
-		testButton.style.backgroundColor = 'var(--interactive-accent)';
-		testButton.style.color = 'var(--text-on-accent)';
-		testButton.style.border = 'none';
-		testButton.style.borderRadius = '3px';
-		testButton.style.cursor = 'pointer';
-		testButton.style.transition = 'all 0.2s ease';
-
-		// 鼠标悬停效果
-		testButton.addEventListener('mouseenter', () => {
-			if (!testButton.disabled) {
-				testButton.style.backgroundColor = 'var(--interactive-accent-hover)';
-			}
-		});
-		testButton.addEventListener('mouseleave', () => {
-			if (!testButton.disabled) {
-				testButton.style.backgroundColor = 'var(--interactive-accent)';
-			}
+		const testButton = testContainer.createEl('button', {
+			text: 'Test Token',
+			cls: 'mod-cta'
 		});
 
 		// 状态指示灯
@@ -195,10 +178,11 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 添加新仓库的输入框
 		const addRepoContainer = containerEl.createDiv();
-		addRepoContainer.style.marginBottom = '20px';
-		addRepoContainer.style.padding = '15px';
+		addRepoContainer.style.marginBottom = 'var(--size-4-3)';
+		addRepoContainer.style.padding = 'var(--size-4-2)';
 		addRepoContainer.style.border = '1px solid var(--background-modifier-border)';
-		addRepoContainer.style.borderRadius = '5px';
+		addRepoContainer.style.borderRadius = 'var(--radius-s)';
+		addRepoContainer.style.backgroundColor = 'var(--background-secondary)';
 
 		addRepoContainer.createEl('h4', {text: 'Add New Repository'});
 
@@ -208,28 +192,34 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			placeholder: 'GitHub URL (e.g., https://github.com/username/reponame)'
 		});
 		urlInput.style.width = '100%';
-		urlInput.style.marginBottom = '10px';
-		urlInput.style.padding = '8px';
+		urlInput.style.marginBottom = 'var(--size-2-2)';
+		urlInput.style.padding = 'var(--size-2-2)';
+		urlInput.style.borderRadius = 'var(--radius-s)';
+		urlInput.style.border = '1px solid var(--background-modifier-border)';
+		urlInput.style.fontSize = 'var(--font-ui-small)';
 
 		// 或分隔线
 		const orDiv = addRepoContainer.createDiv();
 		orDiv.textContent = 'OR';
 		orDiv.style.textAlign = 'center';
-		orDiv.style.margin = '10px 0';
+		orDiv.style.margin = 'var(--size-2-2) 0';
 		orDiv.style.color = 'var(--text-muted)';
-		orDiv.style.fontSize = '12px';
+		orDiv.style.fontSize = 'var(--font-ui-smaller)';
 
 		// 手动输入区域
 		const manualDiv = addRepoContainer.createDiv();
-		manualDiv.style.marginTop = '10px';
+		manualDiv.style.marginTop = 'var(--size-2-2)';
 
 		const nameInput = manualDiv.createEl('input', {
 			type: 'text',
 			placeholder: 'Repository display name (e.g., My Project)'
 		});
 		nameInput.style.width = '100%';
-		nameInput.style.marginBottom = '10px';
-		nameInput.style.padding = '8px';
+		nameInput.style.marginBottom = 'var(--size-2-2)';
+		nameInput.style.padding = 'var(--size-2-2)';
+		nameInput.style.borderRadius = 'var(--radius-s)';
+		nameInput.style.border = '1px solid var(--background-modifier-border)';
+		nameInput.style.fontSize = 'var(--font-ui-small)';
 
 		const ownerInput = manualDiv.createEl('input', {
 			type: 'text',
@@ -237,16 +227,22 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		});
 		ownerInput.style.width = '48%';
 		ownerInput.style.marginRight = '4%';
-		ownerInput.style.marginBottom = '10px';
-		ownerInput.style.padding = '8px';
+		ownerInput.style.marginBottom = 'var(--size-2-2)';
+		ownerInput.style.padding = 'var(--size-2-2)';
+		ownerInput.style.borderRadius = 'var(--radius-s)';
+		ownerInput.style.border = '1px solid var(--background-modifier-border)';
+		ownerInput.style.fontSize = 'var(--font-ui-small)';
 
 		const repoInput = manualDiv.createEl('input', {
 			type: 'text',
 			placeholder: 'Repository name (e.g., my-repo)'
 		});
 		repoInput.style.width = '48%';
-		repoInput.style.marginBottom = '10px';
-		repoInput.style.padding = '8px';
+		repoInput.style.marginBottom = 'var(--size-2-2)';
+		repoInput.style.padding = 'var(--size-2-2)';
+		repoInput.style.borderRadius = 'var(--radius-s)';
+		repoInput.style.border = '1px solid var(--background-modifier-border)';
+		repoInput.style.fontSize = 'var(--font-ui-small)';
 
 		// URL 自动解析功能
 		urlInput.addEventListener('input', () => {
@@ -258,17 +254,26 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				ownerInput.value = parsed.owner;
 				repoInput.value = parsed.repo;
 				
-				// 给手动输入框添加视觉提示
-				nameInput.style.backgroundColor = 'var(--background-modifier-success)';
-				ownerInput.style.backgroundColor = 'var(--background-modifier-success)';
-				repoInput.style.backgroundColor = 'var(--background-modifier-success)';
+				// 给手动输入框添加视觉提示（绿色边框）
+				nameInput.style.borderColor = 'var(--color-green)';
+				ownerInput.style.borderColor = 'var(--color-green)';
+				repoInput.style.borderColor = 'var(--color-green)';
+				nameInput.style.backgroundColor = '';
+				ownerInput.style.backgroundColor = '';
+				repoInput.style.backgroundColor = '';
 			} else if (url.length > 0) {
-				// 如果有输入但解析失败，显示错误提示
+				// 如果有输入但解析失败，重置样式
+				nameInput.style.borderColor = '';
+				ownerInput.style.borderColor = '';
+				repoInput.style.borderColor = '';
 				nameInput.style.backgroundColor = '';
 				ownerInput.style.backgroundColor = '';
 				repoInput.style.backgroundColor = '';
 			} else {
 				// 清空时重置样式
+				nameInput.style.borderColor = '';
+				ownerInput.style.borderColor = '';
+				repoInput.style.borderColor = '';
 				nameInput.style.backgroundColor = '';
 				ownerInput.style.backgroundColor = '';
 				repoInput.style.backgroundColor = '';
@@ -284,13 +289,10 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			});
 		});
 
-		const addButton = addRepoContainer.createEl('button', {text: 'Add Repository'});
-		addButton.style.padding = '8px 16px';
-		addButton.style.backgroundColor = 'var(--interactive-accent)';
-		addButton.style.color = 'var(--text-on-accent)';
-		addButton.style.border = 'none';
-		addButton.style.borderRadius = '3px';
-		addButton.style.cursor = 'pointer';
+		const addButton = addRepoContainer.createEl('button', {
+			text: 'Add Repository',
+			cls: 'mod-cta'
+		});
 
 		addButton.addEventListener('click', async () => {
 			let name = nameInput.value.trim();
@@ -349,6 +351,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			nameInput.style.backgroundColor = '';
 			ownerInput.style.backgroundColor = '';
 			repoInput.style.backgroundColor = '';
+			nameInput.style.borderColor = '';
+			ownerInput.style.borderColor = '';
+			repoInput.style.borderColor = '';
 
 			// 重新渲染页面
 			this.display();
@@ -360,30 +365,34 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			
 			this.plugin.settings.repositories.forEach((repository, index) => {
 				const repoDiv = containerEl.createDiv();
-				repoDiv.style.marginBottom = '15px';
-				repoDiv.style.padding = '15px';
+				repoDiv.style.marginBottom = '12px';
+				repoDiv.style.padding = '12px';
 				repoDiv.style.border = '1px solid var(--background-modifier-border)';
-				repoDiv.style.borderRadius = '5px';
+				repoDiv.style.borderRadius = 'var(--radius-s)';
 				repoDiv.style.backgroundColor = repository.isDefault ? 'var(--background-modifier-hover)' : 'transparent';
 
 				const repoHeader = repoDiv.createDiv();
 				repoHeader.style.display = 'flex';
 				repoHeader.style.justifyContent = 'space-between';
 				repoHeader.style.alignItems = 'center';
-				repoHeader.style.marginBottom = '10px';
+				repoHeader.style.marginBottom = '8px';
 
 				const repoTitle = repoHeader.createEl('h5');
 				repoTitle.textContent = `${repository.name} ${repository.isDefault ? '(Default)' : ''}`;
 				repoTitle.style.margin = '0';
+				repoTitle.style.fontSize = 'var(--font-ui-small)';
+				repoTitle.style.fontWeight = 'var(--font-weight-medium)';
 
 				const actionsDiv = repoHeader.createDiv();
+				actionsDiv.style.display = 'flex';
+				actionsDiv.style.gap = 'var(--size-2-2)';
 
 				// 设为默认按钮
 				if (!repository.isDefault) {
-					const setDefaultButton = actionsDiv.createEl('button', {text: 'Set Default'});
-					setDefaultButton.style.marginRight = '10px';
-					setDefaultButton.style.padding = '4px 8px';
-					setDefaultButton.style.fontSize = '12px';
+					const setDefaultButton = actionsDiv.createEl('button', {
+						text: 'Set Default',
+						cls: 'mod-cta'
+					});
 					setDefaultButton.addEventListener('click', async () => {
 						// 取消其他仓库的默认状态
 						this.plugin.settings.repositories.forEach(repo => repo.isDefault = false);
@@ -395,14 +404,11 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				}
 
 				// 删除按钮
-				const deleteButton = actionsDiv.createEl('button', {text: '×'});
-				deleteButton.style.padding = '4px 8px';
-				deleteButton.style.fontSize = '12px';
-				deleteButton.style.backgroundColor = 'var(--text-error)';
-				deleteButton.style.color = 'white';
-				deleteButton.style.border = 'none';
-				deleteButton.style.borderRadius = '3px';
-				deleteButton.style.cursor = 'pointer';
+				const deleteButton = actionsDiv.createEl('button', {
+					cls: 'mod-warning'
+				});
+				deleteButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+				deleteButton.title = 'Delete repository';
 				deleteButton.addEventListener('click', async () => {
 					this.plugin.settings.repositories.splice(index, 1);
 					// 如果删除的是默认仓库且还有其他仓库，设置第一个为默认
@@ -415,7 +421,74 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 				// 仓库信息
 				const repoInfo = repoDiv.createDiv();
-				repoInfo.innerHTML = `<strong>Repository:</strong> ${repository.owner}/${repository.repo}`;
+				repoInfo.addClass('repo-info');
+				repoInfo.style.display = 'flex';
+				repoInfo.style.alignItems = 'center';
+				repoInfo.style.gap = 'var(--size-2-2)';
+
+				const repoLabel = repoInfo.createSpan();
+				repoLabel.innerHTML = '<strong>Repository:</strong>';
+				repoLabel.style.fontSize = 'var(--font-ui-smaller)';
+				repoLabel.style.color = 'var(--text-muted)';
+				repoLabel.style.minWidth = 'fit-content';
+
+				// 显示完整的可复制链接
+				const repoUrl = `https://github.com/${repository.owner}/${repository.repo}`;
+				const repoLink = repoInfo.createEl('a');
+				repoLink.textContent = repoUrl;
+				repoLink.href = repoUrl;
+				repoLink.style.color = 'var(--text-accent)';
+				repoLink.style.textDecoration = 'none';
+				repoLink.style.cursor = 'pointer';
+				repoLink.style.fontFamily = 'var(--font-monospace)';
+				repoLink.style.fontSize = 'var(--font-ui-smaller)';
+				repoLink.style.flex = '1';
+				repoLink.style.overflow = 'hidden';
+				repoLink.style.textOverflow = 'ellipsis';
+				repoLink.style.whiteSpace = 'nowrap';
+				repoLink.title = 'Click to copy URL';
+				repoLink.addEventListener('click', (e) => {
+					e.preventDefault();
+					navigator.clipboard.writeText(repoUrl).then(() => {
+						new Notice('Repository URL copied to clipboard');
+						// 临时改变样式提供视觉反馈
+						const originalColor = repoLink.style.color;
+						repoLink.style.color = 'var(--color-green)';
+						setTimeout(() => {
+							repoLink.style.color = originalColor;
+						}, 1000);
+					}).catch(() => {
+						new Notice('Failed to copy URL');
+					});
+				});
+
+				// 按钮容器
+				const buttonContainer = repoInfo.createDiv();
+				buttonContainer.style.display = 'flex';
+				buttonContainer.style.gap = 'var(--size-2-1)';
+				buttonContainer.style.flexShrink = '0';
+
+				// 添加复制图标按钮
+				const copyIcon = buttonContainer.createEl('button', {
+					cls: 'clickable-icon'
+				});
+				copyIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+				copyIcon.title = 'Copy repository URL';
+				copyIcon.addEventListener('click', () => {
+					navigator.clipboard.writeText(repoUrl).then(() => {
+						new Notice('Repository URL copied to clipboard');
+					});
+				});
+
+				// 添加外部链接图标（在新标签页打开）
+				const externalIcon = buttonContainer.createEl('button', {
+					cls: 'clickable-icon'
+				});
+				externalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+				externalIcon.title = 'Open in GitHub';
+				externalIcon.addEventListener('click', () => {
+					window.open(repoUrl, '_blank');
+				});
 			});
 		}
 	}
@@ -509,10 +582,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				// 移除常见的后缀
 				const cleanRepo = repo.replace(/\.(git|zip)$/, '');
 				
-				// 生成显示名称（首字母大写，替换连字符为空格）
+				// 生成显示名称（保持原始大小写，仅替换连字符为空格）
 				const displayName = cleanRepo
 					.split(/[-_]/)
-					.map(word => word.charAt(0).toUpperCase() + word.slice(1))
 					.join(' ');
 				
 				return {
@@ -582,13 +654,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		if (this.tokenStatus === 'testing') {
 			testButton.disabled = true;
 			testButton.textContent = 'Testing...';
-			testButton.style.backgroundColor = 'var(--text-muted)';
-			testButton.style.cursor = 'not-allowed';
 		} else {
 			testButton.disabled = false;
 			testButton.textContent = 'Test Token';
-			testButton.style.backgroundColor = 'var(--interactive-accent)';
-			testButton.style.cursor = 'pointer';
 		}
 
 		// 更新状态指示灯和文本
