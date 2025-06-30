@@ -142,6 +142,76 @@
 	border-color: var(--interactive-accent);
 }
 
+/* 过滤工具栏样式 */
+.filter-toolbar {
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.filter-content {
+	padding: var(--size-4-3);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.filter-group label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.filter-group input,
+.filter-group select {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* 移除多选样式，现在所有过滤器都使用单选 */
+/* .filter-group select[multiple] {
+	min-height: 80px;
+} */
+
+.filter-group button {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.1s ease;
+}
+
+.filter-group button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+/* 过滤按钮活跃状态 */
+.header-actions .clickable-icon.filter-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
 /* 响应式设计 */
 @media (max-width: 600px) {
 	.issues-header {

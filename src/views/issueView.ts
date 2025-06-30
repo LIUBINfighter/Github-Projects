@@ -21,6 +21,11 @@ export interface GitHubIssue {
 		login: string;
 		avatar_url: string;
 	};
+	milestone?: {
+		title: string;
+		description?: string;
+		state: 'open' | 'closed';
+	};
 	created_at: string;
 	updated_at: string;
 	html_url: string;
@@ -30,12 +35,32 @@ export interface GitHubIssue {
 	};
 }
 
+export interface FilterOptions {
+	titleContains: string;
+	selectedLabels: string[];
+	selectedMilestone: string;
+	selectedAssignee: string;
+	selectedState: 'all' | 'open' | 'closed';
+}
+
 export class IssueView extends ItemView {
 	plugin: GithubProjectsPlugin;
 	private issues: GitHubIssue[] = [];
+	private filteredIssues: GitHubIssue[] = [];
 	private isLoading = false;
 	private selectedRepo = '';
 	private expandedIssues = new Set<number>(); // 跟踪展开的 issue
+	private isFilterExpanded = false;
+	private availableLabels: string[] = [];
+	private availableMilestones: string[] = [];
+	private availableAssignees: string[] = [];
+	private filters: FilterOptions = {
+		titleContains: '',
+		selectedLabels: [],
+		selectedMilestone: 'all',
+		selectedAssignee: 'all',
+		selectedState: 'all'
+	};
 
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
 		super(leaf);
@@ -75,6 +100,9 @@ export class IssueView extends ItemView {
 		// 创建仓库选择器
 		this.createRepositorySelector(container);
 
+		// 创建过滤工具栏
+		this.createFilterToolbar(container);
+
 		// 创建Issues列表容器
 		this.createIssuesList(container);
 	}
@@ -106,6 +134,27 @@ export class IssueView extends ItemView {
 			display: flex;
 			gap: var(--size-2-1);
 		`;
+
+		// 过滤按钮
+		const filterBtn = actions.createEl('button', { 
+			cls: 'clickable-icon',
+			attr: { 'aria-label': 'Toggle filters' }
+		});
+		filterBtn.style.cssText = `
+			width: var(--icon-size);
+			height: var(--icon-size);
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: ${this.isFilterExpanded ? 'var(--interactive-accent)' : 'transparent'};
+			border: none;
+			border-radius: var(--radius-s);
+			cursor: pointer;
+			color: ${this.isFilterExpanded ? 'var(--text-on-accent)' : 'var(--icon-color)'};
+		`;
+		setIcon(filterBtn, 'filter');
+		filterBtn.addEventListener('click', () => this.toggleFilters());
 
 		// 刷新按钮
 		const refreshBtn = actions.createEl('button', { 
@@ -203,6 +252,7 @@ export class IssueView extends ItemView {
 			const target = e.target as HTMLSelectElement;
 			this.selectedRepo = target.value;
 			if (this.selectedRepo) {
+				this.resetFilters();
 				this.loadIssues();
 			}
 		});
@@ -230,10 +280,13 @@ export class IssueView extends ItemView {
 	private updateIssuesListContent(container: Element) {
 		if (this.isLoading) {
 			this.renderLoadingState(container);
-		} else if (this.issues.length === 0) {
-			this.renderEmptyState(container);
 		} else {
-			this.renderIssuesList(container);
+			const issuesToRender = this.filteredIssues.length > 0 || this.hasActiveFilters() ? this.filteredIssues : this.issues;
+			if (issuesToRender.length === 0) {
+				this.renderEmptyState(container);
+			} else {
+				this.renderIssuesList(container);
+			}
 		}
 	}
 
@@ -337,7 +390,9 @@ export class IssueView extends ItemView {
 	private renderIssuesList(container: Element) {
 		container.empty();
 		
-		this.issues.forEach(issue => {
+		const issuesToRender = this.filteredIssues.length > 0 || this.hasActiveFilters() ? this.filteredIssues : this.issues;
+		
+		issuesToRender.forEach(issue => {
 			const issueItem = container.createDiv('issue-item');
 			issueItem.style.cssText = `
 				border: var(--border-width) solid var(--background-modifier-border);
@@ -531,7 +586,7 @@ export class IssueView extends ItemView {
 
 		try {
 			const [owner, repo] = this.selectedRepo.split('/');
-			const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+			const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`, {
 				headers: {
 					'Authorization': `Bearer ${this.plugin.settings.githubToken}`,
 					'Accept': 'application/vnd.github.v3+json',
@@ -548,6 +603,12 @@ export class IssueView extends ItemView {
 			this.issues.forEach(issue => {
 				issue.repository = { owner, name: repo };
 			});
+
+			// 提取过滤数据
+			this.extractFilterData();
+			
+			// 应用当前过滤器
+			this.applyFilters();
 			
 		} catch (error) {
 			console.error('Error loading issues:', error);
@@ -812,5 +873,438 @@ export class IssueView extends ItemView {
 	private async closeIssue(issue: GitHubIssue) {
 		// TODO: 实现关闭 Issue 功能
 		new Notice(`Close issue #${issue.number} feature coming soon!`);
+	}
+
+	private toggleFilters() {
+		this.isFilterExpanded = !this.isFilterExpanded;
+		this.renderView();
+	}
+
+	private createFilterToolbar(container: Element) {
+		const filterContainer = container.createDiv('filter-toolbar');
+		filterContainer.style.cssText = `
+			background: var(--background-secondary);
+			border-bottom: var(--border-width) solid var(--background-modifier-border);
+			max-height: ${this.isFilterExpanded ? '300px' : '0'};
+			overflow: hidden;
+			transition: max-height 0.3s ease;
+		`;
+
+		if (this.isFilterExpanded) {
+			this.renderFilterContent(filterContainer);
+		}
+	}
+
+	private renderFilterContent(container: Element) {
+		const content = container.createDiv('filter-content');
+		content.style.cssText = `
+			padding: var(--size-4-3);
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: var(--size-4-3);
+		`;
+
+		// 标题包含过滤器
+		this.createTitleFilter(content);
+
+		// 状态过滤器
+		this.createStateFilter(content);
+
+		// 标签过滤器
+		this.createLabelFilter(content);
+
+		// 里程碑过滤器
+		this.createMilestoneFilter(content);
+
+		// 负责人过滤器
+		this.createAssigneeFilter(content);
+
+		// 重置按钮
+		this.createFilterActions(content);
+	}
+
+	private createTitleFilter(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+		`;
+
+		const label = filterGroup.createEl('label', { text: 'Title Contains' });
+		label.style.cssText = `
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-medium);
+			color: var(--text-normal);
+		`;
+
+		const input = filterGroup.createEl('input', {
+			type: 'text',
+			placeholder: 'e.g., [FR], bug, feature...',
+			value: this.filters.titleContains
+		});
+		input.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			font-size: var(--font-ui-small);
+		`;
+
+		input.addEventListener('input', (e) => {
+			const target = e.target as HTMLInputElement;
+			this.filters.titleContains = target.value;
+			this.applyFilters();
+		});
+	}
+
+	private createStateFilter(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+		`;
+
+		const label = filterGroup.createEl('label', { text: 'State' });
+		label.style.cssText = `
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-medium);
+			color: var(--text-normal);
+		`;
+
+		const select = filterGroup.createEl('select');
+		select.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			font-size: var(--font-ui-small);
+		`;
+
+		const options = [
+			{ value: 'all', text: 'All States' },
+			{ value: 'open', text: 'Open' },
+			{ value: 'closed', text: 'Closed' }
+		];
+
+		options.forEach(option => {
+			const optionEl = select.createEl('option', {
+				value: option.value,
+				text: option.text
+			});
+			if (option.value === this.filters.selectedState) {
+				optionEl.selected = true;
+			}
+		});
+
+		select.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.filters.selectedState = target.value as 'all' | 'open' | 'closed';
+			this.applyFilters();
+		});
+	}
+
+	private createLabelFilter(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+		`;
+
+		const label = filterGroup.createEl('label', { text: 'Labels' });
+		label.style.cssText = `
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-medium);
+			color: var(--text-normal);
+		`;
+
+		const select = filterGroup.createEl('select');
+		select.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			font-size: var(--font-ui-small);
+		`;
+
+		const allOption = select.createEl('option', {
+			value: 'all',
+			text: 'All Labels'
+		});
+		if (this.filters.selectedLabels.length === 0) {
+			allOption.selected = true;
+		}
+
+		this.availableLabels.forEach(labelName => {
+			const option = select.createEl('option', {
+				value: labelName,
+				text: labelName
+			});
+			if (this.filters.selectedLabels.includes(labelName)) {
+				option.selected = true;
+			}
+		});
+
+		select.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			if (target.value === 'all') {
+				this.filters.selectedLabels = [];
+			} else {
+				this.filters.selectedLabels = [target.value];
+			}
+			this.applyFilters();
+		});
+	}
+
+	private createMilestoneFilter(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+		`;
+
+		const label = filterGroup.createEl('label', { text: 'Milestone' });
+		label.style.cssText = `
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-medium);
+			color: var(--text-normal);
+		`;
+
+		const select = filterGroup.createEl('select');
+		select.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			font-size: var(--font-ui-small);
+		`;
+
+		const allOption = select.createEl('option', {
+			value: 'all',
+			text: 'All Milestones'
+		});
+		if (this.filters.selectedMilestone === 'all') {
+			allOption.selected = true;
+		}
+
+		const noneOption = select.createEl('option', {
+			value: 'none',
+			text: 'No Milestone'
+		});
+		if (this.filters.selectedMilestone === 'none') {
+			noneOption.selected = true;
+		}
+
+		this.availableMilestones.forEach(milestone => {
+			const option = select.createEl('option', {
+				value: milestone,
+				text: milestone
+			});
+			if (milestone === this.filters.selectedMilestone) {
+				option.selected = true;
+			}
+		});
+
+		select.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.filters.selectedMilestone = target.value;
+			this.applyFilters();
+		});
+	}
+
+	private createAssigneeFilter(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+		`;
+
+		const label = filterGroup.createEl('label', { text: 'Assignee' });
+		label.style.cssText = `
+			font-size: var(--font-ui-small);
+			font-weight: var(--font-medium);
+			color: var(--text-normal);
+		`;
+
+		const select = filterGroup.createEl('select');
+		select.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			font-size: var(--font-ui-small);
+		`;
+
+		const allOption = select.createEl('option', {
+			value: 'all',
+			text: 'All Assignees'
+		});
+		if (this.filters.selectedAssignee === 'all') {
+			allOption.selected = true;
+		}
+
+		const unassignedOption = select.createEl('option', {
+			value: 'unassigned',
+			text: 'Unassigned'
+		});
+		if (this.filters.selectedAssignee === 'unassigned') {
+			unassignedOption.selected = true;
+		}
+
+		this.availableAssignees.forEach(assignee => {
+			const option = select.createEl('option', {
+				value: assignee,
+				text: assignee
+			});
+			if (assignee === this.filters.selectedAssignee) {
+				option.selected = true;
+			}
+		});
+
+		select.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.filters.selectedAssignee = target.value;
+			this.applyFilters();
+		});
+	}
+
+	private createFilterActions(container: Element) {
+		const filterGroup = container.createDiv('filter-group');
+		filterGroup.style.cssText = `
+			display: flex;
+			flex-direction: column;
+			gap: var(--size-2-1);
+			justify-content: flex-end;
+		`;
+
+		const resetBtn = filterGroup.createEl('button', { text: 'Reset Filters' });
+		resetBtn.style.cssText = `
+			padding: var(--size-2-1) var(--size-2-3);
+			border: var(--border-width) solid var(--background-modifier-border);
+			border-radius: var(--radius-s);
+			background: var(--background-primary);
+			color: var(--text-normal);
+			cursor: pointer;
+			font-size: var(--font-ui-small);
+			margin-top: auto;
+		`;
+
+		resetBtn.addEventListener('click', () => {
+			this.resetFilters();
+		});
+	}
+
+	private applyFilters() {
+		this.filteredIssues = this.issues.filter(issue => {
+			// 标题包含过滤
+			if (this.filters.titleContains && 
+				!issue.title.toLowerCase().includes(this.filters.titleContains.toLowerCase())) {
+				return false;
+			}
+
+			// 状态过滤
+			if (this.filters.selectedState !== 'all' && issue.state !== this.filters.selectedState) {
+				return false;
+			}
+
+			// 标签过滤
+			if (this.filters.selectedLabels.length > 0) {
+				const issueLabels = issue.labels.map(label => label.name);
+				const hasSelectedLabel = this.filters.selectedLabels.some(selectedLabel => 
+					issueLabels.includes(selectedLabel)
+				);
+				if (!hasSelectedLabel) {
+					return false;
+				}
+			}
+
+			// 里程碑过滤
+			if (this.filters.selectedMilestone !== 'all') {
+				if (this.filters.selectedMilestone === 'none') {
+					if (issue.milestone) {
+						return false;
+					}
+				} else {
+					if (!issue.milestone || issue.milestone.title !== this.filters.selectedMilestone) {
+						return false;
+					}
+				}
+			}
+
+			// 负责人过滤
+			if (this.filters.selectedAssignee !== 'all') {
+				if (this.filters.selectedAssignee === 'unassigned') {
+					if (issue.assignee) {
+						return false;
+					}
+				} else {
+					if (!issue.assignee || issue.assignee.login !== this.filters.selectedAssignee) {
+						return false;
+					}
+				}
+			}
+
+			return true;
+		});
+
+		this.updateIssuesList();
+	}
+
+	private resetFilters() {
+		this.filters = {
+			titleContains: '',
+			selectedLabels: [],
+			selectedMilestone: 'all',
+			selectedAssignee: 'all',
+			selectedState: 'all'
+		};
+		this.filteredIssues = [...this.issues];
+		this.renderView();
+	}
+
+	private hasActiveFilters(): boolean {
+		return this.filters.titleContains !== '' ||
+			   this.filters.selectedLabels.length > 0 ||
+			   this.filters.selectedMilestone !== 'all' ||
+			   this.filters.selectedAssignee !== 'all' ||
+			   this.filters.selectedState !== 'all';
+	}
+
+	private extractFilterData() {
+		// 提取可用的标签
+		const labelsSet = new Set<string>();
+		this.issues.forEach(issue => {
+			issue.labels.forEach(label => {
+				labelsSet.add(label.name);
+			});
+		});
+		this.availableLabels = Array.from(labelsSet).sort();
+
+		// 提取可用的里程碑
+		const milestonesSet = new Set<string>();
+		this.issues.forEach(issue => {
+			if (issue.milestone) {
+				milestonesSet.add(issue.milestone.title);
+			}
+		});
+		this.availableMilestones = Array.from(milestonesSet).sort();
+
+		// 提取可用的负责人
+		const assigneesSet = new Set<string>();
+		this.issues.forEach(issue => {
+			if (issue.assignee) {
+				assigneesSet.add(issue.assignee.login);
+			}
+		});
+		this.availableAssignees = Array.from(assigneesSet).sort();
 	}
 }
