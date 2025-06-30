@@ -250,3 +250,388 @@
 	transform: translateY(-1px);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* 以下是从 TypeScript 文件中提取的内联样式，转换为CSS类 */
+
+/* Header styles */
+.header-title {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.clickable-icon-button {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	color: var(--icon-color);
+	transition: all 0.1s ease;
+}
+
+.clickable-icon-button:hover {
+	background: var(--background-modifier-hover);
+	color: var(--icon-color-hover);
+}
+
+.clickable-icon-button.filter-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* Repository selector styles */
+.repo-icon-container {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	color: var(--icon-color);
+}
+
+.repo-select {
+	flex: 1;
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	height: var(--input-height);
+}
+
+.repo-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* Loading and empty states */
+.loading-content {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	font-size: var(--font-ui-small);
+}
+
+.loading-icon {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	color: var(--icon-color);
+	animation: spin 1s linear infinite;
+}
+
+.empty-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--size-4-3);
+}
+
+.empty-icon {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+	color: var(--icon-color-hover);
+}
+
+.empty-message {
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+}
+
+.empty-create-button {
+	padding: var(--size-2-1) var(--size-4-2);
+	font-size: var(--font-ui-small);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	transition: all 0.1s ease;
+}
+
+.empty-create-button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.empty-button-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+/* Issue item styles */
+.issue-item-container {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin-bottom: var(--size-2-1);
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: var(--font-ui-small);
+	overflow: hidden;
+}
+
+.issue-item-container:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.issue-content {
+	padding: var(--size-4-2);
+}
+
+.issue-expand-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+	flex-shrink: 0;
+	color: var(--icon-color);
+	transition: transform 0.2s ease;
+}
+
+.issue-expand-icon.expanded {
+	transform: rotate(90deg);
+}
+
+.issue-status-icon {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	flex-shrink: 0;
+}
+
+.issue-status-icon.open {
+	color: var(--color-green);
+}
+
+.issue-status-icon.closed {
+	color: var(--color-red);
+}
+
+.issue-title-container {
+	flex: 1;
+	min-width: 0;
+}
+
+.issue-title {
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+	line-height: var(--line-height-tight);
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.issue-number {
+	color: var(--text-muted);
+	font-weight: normal;
+	flex-shrink: 0;
+}
+
+.issue-meta-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+}
+
+.issue-meta-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+.issue-label {
+	padding: var(--size-2-1) var(--size-2-1);
+	font-size: var(--font-ui-smaller);
+	border-radius: var(--radius-xs);
+	line-height: 1;
+}
+
+.issue-expanded-content {
+	padding: var(--size-4-3);
+}
+
+.issue-section {
+	margin-bottom: var(--size-4-3);
+}
+
+.issue-section-header {
+	margin: 0 0 var(--size-2-2) 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.issue-section-content {
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+	color: var(--text-normal);
+	font-weight: var(--font-small);
+	word-wrap: break-word;
+}
+
+.issue-description-content {
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	max-height: 200px;
+	overflow-y: auto;
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+	color: var(--text-muted);
+	white-space: pre-wrap;
+}
+
+.issue-meta-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--size-4-2);
+	font-size: var(--font-ui-small);
+}
+
+.issue-meta-item-detail {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	color: var(--text-muted);
+}
+
+.issue-meta-icon-detail {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+.issue-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	flex-wrap: wrap;
+}
+
+.issue-action-button {
+	padding: var(--size-2-1) var(--size-2-3);
+	font-size: var(--font-ui-small);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	transition: all 0.1s ease;
+}
+
+.issue-action-button:hover {
+	background: var(--background-modifier-hover);
+}
+
+.issue-action-button.primary {
+	border-color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.issue-action-button.primary:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.issue-action-button.danger {
+	border-color: var(--text-error);
+	background: transparent;
+	color: var(--text-error);
+}
+
+.issue-action-button.danger:hover {
+	background: var(--text-error);
+	color: var(--text-on-accent);
+}
+
+.issue-action-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+/* Filter toolbar styles */
+.filter-toolbar-container {
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.filter-toolbar-container.collapsed {
+	max-height: 0;
+}
+
+.filter-toolbar-container.expanded {
+	max-height: 300px;
+}
+
+.filter-content-grid {
+	padding: var(--size-4-3);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.filter-group-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.filter-group-label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.filter-input,
+.filter-select {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.filter-input:focus,
+.filter-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.filter-group-actions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+	justify-content: flex-end;
+}
+
+.filter-reset-button {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	margin-top: auto;
+	transition: all 0.1s ease;
+}
+
+.filter-reset-button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
