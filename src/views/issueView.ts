@@ -129,7 +129,7 @@ export class IssueView extends ItemView {
 		// 刷新按钮
 		const refreshBtn = actions.createEl('button', { 
 			cls: 'clickable-icon-button',
-			attr: { 'aria-label': 'Refresh issues' }
+			attr: { 'aria-label': 'Sync all repositories from GitHub' }
 		});
 		setIcon(refreshBtn, 'refresh-cw');
 		refreshBtn.addEventListener('click', () => this.refreshIssues());
@@ -451,18 +451,44 @@ export class IssueView extends ItemView {
 	}
 
 	private async refreshIssues() {
-		if (!this.selectedRepo) {
-			return;
+		// 同步所有活跃仓库并刷新整个视图
+		const refreshBtn = this.containerEl.querySelector('button[aria-label*="Sync all repositories"]') as HTMLButtonElement;
+		
+		// 禁用按钮并显示加载状态
+		if (refreshBtn) {
+			refreshBtn.disabled = true;
+			refreshBtn.classList.add('is-loading');
 		}
 		
-		// 强制从服务器同步
-		new Notice('Refreshing issues from GitHub...');
-		const syncResult = await this.plugin.syncRepository(this.selectedRepo);
+		new Notice('Syncing all repositories from GitHub...');
 		
-		if (syncResult && syncResult.success) {
-			new Notice(`Refreshed ${syncResult.issuesCount || 0} issues`);
-		} else {
-			new Notice(`Failed to refresh issues: ${syncResult?.error || 'Unknown error'}`);
+		try {
+			const results = await this.plugin.syncAllRepositories();
+			const successCount = Object.values(results).filter(r => r.success).length;
+			const totalCount = Object.keys(results).length;
+			
+			if (totalCount === 0) {
+				new Notice('No active repositories to sync');
+				return;
+			}
+			
+			if (successCount === totalCount) {
+				const totalIssues = Object.values(results).reduce((sum, r) => sum + (r.issuesCount || 0), 0);
+				new Notice(`Successfully synced all ${totalCount} repositories (${totalIssues} issues)`);
+			} else {
+				new Notice(`Synced ${successCount}/${totalCount} repositories. Check console for errors.`);
+			}
+			
+			// 注意：不需要手动调用 refreshData()，因为 syncAllRepositories 完成后会自动调用 refreshIssueViews()
+			
+		} catch (error) {
+			new Notice(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		} finally {
+			// 恢复按钮状态
+			if (refreshBtn) {
+				refreshBtn.disabled = false;
+				refreshBtn.classList.remove('is-loading');
+			}
 		}
 	}
 

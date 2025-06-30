@@ -728,3 +728,13 @@
 	color: var(--text-accent-hover);
 	text-decoration: underline;
 }
+
+/* 加载状态样式 */
+.clickable-icon-button.is-loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading svg {
+	animation: spin 1s linear infinite;
+}
