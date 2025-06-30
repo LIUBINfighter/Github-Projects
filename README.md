@@ -12,6 +12,23 @@
 
 本地增强管理能力和与obsidian的联动能力
 
+我们做什么：
+
+查看
+
+联系
+
+将issue转化为笔记
+
+patch而非edit
+
+我们不做什么
+
+双向同步
+
+github issue <-> obsidian markdown
+
+
 ## mvp阶段
 
 0.引导设置github token
