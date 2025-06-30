@@ -1,5 +1,6 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
+import { GitHubIssueCache, GitHubDataSync } from '../github/dataSync';
 
 export interface GithubRepository {
 	name: string; // 显示名称
@@ -13,13 +14,15 @@ export interface GithubProjectsSettings {
 	repositories: GithubRepository[]; // 多仓库列表
 	autoSync: boolean;
 	syncInterval: number; // in minutes
+	issueCache: GitHubIssueCache; // Issue 缓存数据
 }
 
 export const DEFAULT_SETTINGS: GithubProjectsSettings = {
 	githubToken: '',
 	repositories: [],
 	autoSync: false,
-	syncInterval: 5
+	syncInterval: 5,
+	issueCache: {}
 }
 
 export class GithubProjectsSettingTab extends PluginSettingTab {
@@ -427,6 +430,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.autoSync = value;
 					await this.plugin.saveSettings();
+					// 重启自动同步
+					this.plugin.restartAutoSync();
 				}));
 
 		// 同步间隔设置
@@ -440,6 +445,37 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.syncInterval = value;
 					await this.plugin.saveSettings();
+					// 重启自动同步
+					this.plugin.restartAutoSync();
+				}));
+
+		// 手动同步按钮
+		new Setting(containerEl)
+			.setName('Manual Sync')
+			.setDesc('Sync all repositories now')
+			.addButton(button => button
+				.setButtonText('Sync Now')
+				.setCta()
+				.onClick(async () => {
+					button.setButtonText('Syncing...');
+					button.setDisabled(true);
+					
+					try {
+						const results = await this.plugin.syncAllRepositories();
+						const successCount = Object.values(results).filter(r => r.success).length;
+						const totalCount = Object.keys(results).length;
+						
+						if (successCount === totalCount) {
+							new Notice(`Successfully synced all ${totalCount} repositories`);
+						} else {
+							new Notice(`Synced ${successCount}/${totalCount} repositories. Check console for errors.`);
+						}
+					} catch (error) {
+						new Notice(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+					} finally {
+						button.setButtonText('Sync Now');
+						button.setDisabled(false);
+					}
 				}));
 
 		// 同步说明
@@ -447,7 +483,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		syncHelpDiv.style.marginTop = '20px';
 		syncHelpDiv.createEl('h4', {text: 'Sync Information'});
 		syncHelpDiv.createEl('p', {text: 'Auto sync will periodically fetch issues from all configured repositories.'});
-		syncHelpDiv.createEl('p', {text: 'You can also manually sync issues using plugin commands.'});
+		syncHelpDiv.createEl('p', {text: 'You can also manually sync issues using plugin commands or the button above.'});
+		syncHelpDiv.createEl('p', {text: 'Data is cached locally for offline access and fast searching.'});
 	}
 
 	private parseGitHubUrl(url: string): {name: string, owner: string, repo: string} | null {
@@ -512,44 +549,20 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		this.updateTokenStatus(containerEl);
 
 		try {
-			const response = await fetch('https://api.github.com/user', {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${token}`,
-					'Accept': 'application/vnd.github.v3+json',
-					'User-Agent': 'Obsidian-GitHub-Projects'
-				}
-			});
+			// 使用我们的同步工具来验证 token
+			const sync = new GitHubDataSync(token);
+			const result = await sync.validateToken();
 
-			if (response.ok) {
-				const userData = await response.json();
+			if (result.success) {
 				this.tokenStatus = 'valid';
-				this.tokenTestResult = `✓ Token valid! Authenticated as: ${userData.login}`;
-				
-				// 检查权限
-				const scopes = response.headers.get('X-OAuth-Scopes');
-				if (scopes && (scopes.includes('repo') || scopes.includes('public_repo'))) {
-					this.tokenTestResult += ' (✓ Has repository permissions)';
-				} else {
-					this.tokenTestResult += ' (⚠ May lack repository permissions)';
-				}
-			} else if (response.status === 401) {
-				this.tokenStatus = 'invalid';
-				this.tokenTestResult = '✗ Invalid token or expired';
-			} else if (response.status === 403) {
-				this.tokenStatus = 'invalid';
-				this.tokenTestResult = '✗ Rate limit exceeded or insufficient permissions';
+				this.tokenTestResult = `✓ Token is valid! (Rate limit remaining: ${result.rateLimitRemaining || 'Unknown'})`;
 			} else {
 				this.tokenStatus = 'invalid';
-				this.tokenTestResult = `✗ Error: ${response.status} ${response.statusText}`;
+				this.tokenTestResult = `✗ ${result.error}`;
 			}
 		} catch (error) {
 			this.tokenStatus = 'invalid';
-			if (error instanceof TypeError && error.message.includes('fetch')) {
-				this.tokenTestResult = '✗ Network error: Please check your internet connection';
-			} else {
-				this.tokenTestResult = `✗ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-			}
+			this.tokenTestResult = `✗ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`;
 		}
 
 		this.updateTokenStatus(containerEl);

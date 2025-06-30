@@ -159,22 +159,39 @@ export class IssueView extends ItemView {
 
 		// 填充仓库选项
 		this.plugin.settings.repositories.forEach(repo => {
-			const option = select.createEl('option', {
-				text: `${repo.owner}/${repo.repo}`,
-				value: `${repo.owner}/${repo.repo}`
+			const repoKey = `${repo.owner}/${repo.repo}`;
+			select.createEl('option', {
+				text: `${repo.name || repo.repo} (${repoKey})`,
+				value: repoKey
 			});
-			if (repo.isDefault) {
-				option.selected = true;
-				this.selectedRepo = `${repo.owner}/${repo.repo}`;
-			}
 		});
+
+		// 设置当前选中的仓库
+		if (this.selectedRepo) {
+			select.value = this.selectedRepo;
+		}
 
 		select.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
-			this.selectedRepo = target.value;
-			if (this.selectedRepo) {
-				this.resetFilters();
-				this.loadIssues();
+			const newRepo = target.value;
+			
+			if (newRepo !== this.selectedRepo) {
+				this.selectedRepo = newRepo;
+				
+				if (this.selectedRepo) {
+					// 重置过滤器和状态
+					this.resetFilters();
+					this.issues = [];
+					this.filteredIssues = [];
+					
+					// 加载新仓库的 Issues
+					this.loadIssues();
+				} else {
+					// 清空状态
+					this.issues = [];
+					this.filteredIssues = [];
+					this.updateIssuesList();
+				}
 			}
 		});
 	}
@@ -229,18 +246,28 @@ export class IssueView extends ItemView {
 		
 		if (!this.selectedRepo) {
 			setIcon(iconDiv, 'folder-open');
-			messageDiv.textContent = 'Select a repository to view issues';
+			messageDiv.createEl('h3', { text: 'Select a repository' });
+			messageDiv.createEl('p', { text: 'Choose a repository from the dropdown above to view its issues.' });
 		} else {
-			setIcon(iconDiv, 'inbox');
-			messageDiv.textContent = 'No issues found in this repository';
+			// GitHub 风格的空状态
+			setIcon(iconDiv, 'check-circle');
+			iconDiv.addClass('empty-icon-success');
 			
-			const createBtn = emptyContent.createEl('button', { cls: 'empty-create-button' });
+			const titleEl = messageDiv.createEl('h3', { text: 'You\'re all set!' });
+			titleEl.addClass('empty-title-success');
 			
-			const btnIcon = createBtn.createDiv('empty-button-icon');
-			setIcon(btnIcon, 'plus');
+			const descEl = messageDiv.createEl('p', { 
+				text: 'No issues found in this repository. That\'s a good thing!' 
+			});
+			descEl.addClass('empty-desc');
 			
-			createBtn.createSpan({ text: 'Create First Issue' });
-			createBtn.addEventListener('click', () => this.createNewIssue());
+			// 如果有过滤器激活，显示不同的消息
+			if (this.hasActiveFilters()) {
+				titleEl.textContent = 'No issues match your filters';
+				descEl.textContent = 'Try adjusting your search criteria or clearing the filters.';
+				setIcon(iconDiv, 'search');
+				iconDiv.removeClass('empty-icon-success');
+			}
 		}
 	}
 
@@ -337,6 +364,7 @@ export class IssueView extends ItemView {
 		const defaultRepo = this.plugin.settings.repositories.find(repo => repo.isDefault);
 		if (defaultRepo) {
 			this.selectedRepo = `${defaultRepo.owner}/${defaultRepo.repo}`;
+			this.updateRepositorySelector();
 			await this.loadIssues();
 		}
 	}
@@ -351,30 +379,25 @@ export class IssueView extends ItemView {
 		this.updateIssuesList(); // 只更新Issues列表部分，不重新渲染整个视图
 
 		try {
-			const [owner, repo] = this.selectedRepo.split('/');
-			const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`, {
-				headers: {
-					'Authorization': `Bearer ${this.plugin.settings.githubToken}`,
-					'Accept': 'application/vnd.github.v3+json',
-					'User-Agent': 'Obsidian-GitHub-Projects'
-				}
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch issues: ${response.status} ${response.statusText}`);
-			}
-
-			this.issues = await response.json();
-			// 添加仓库信息到每个issue
-			this.issues.forEach(issue => {
-				issue.repository = { owner, name: repo };
-			});
-
-			// 提取过滤数据
-			this.extractFilterData();
+			// 首先尝试从缓存加载
+			this.loadIssuesFromCache();
 			
-			// 应用当前过滤器
-			this.applyFilters();
+			// 如果缓存为空或者用户明确要求刷新，则从服务器同步
+			const cache = this.plugin.getRepositoryCache(this.selectedRepo);
+			const shouldSync = !cache || cache.issues.length === 0;
+			
+			if (shouldSync) {
+				new Notice('Syncing issues from GitHub...');
+				const syncResult = await this.plugin.syncRepository(this.selectedRepo);
+				
+				if (syncResult && syncResult.success) {
+					// 同步成功后，从缓存重新加载
+					this.loadIssuesFromCache();
+					new Notice(`Loaded ${syncResult.issuesCount || 0} issues from GitHub`);
+				} else {
+					throw new Error(syncResult?.error || 'Failed to sync repository');
+				}
+			}
 			
 			// 异步加载提交数（不阻塞主要显示）
 			this.loadCommitCounts();
@@ -390,8 +413,19 @@ export class IssueView extends ItemView {
 	}
 
 	private async refreshIssues() {
-		await this.loadIssues();
-		new Notice('Issues refreshed');
+		if (!this.selectedRepo) {
+			return;
+		}
+		
+		// 强制从服务器同步
+		new Notice('Refreshing issues from GitHub...');
+		const syncResult = await this.plugin.syncRepository(this.selectedRepo);
+		
+		if (syncResult && syncResult.success) {
+			new Notice(`Refreshed ${syncResult.issuesCount || 0} issues`);
+		} else {
+			new Notice(`Failed to refresh issues: ${syncResult?.error || 'Unknown error'}`);
+		}
 	}
 
 	private createNewIssue() {
@@ -1037,5 +1071,51 @@ export class IssueView extends ItemView {
 
 		// 更新显示
 		this.updateIssuesList();
+	}
+
+	/**
+	 * 从缓存刷新数据（当数据同步完成时调用）
+	 */
+	refreshData() {
+		// 更新仓库选择器状态
+		this.updateRepositorySelector();
+		
+		if (this.selectedRepo) {
+			this.loadIssuesFromCache();
+		}
+	}
+
+	/**
+	 * 从本地缓存加载 Issues
+	 */
+	private loadIssuesFromCache() {
+		if (!this.selectedRepo) {
+			this.issues = [];
+			this.filteredIssues = [];
+			this.updateIssuesList();
+			return;
+		}
+
+		const cache = this.plugin.getRepositoryCache(this.selectedRepo);
+		if (cache && cache.issues) {
+			this.issues = cache.issues;
+			this.extractFilterData();
+			this.applyFilters();
+		} else {
+			this.issues = [];
+			this.filteredIssues = [];
+		}
+		
+		this.updateIssuesList();
+	}
+
+	/**
+	 * 更新仓库选择器的选中状态
+	 */
+	private updateRepositorySelector() {
+		const select = this.containerEl.querySelector('.repo-select') as HTMLSelectElement;
+		if (select && this.selectedRepo) {
+			select.value = this.selectedRepo;
+		}
 	}
 }

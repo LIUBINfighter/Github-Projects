@@ -1,9 +1,11 @@
 import { Plugin } from 'obsidian';
 import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } from './views/settingTab';
 import { IssueView, ISSUE_VIEW_TYPE } from './views/issueView';
+import { GitHubDataSync, GitHubSyncResult } from './github/dataSync';
 
 export default class GithubProjectsPlugin extends Plugin {
 	settings: GithubProjectsSettings;
+	private syncTimer?: number;
 
 	async onload() {
 		await this.loadSettings();
@@ -23,6 +25,15 @@ export default class GithubProjectsPlugin extends Plugin {
 			}
 		});
 
+		// 添加同步命令
+		this.addCommand({
+			id: 'sync-github-issues',
+			name: 'Sync GitHub Issues',
+			callback: () => {
+				this.syncAllRepositories();
+			}
+		});
+
 		// 添加功能区图标
 		this.addRibbonIcon('github', 'GitHub Issues', (evt: MouseEvent) => {
 			this.activateView();
@@ -30,11 +41,17 @@ export default class GithubProjectsPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new GithubProjectsSettingTab(this.app, this));
+
+		// 启动自动同步（如果启用）
+		this.startAutoSync();
 	}
 
 	onunload() {
 		// 清理视图
 		this.app.workspace.detachLeavesOfType(ISSUE_VIEW_TYPE);
+		
+		// 清理自动同步定时器
+		this.stopAutoSync();
 	}
 
 	async activateView() {
@@ -65,5 +82,139 @@ export default class GithubProjectsPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * 同步所有配置的仓库
+	 */
+	async syncAllRepositories(): Promise<Record<string, GitHubSyncResult>> {
+		if (!this.settings.githubToken) {
+			console.error('GitHub token not configured');
+			return {};
+		}
+
+		if (this.settings.repositories.length === 0) {
+			console.warn('No repositories configured');
+			return {};
+		}
+
+		const sync = new GitHubDataSync(this.settings.githubToken);
+		
+		try {
+			const { cache, results } = await sync.syncAllRepositories(
+				this.settings.repositories,
+				this.settings.issueCache
+			);
+
+			// 更新缓存数据
+			this.settings.issueCache = cache;
+			await this.saveSettings();
+
+			// 通知 Issue 视图刷新数据
+			this.refreshIssueViews();
+
+			console.log('Repository sync completed:', results);
+			return results;
+		} catch (error) {
+			console.error('Failed to sync repositories:', error);
+			return {};
+		}
+	}
+
+	/**
+	 * 同步单个仓库
+	 */
+	async syncRepository(repoKey: string): Promise<GitHubSyncResult | null> {
+		if (!this.settings.githubToken) {
+			console.error('GitHub token not configured');
+			return null;
+		}
+
+		const repo = this.settings.repositories.find(r => `${r.owner}/${r.repo}` === repoKey);
+		if (!repo) {
+			console.error(`Repository ${repoKey} not found in configuration`);
+			return null;
+		}
+
+		const sync = new GitHubDataSync(this.settings.githubToken);
+		
+		try {
+			const { cache, result } = await sync.syncRepository(
+				repo,
+				this.settings.issueCache[repoKey]
+			);
+
+			if (cache) {
+				this.settings.issueCache[repoKey] = cache;
+				await this.saveSettings();
+				this.refreshIssueViews();
+			}
+
+			return result;
+		} catch (error) {
+			console.error(`Failed to sync repository ${repoKey}:`, error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error'
+			};
+		}
+	}
+
+	/**
+	 * 获取指定仓库的缓存数据
+	 */
+	getRepositoryCache(repoKey: string) {
+		return this.settings.issueCache[repoKey];
+	}
+
+	/**
+	 * 刷新所有 Issue 视图
+	 */
+	private refreshIssueViews() {
+		const leaves = this.app.workspace.getLeavesOfType(ISSUE_VIEW_TYPE);
+		leaves.forEach(leaf => {
+			const view = leaf.view as IssueView;
+			if (view && view.refreshData) {
+				view.refreshData();
+			}
+		});
+	}
+
+	/**
+	 * 启动自动同步
+	 */
+	private startAutoSync() {
+		if (!this.settings.autoSync || this.settings.syncInterval <= 0) {
+			return;
+		}
+
+		// 清理现有的定时器
+		this.stopAutoSync();
+
+		// 设置新的定时器
+		const intervalMs = this.settings.syncInterval * 60 * 1000; // 转换为毫秒
+		this.syncTimer = window.setInterval(() => {
+			this.syncAllRepositories();
+		}, intervalMs);
+
+		console.log(`Auto sync started with interval: ${this.settings.syncInterval} minutes`);
+	}
+
+	/**
+	 * 停止自动同步
+	 */
+	private stopAutoSync() {
+		if (this.syncTimer) {
+			window.clearInterval(this.syncTimer);
+			this.syncTimer = undefined;
+		}
+	}
+
+	/**
+	 * 重新启动自动同步（当设置变更时调用）
+	 */
+	restartAutoSync() {
+		this.stopAutoSync();
+		this.startAutoSync();
 	}
 }
