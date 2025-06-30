@@ -382,7 +382,7 @@ export class IssueWorkbenchView extends ItemView {
 			const activeRepos = this.plugin.getActiveRepositories();
 			this.repositories = [];
 			this.projects = { projects: [] }; // 重置项目数据
-			let allProjects: GitHubProject[] = [];
+			const allProjects: GitHubProject[] = [];
 			let lastProjectSync: string | undefined;
 
 			for (const repo of activeRepos) {
@@ -402,7 +402,15 @@ export class IssueWorkbenchView extends ItemView {
 
 					// 聚合所有仓库的 Projects 数据
 					if (cache.projects && cache.projects.length > 0) {
-						allProjects.push(...cache.projects);
+						// 为每个项目添加仓库信息
+						const projectsWithRepo = cache.projects.map(p => ({
+							...p,
+							repository: {
+								owner: repo.owner,
+								name: repo.repo
+							}
+						}));
+						allProjects.push(...projectsWithRepo);
 					}
 					
 					// 找到最近的同步时间
@@ -444,7 +452,20 @@ export class IssueWorkbenchView extends ItemView {
 
 					if (cache && cache.projects) {
 						// 为每个项目附加仓库信息，以便在卡片中显示
-						const projectsWithRepoInfo = cache.projects.map((p: any) => ({
+						const projectsWithRepoInfo = cache.projects.map((p: {
+							id: number;
+							number: number;
+							title: string;
+							body: string;
+							state: 'open' | 'closed';
+							creator: {
+								login: string;
+								avatar_url: string;
+							};
+							created_at: string;
+							updated_at: string;
+							html_url: string;
+						}) => ({
 							...p,
 							repository: {
 								owner: repo.owner,

@@ -17,6 +17,20 @@ export interface GitHubSyncResult {
 export interface GitHubRepoCache {
 	last_sync: string; // ISO 8601 格式的时间戳
 	issues: GitHubIssue[];
+	projects?: {
+		id: number;
+		number: number;
+		title: string;
+		body: string;
+		state: 'open' | 'closed';
+		creator: {
+			login: string;
+			avatar_url: string;
+		};
+		created_at: string;
+		updated_at: string;
+		html_url: string;
+	}[]; // 仓库关联的项目列表
 }
 
 export interface GitHubIssueCache {
@@ -248,7 +262,9 @@ export class GitHubDataSync {
 		
 		const updatedCache: GitHubRepoCache = {
 			last_sync: new Date().toISOString(),
-			issues: allIssues
+			issues: allIssues,
+			// 保留现有的 projects 数据（如果有）
+			...(existingCache?.projects ? { projects: existingCache.projects } : {})
 		};
 
 		return {
@@ -336,5 +352,222 @@ export class GitHubDataSync {
 			console.error(`Failed to fetch commits for issue #${issueNumber}:`, error);
 			return 0;
 		}
+	}
+
+	/**
+	 * 获取GitHub仓库关联的项目数据
+	 * @param repo GitHub仓库
+	 * @returns 获取结果
+	 */
+	async fetchRepositoryProjects(repo: GithubRepository): Promise<{
+		success: boolean;
+		error?: string;
+		projects?: {
+			id: number;
+			number: number;
+			title: string;
+			body: string;
+			state: 'open' | 'closed';
+			creator: {
+				login: string;
+				avatar_url: string;
+			};
+			created_at: string;
+			updated_at: string;
+			html_url: string;
+		}[];
+		rateLimitRemaining?: number;
+	}> {
+		try {
+			const repoKey = this.getRepoKey(repo);
+			console.log(`Fetching projects for repository ${repoKey}`);
+			
+			// 构建GraphQL查询
+			const query = `
+				query {
+					repository(owner: "${repo.owner}", name: "${repo.repo}") {
+						projects(first: 20, states: [OPEN]) {
+							nodes {
+								id
+								number
+								title
+								body
+								state
+								creator {
+									login
+									avatarUrl
+								}
+								createdAt
+								updatedAt
+								url
+							}
+						}
+					}
+				}
+			`;
+			
+			// 发送查询请求
+			const response = await fetch('https://api.github.com/graphql', {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${this.token}`,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ query }),
+			});
+			
+			const data = await response.json();
+			const rateLimitRemaining = parseInt(response.headers.get('x-ratelimit-remaining') || '0');
+			
+			if (!response.ok) {
+				return {
+					success: false,
+					error: `Failed to fetch projects: ${data.message || response.statusText}`,
+					rateLimitRemaining
+				};
+			}
+			
+			if (data.errors) {
+				return {
+					success: false,
+					error: `GraphQL error: ${data.errors[0].message}`,
+					rateLimitRemaining
+				};
+			}
+			
+			// 从响应中提取项目数据
+			const projects = data.data?.repository?.projects?.nodes || [];
+			
+			// 格式化返回的项目数据
+			const formattedProjects = projects.map((project: {
+				id: string;
+				number: number;
+				title: string;
+				body: string;
+				state: string;
+				creator: {
+					login: string;
+					avatarUrl: string;
+				};
+				createdAt: string;
+				updatedAt: string;
+				url: string;
+			}) => ({
+				id: project.id,
+				number: project.number,
+				title: project.title,
+				body: project.body,
+				state: project.state.toLowerCase(),
+				creator: {
+					login: project.creator.login,
+					avatar_url: project.creator.avatarUrl
+				},
+				created_at: project.createdAt,
+				updated_at: project.updatedAt,
+				html_url: project.url
+			}));
+			
+			return {
+				success: true,
+				projects: formattedProjects,
+				rateLimitRemaining
+			};
+		} catch (error) {
+			console.error('Error fetching repository projects:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error'
+			};
+		}
+	}
+	
+	/**
+	 * 同步仓库的项目数据
+	 * @param repo GitHub仓库
+	 * @param existingCache 现有的仓库缓存
+	 * @returns 更新后的缓存及结果
+	 */
+	async syncRepositoryProjects(
+		repo: GithubRepository,
+		existingCache?: GitHubRepoCache
+	): Promise<{ cache: GitHubRepoCache | null; result: { success: boolean; error?: string } }> {
+		const repoKey = this.getRepoKey(repo);
+		console.log(`Syncing projects for repository ${repoKey}`);
+		
+		const fetchResult = await this.fetchRepositoryProjects(repo);
+		
+		if (!fetchResult.success || !fetchResult.projects) {
+			return {
+				cache: null,
+				result: fetchResult
+			};
+		}
+		
+		// 准备更新缓存
+		const issues = existingCache?.issues || [];
+		const lastSync = existingCache?.last_sync || new Date().toISOString();
+		
+		const updatedCache: GitHubRepoCache = {
+			last_sync: lastSync,
+			issues: issues,
+			projects: fetchResult.projects
+		};
+		
+		return {
+			cache: updatedCache,
+			result: {
+				success: true
+			}
+		};
+	}
+	
+	/**
+	 * 为所有仓库同步项目数据
+	 * @param repositories 要同步的仓库列表
+	 * @param existingCache 现有的缓存数据
+	 * @returns 更新后的完整缓存数据
+	 */
+	async syncAllRepositoriesProjects(
+		repositories: GithubRepository[],
+		existingCache: GitHubIssueCache = {}
+	): Promise<{ cache: GitHubIssueCache; results: Record<string, { success: boolean; error?: string }> }> {
+		const updatedCache: GitHubIssueCache = { ...existingCache };
+		const results: Record<string, { success: boolean; error?: string }> = {};
+		
+		for (const repo of repositories) {
+			if (repo.isDisabled) {
+				continue; // 跳过禁用的仓库
+			}
+			
+			const repoKey = this.getRepoKey(repo);
+			
+			try {
+				// 使用现有缓存，如果存在的话
+				const { cache, result } = await this.syncRepositoryProjects(repo, existingCache[repoKey]);
+				
+				if (result.success && cache) {
+					// 更新缓存
+					updatedCache[repoKey] = {
+						...updatedCache[repoKey], // 保留现有数据（如issues）
+						projects: cache.projects // 更新项目数据
+					};
+					results[repoKey] = { success: true };
+				} else {
+					results[repoKey] = { 
+						success: false, 
+						error: result.error || 'Unknown error during project sync' 
+					};
+					console.error(`Failed to sync projects for repository ${repoKey}:`, result.error);
+				}
+			} catch (error) {
+				results[repoKey] = { 
+					success: false, 
+					error: error instanceof Error ? error.message : 'Unknown error' 
+				};
+				console.error(`Error syncing projects for repository ${repoKey}:`, error);
+			}
+		}
+		
+		return { cache: updatedCache, results };
 	}
 }

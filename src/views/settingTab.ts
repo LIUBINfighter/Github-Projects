@@ -16,6 +16,7 @@ export interface GithubProject {
 	projectNumber: number; // Project 编号
 	isDefault: boolean; // 是否为默认项目
 	isDisabled?: boolean; // 是否禁用（不显示在下拉栏，不同步）
+	type?: 'user' | 'org'; // 项目类型：用户项目或组织项目
 }
 
 export interface GitHubProjectCache {
@@ -597,7 +598,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		// Project URL 输入
 		const projectUrlInput = addProjectContainer.createEl('input', {
 			type: 'text',
-			placeholder: 'GitHub Project URL (e.g., https://github.com/orgs/myorg/projects/1)'
+			placeholder: 'GitHub Project URL (e.g., https://github.com/orgs/myorg/projects/1 or https://github.com/users/username/projects/3)'
 		});
 		projectUrlInput.style.width = '100%';
 		projectUrlInput.style.marginBottom = 'var(--size-2-2)';
@@ -605,6 +606,13 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		projectUrlInput.style.borderRadius = 'var(--radius-s)';
 		projectUrlInput.style.border = '1px solid var(--background-modifier-border)';
 		projectUrlInput.style.fontSize = 'var(--font-ui-small)';
+
+		// 添加支持格式说明
+		const urlHintDiv = addProjectContainer.createDiv();
+		urlHintDiv.style.fontSize = 'var(--font-ui-smaller)';
+		urlHintDiv.style.color = 'var(--text-muted)';
+		urlHintDiv.style.marginBottom = 'var(--size-2-2)';
+		urlHintDiv.innerHTML = '💡 Supports both organization projects (<code>/orgs/name/projects/N</code>) and user projects (<code>/users/name/projects/N</code>)';
 
 		const orDiv = addProjectContainer.createDiv();
 		orDiv.textContent = 'OR';
@@ -690,16 +698,30 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			let name = projectNameInput.value.trim();
 			let owner = ownerInput.value.trim();
 			let projectNumber = parseInt(projectNumberInput.value.trim());
+			let type: 'user' | 'org' = 'org'; // 默认为组织项目
 
 			// 如果有 URL，尝试解析
-			if (!name || !owner || !projectNumber) {
-				const parsed = this.parseGitHubProjectUrl(projectUrlInput.value.trim());
+			const urlValue = projectUrlInput.value.trim();
+			if (urlValue) {
+				const parsed = this.parseGitHubProjectUrl(urlValue);
 				if (parsed) {
 					name = name || parsed.name;
 					owner = owner || parsed.owner;
 					projectNumber = projectNumber || parsed.projectNumber;
+					type = parsed.type;
 				}
+			} else if (!name || !owner || !projectNumber) {
+				// 如果没有URL且手动输入不完整
+				const errorMsg = addProjectContainer.createDiv();
+				errorMsg.className = 'error-message';
+				errorMsg.textContent = 'Please provide a valid GitHub Project URL or fill in all fields manually.';
+				errorMsg.style.color = 'var(--text-error)';
+				errorMsg.style.fontSize = '12px';
+				errorMsg.style.marginTop = '5px';
+				setTimeout(() => errorMsg.remove(), 3000);
+				return;
 			}
+			// 如果是手动输入且没有URL，默认保持为 'org'
 
 			if (!name || !owner || !projectNumber) {
 				const errorMsg = addProjectContainer.createDiv();
@@ -717,7 +739,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				owner,
 				projectNumber,
 				isDefault: this.plugin.settings.projects.length === 0,
-				isDisabled: false
+				isDisabled: false,
+				type
 			};
 
 			this.plugin.settings.projects.push(newProject);
@@ -843,7 +866,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		label.style.fontSize = 'var(--font-ui-smaller)';
 		label.style.color = 'var(--text-muted)';
 
-		const projectUrl = `https://github.com/orgs/${project.owner}/projects/${project.projectNumber}`;
+		// 根据项目类型生成正确的URL
+		const projectType = project.type || 'org'; // 为了兼容性，默认为组织项目
+		const projectUrl = `https://github.com/${projectType === 'user' ? 'users' : 'orgs'}/${project.owner}/projects/${project.projectNumber}`;
 		const link = info.createEl('a');
 		link.textContent = projectUrl;
 		link.href = projectUrl;
@@ -861,32 +886,62 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private parseGitHubProjectUrl(url: string): { name: string; owner: string; projectNumber: number } | null {
+	private parseGitHubProjectUrl(url: string): { name: string; owner: string; projectNumber: number; type: 'user' | 'org' } | null {
 		if (!url) return null;
 
 		// 匹配各种可能的 GitHub Project URL 格式
 		const patterns = [
 			// https://github.com/orgs/owner/projects/123
-			/^https?:\/\/github\.com\/orgs\/([^/]+)\/projects\/(\d+)/,
+			{ regex: /^https?:\/\/github\.com\/orgs\/([^/]+)\/projects\/(\d+)/, type: 'org' as const },
 			// github.com/orgs/owner/projects/123
-			/^github\.com\/orgs\/([^/]+)\/projects\/(\d+)/,
+			{ regex: /^github\.com\/orgs\/([^/]+)\/projects\/(\d+)/, type: 'org' as const },
 			// orgs/owner/projects/123
-			/^orgs\/([^/]+)\/projects\/(\d+)/,
+			{ regex: /^orgs\/([^/]+)\/projects\/(\d+)/, type: 'org' as const },
 			// 用户项目: https://github.com/users/username/projects/123
-			/^https?:\/\/github\.com\/users\/([^/]+)\/projects\/(\d+)/,
-			/^github\.com\/users\/([^/]+)\/projects\/(\d+)/,
-			/^users\/([^/]+)\/projects\/(\d+)/
+			{ regex: /^https?:\/\/github\.com\/users\/([^/]+)\/projects\/(\d+)/, type: 'user' as const },
+			{ regex: /^github\.com\/users\/([^/]+)\/projects\/(\d+)/, type: 'user' as const },
+			{ regex: /^users\/([^/]+)\/projects\/(\d+)/, type: 'user' as const }
 		];
 
 		for (const pattern of patterns) {
-			const match = url.match(pattern);
+			const match = url.match(pattern.regex);
 			if (match) {
 				const owner = match[1];
 				const projectNumber = parseInt(match[2]);
 				return {
 					name: `${owner} Project ${projectNumber}`,
 					owner,
-					projectNumber
+					projectNumber,
+					type: pattern.type
+				};
+			}
+		}
+
+		return null;
+	}
+
+	private parseGitHubUrl(url: string): { name: string; owner: string; repo: string } | null {
+		if (!url) return null;
+
+		// 匹配各种可能的 GitHub 仓库URL格式
+		const patterns = [
+			// https://github.com/username/repo
+			/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/?$/,
+			// github.com/username/repo
+			/^github\.com\/([^/]+)\/([^/]+)\/?$/,
+			// username/repo
+			/^([^/]+)\/([^/]+)\/?$/
+		];
+
+		for (const pattern of patterns) {
+			const match = url.match(pattern);
+			if (match) {
+				const owner = match[1];
+				const repo = match[2];
+				return {
+					name: `${repo}`,
+					owner,
+					repo
 				};
 			}
 		}
@@ -1000,5 +1055,172 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				statusText.style.color = '#ef4444';
 				break;
 		}
+	}
+
+	private displaySyncSettings(containerEl: HTMLElement): void {
+		containerEl.createEl('h3', {text: 'Synchronization Options'});
+
+		// 自动同步设置
+		new Setting(containerEl)
+			.setName('Auto-Sync Enabled')
+			.setDesc('Automatically sync GitHub data at regular intervals.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.autoSync)
+				.onChange(async (value) => {
+					this.plugin.settings.autoSync = value;
+					await this.plugin.saveSettings();
+					// 刷新显示以更新同步间隔设置的可见性
+					this.display();
+				}));
+
+		// 仅当自动同步启用时显示同步间隔设置
+		if (this.plugin.settings.autoSync) {
+			new Setting(containerEl)
+				.setName('Sync Interval')
+				.setDesc('How often to sync data (in minutes).')
+				.addSlider(slider => slider
+					.setLimits(1, 60, 1)
+					.setValue(this.plugin.settings.syncInterval)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.syncInterval = value;
+						await this.plugin.saveSettings();
+						// 如果主插件有重启同步的方法，调用它
+						// 这里先注释掉，如果需要可以实现该方法
+						// this.plugin.restartAutoSync();
+					}))
+				.addExtraButton(button => button
+					.setIcon('reset')
+					.setTooltip('Reset to default (5 minutes)')
+					.onClick(async () => {
+						this.plugin.settings.syncInterval = 5;
+						await this.plugin.saveSettings();
+						this.display();
+						// 重启同步服务（如果主插件有这个方法）
+						// this.plugin.restartAutoSync();
+					}));
+		}
+
+		// 手动同步按钮
+		const syncButtonContainer = containerEl.createDiv();
+		syncButtonContainer.style.marginTop = '20px';
+		
+		const syncButton = syncButtonContainer.createEl('button', {
+			text: 'Sync Now',
+			cls: 'mod-cta'
+		});
+		
+		syncButton.addEventListener('click', async () => {
+			syncButton.disabled = true;
+			syncButton.textContent = 'Syncing...';
+			
+			try {
+				// 调用数据同步
+				// 注意：这里需要确保主插件中有同步数据的方法
+				// 如果没有 syncData 方法，你可能需要创建一个，或者修改这里的调用
+				// await this.plugin.syncData();
+				
+				// 临时替代方案：直接创建同步器并执行
+				if (this.plugin.settings.githubToken) {
+					const sync = new GitHubDataSync(this.plugin.settings.githubToken);
+					
+					// 同步仓库 issue 数据
+					const activeRepos = this.plugin.settings.repositories.filter(repo => !repo.isDisabled);
+					if (activeRepos.length > 0) {
+						const repoResult = await sync.syncAllRepositories(activeRepos, this.plugin.settings.issueCache);
+						this.plugin.settings.issueCache = repoResult.cache;
+						
+						// 同步仓库项目数据
+						const projectResult = await sync.syncAllRepositoriesProjects(activeRepos, this.plugin.settings.issueCache);
+						this.plugin.settings.issueCache = projectResult.cache;
+					}
+					
+					// TODO: 需要实现单独的项目同步功能
+					
+					// 更新设置以保存缓存
+					await this.plugin.saveSettings();
+				}
+				
+				syncButton.textContent = 'Sync Completed!';
+				// 显示成功图标
+				const successIcon = document.createElement('span');
+				successIcon.textContent = ' ✓';
+				successIcon.style.color = 'var(--color-green)';
+				syncButton.appendChild(successIcon);
+				
+				// 3秒后恢复按钮状态
+				setTimeout(() => {
+					syncButton.disabled = false;
+					syncButton.textContent = 'Sync Now';
+				}, 3000);
+			} catch (error) {
+				syncButton.textContent = 'Sync Failed!';
+				// 显示错误图标
+				const errorIcon = document.createElement('span');
+				errorIcon.textContent = ' ✗';
+				errorIcon.style.color = 'var(--color-red)';
+				syncButton.appendChild(errorIcon);
+				
+				// 显示错误信息
+				const errorMsg = syncButtonContainer.createDiv();
+				errorMsg.textContent = error instanceof Error ? error.message : 'Unknown error';
+				errorMsg.style.color = 'var(--color-red)';
+				errorMsg.style.marginTop = '5px';
+				errorMsg.style.fontSize = '12px';
+				
+				// 3秒后恢复按钮状态
+				setTimeout(() => {
+					syncButton.disabled = false;
+					syncButton.textContent = 'Sync Now';
+					errorMsg.remove();
+				}, 5000);
+			}
+		});
+
+		// 添加上次同步时间信息
+		const lastSyncInfo = containerEl.createDiv();
+		lastSyncInfo.style.marginTop = '10px';
+		lastSyncInfo.style.fontSize = '12px';
+		lastSyncInfo.style.color = 'var(--text-muted)';
+		
+		// 查找最近的同步时间
+		let lastSyncTime = 'Never';
+		
+		// 检查缓存中的最后同步时间
+		const allCacheTimes: number[] = [];
+		
+		// 从仓库缓存中获取最后同步时间
+		for (const repoKey in this.plugin.settings.issueCache) {
+			const lastSync = this.plugin.settings.issueCache[repoKey]?.last_sync;
+			if (lastSync) {
+				try {
+					const syncDate = new Date(lastSync);
+					allCacheTimes.push(syncDate.getTime());
+				} catch (e) {
+					// 忽略无效日期
+				}
+			}
+		}
+		
+		// 从项目缓存中获取最后同步时间
+		for (const projectKey in this.plugin.settings.projectCache) {
+			const lastSync = this.plugin.settings.projectCache[projectKey]?.last_sync;
+			if (lastSync) {
+				try {
+					const syncDate = new Date(lastSync);
+					allCacheTimes.push(syncDate.getTime());
+				} catch (e) {
+					// 忽略无效日期
+				}
+			}
+		}
+		
+		// 找出最近的同步时间
+		if (allCacheTimes.length > 0) {
+			const mostRecent = new Date(Math.max(...allCacheTimes));
+			lastSyncTime = mostRecent.toLocaleString();
+		}
+		
+		lastSyncInfo.textContent = `Last synchronized: ${lastSyncTime}`;
 	}
 }
