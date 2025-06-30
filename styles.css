@@ -179,6 +179,21 @@
 	border-color: var(--interactive-accent);
 }
 
+/* 仓库选择器样式 */
+.repo-select option:disabled {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.repo-select:invalid {
+	color: var(--text-faint);
+}
+
+/* 确保选择器在没有有效选择时显示占位符样式 */
+.repo-select option[value=""] {
+	color: var(--text-faint);
+}
+
 /* 过滤工具栏样式 */
 .filter-toolbar {
 	background: var(--background-secondary);
@@ -344,6 +359,21 @@
 .repo-select:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
+}
+
+/* 仓库选择器样式 */
+.repo-select option:disabled {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.repo-select:invalid {
+	color: var(--text-faint);
+}
+
+/* 确保选择器在没有有效选择时显示占位符样式 */
+.repo-select option[value=""] {
+	color: var(--text-faint);
 }
 
 /* Loading and empty states */

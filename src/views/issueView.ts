@@ -151,11 +151,12 @@ export class IssueView extends ItemView {
 
 		const select = selectorContainer.createEl('select', { cls: 'repo-select' });
 
-		// 添加默认选项
-		select.createEl('option', { 
+		// 添加默认选项（不可选）
+		const defaultOption = select.createEl('option', { 
 			text: 'Select a repository...',
 			value: ''
 		});
+		defaultOption.disabled = true;
 
 		// 填充仓库选项
 		this.plugin.settings.repositories.forEach(repo => {
@@ -166,32 +167,43 @@ export class IssueView extends ItemView {
 			});
 		});
 
-		// 设置当前选中的仓库
+		// 设置当前选中的仓库，如果没有选中的仓库则使用第一个可用仓库
 		if (this.selectedRepo) {
 			select.value = this.selectedRepo;
+		} else if (this.plugin.settings.repositories.length > 0) {
+			// 如果没有选中的仓库，默认选择第一个仓库
+			const firstRepo = this.plugin.settings.repositories[0];
+			const firstRepoKey = `${firstRepo.owner}/${firstRepo.repo}`;
+			this.selectedRepo = firstRepoKey;
+			select.value = firstRepoKey;
+		} else {
+			// 如果没有配置任何仓库，选中默认选项但保持禁用状态
+			select.value = '';
 		}
 
 		select.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
 			const newRepo = target.value;
 			
+			// 防止选择到空值
+			if (!newRepo) {
+				// 如果尝试选择空值，恢复到之前的选择
+				if (this.selectedRepo) {
+					target.value = this.selectedRepo;
+				}
+				return;
+			}
+			
 			if (newRepo !== this.selectedRepo) {
 				this.selectedRepo = newRepo;
 				
-				if (this.selectedRepo) {
-					// 重置过滤器和状态
-					this.resetFilters();
-					this.issues = [];
-					this.filteredIssues = [];
-					
-					// 加载新仓库的 Issues
-					this.loadIssues();
-				} else {
-					// 清空状态
-					this.issues = [];
-					this.filteredIssues = [];
-					this.updateIssuesList();
-				}
+				// 重置过滤器和状态
+				this.resetFilters();
+				this.issues = [];
+				this.filteredIssues = [];
+				
+				// 加载新仓库的 Issues
+				this.loadIssues();
 			}
 		});
 	}
@@ -361,12 +373,24 @@ export class IssueView extends ItemView {
 	}
 
 	private async loadDefaultRepository() {
+		// 首先尝试找到默认仓库
 		const defaultRepo = this.plugin.settings.repositories.find(repo => repo.isDefault);
+		
 		if (defaultRepo) {
 			this.selectedRepo = `${defaultRepo.owner}/${defaultRepo.repo}`;
+		} else if (this.plugin.settings.repositories.length > 0) {
+			// 如果没有默认仓库，选择第一个可用的仓库
+			const firstRepo = this.plugin.settings.repositories[0];
+			this.selectedRepo = `${firstRepo.owner}/${firstRepo.repo}`;
+		} else {
+			// 如果没有任何仓库，清空选择
+			this.selectedRepo = '';
 			this.updateRepositorySelector();
-			await this.loadIssues();
+			return;
 		}
+		
+		this.updateRepositorySelector();
+		await this.loadIssues();
 	}
 
 	private async loadIssues() {
@@ -1114,8 +1138,13 @@ export class IssueView extends ItemView {
 	 */
 	private updateRepositorySelector() {
 		const select = this.containerEl.querySelector('.repo-select') as HTMLSelectElement;
-		if (select && this.selectedRepo) {
-			select.value = this.selectedRepo;
+		if (select) {
+			if (this.selectedRepo) {
+				select.value = this.selectedRepo;
+			} else {
+				// 如果没有选中的仓库，确保选择器显示默认的不可选选项
+				select.value = '';
+			}
 		}
 	}
 }
