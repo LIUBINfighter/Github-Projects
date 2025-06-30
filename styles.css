@@ -891,7 +891,7 @@
 
 .repository-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 	gap: var(--size-4-3);
 }
 
@@ -901,6 +901,8 @@
 	background: var(--background-secondary);
 	overflow: hidden;
 	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
 }
 
 .repository-card:hover {
@@ -914,6 +916,7 @@
 	align-items: flex-start;
 	padding: var(--size-4-3);
 	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	flex-wrap: wrap;
 }
 
 .card-title {
@@ -938,6 +941,8 @@
 .sync-status {
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
+	word-break: break-all;
+	max-width: 100%;
 }
 
 .sync-time {
@@ -945,6 +950,19 @@
 	background: var(--background-modifier-form-field);
 	border-radius: var(--radius-s);
 	font-size: var(--font-ui-smaller);
+	display: inline-block;
+	word-break: break-all;
+	max-width: 100%;
+}
+@media (max-width: 400px) {
+  .card-header {
+	flex-direction: column;
+	align-items: flex-start;
+  }
+  .sync-status {
+	margin-top: var(--size-2-2);
+	width: 100%;
+  }
 }
 
 .sync-never {
@@ -1066,6 +1084,7 @@
 	padding: var(--size-4-3);
 	border-top: var(--border-width) solid var(--background-modifier-border);
 	background: var(--background-primary);
+	margin-top: auto;
 }
 
 .card-actions button {
@@ -1293,16 +1312,16 @@
 
 /* 样式：仓库卡片按钮排列 */
 .repository-card .card-actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 8px; /* 按钮之间的间距 */
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px; /* 按钮之间的间距 */
 }
 
 .repository-card .card-actions button {
-    width: auto;
-    padding: 6px 12px; /* 按钮的内边距 */
-    white-space: nowrap; /* 防止按钮内容换行 */
-    flex-grow: 0;
-    flex-shrink: 0;
+	width: auto;
+	padding: 6px 12px; /* 按钮的内边距 */
+	white-space: nowrap; /* 防止按钮内容换行 */
+	flex-grow: 0;
+	flex-shrink: 0;
 }
