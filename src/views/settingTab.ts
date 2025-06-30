@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import type GithubProjectsPlugin from './main';
+import type GithubProjectsPlugin from '../main';
 
 export interface GithubRepository {
 	name: string; // 显示名称

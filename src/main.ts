@@ -1,5 +1,5 @@
 import { Plugin } from 'obsidian';
-import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } from './settingTab';
+import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } from './views/settingTab';
 
 export default class GithubProjectsPlugin extends Plugin {
 	settings: GithubProjectsSettings;
