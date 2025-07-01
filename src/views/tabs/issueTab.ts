@@ -8,6 +8,10 @@ export interface WorkbenchStats {
 	closedIssues: number;
 	assignedToMe: number;
 	recentlyUpdated: number;
+	createdToday: number;
+	resolvedToday: number;
+	createdThisWeek: number;
+	resolvedThisWeek: number;
 }
 
 export interface RepositoryOverview {
@@ -78,7 +82,11 @@ export class IssueTab {
 							openIssues: 0,
 							closedIssues: 0,
 							assignedToMe: 0,
-							recentlyUpdated: 0
+							recentlyUpdated: 0,
+							createdToday: 0,
+							resolvedToday: 0,
+							createdThisWeek: 0,
+							resolvedThisWeek: 0
 						},
 						issues: []
 					});
@@ -161,13 +169,21 @@ export class IssueTab {
 			acc.closedIssues += repo.stats.closedIssues;
 			acc.assignedToMe += repo.stats.assignedToMe;
 			acc.recentlyUpdated += repo.stats.recentlyUpdated;
+			acc.createdToday += repo.stats.createdToday;
+			acc.resolvedToday += repo.stats.resolvedToday;
+			acc.createdThisWeek += repo.stats.createdThisWeek;
+			acc.resolvedThisWeek += repo.stats.resolvedThisWeek;
 			return acc;
 		}, {
 			totalIssues: 0,
 			openIssues: 0,
 			closedIssues: 0,
 			assignedToMe: 0,
-			recentlyUpdated: 0
+			recentlyUpdated: 0,
+			createdToday: 0,
+			resolvedToday: 0,
+			createdThisWeek: 0,
+			resolvedThisWeek: 0
 		});
 
 		// 创建统计卡片
@@ -176,6 +192,15 @@ export class IssueTab {
 		this.createStatCard(statsGrid, 'Closed Issues', totalStats.closedIssues, 'check-circle', 'closed');
 		this.createStatCard(statsGrid, 'Assigned to Me', totalStats.assignedToMe, 'user');
 		this.createStatCard(statsGrid, 'Recently Updated', totalStats.recentlyUpdated, 'clock');
+
+		// 创建细化的活动统计
+		const activitySection = container.createDiv('stats-overview');
+		activitySection.createEl('h3', { text: 'Recent Activity', cls: 'section-title' });
+		const activityGrid = activitySection.createDiv('stats-grid');
+		this.createStatCard(activityGrid, 'Created Today', totalStats.createdToday, 'calendar-plus', 'created');
+		this.createStatCard(activityGrid, 'Resolved Today', totalStats.resolvedToday, 'calendar-check', 'resolved');
+		this.createStatCard(activityGrid, 'Created This Week', totalStats.createdThisWeek, 'calendar-plus', 'created');
+		this.createStatCard(activityGrid, 'Resolved This Week', totalStats.resolvedThisWeek, 'calendar-check', 'resolved');
 	}
 
 	private createStatCard(container: Element, title: string, value: number, icon: string, type?: string) {
@@ -315,16 +340,57 @@ export class IssueTab {
 		const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 		const currentUser = this.plugin.getCurrentUser();
 
+		const todayStart = new Date();
+		todayStart.setHours(0, 0, 0, 0);
+
+		const weekStart = new Date();
+		const dayOfWeek = weekStart.getDay(); // Sunday - 0, Monday - 1, ...
+		const diff = weekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // adjust when day is sunday
+		weekStart.setDate(diff);
+		weekStart.setHours(0, 0, 0, 0);
+
+		let createdToday = 0;
+		let resolvedToday = 0;
+		let createdThisWeek = 0;
+		let resolvedThisWeek = 0;
+
+		for (const issue of issues) {
+			const createdAt = new Date(issue.created_at);
+			const updatedAt = new Date(issue.updated_at);
+
+			// Created stats
+			if (createdAt >= todayStart) {
+				createdToday++;
+			}
+			if (createdAt >= weekStart) {
+				createdThisWeek++;
+			}
+
+			// Resolved stats (state is closed and updated within the period)
+			if (issue.state === 'closed') {
+				if (updatedAt >= todayStart) {
+					resolvedToday++;
+				}
+				if (updatedAt >= weekStart) {
+					resolvedThisWeek++;
+				}
+			}
+		}
+
 		return {
 			totalIssues: issues.length,
 			openIssues: issues.filter(issue => issue.state === 'open').length,
 			closedIssues: issues.filter(issue => issue.state === 'closed').length,
-			assignedToMe: issues.filter(issue => 
+			assignedToMe: issues.filter(issue =>
 				issue.assignee?.login === currentUser?.login
 			).length,
-			recentlyUpdated: issues.filter(issue => 
+			recentlyUpdated: issues.filter(issue =>
 				new Date(issue.updated_at) > oneDayAgo
-			).length
+			).length,
+			createdToday,
+			resolvedToday,
+			createdThisWeek,
+			resolvedThisWeek
 		};
 	}
 
