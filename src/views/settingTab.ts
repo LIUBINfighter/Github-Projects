@@ -625,12 +625,13 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 					testButtonContainer.style.alignItems = 'center';
 					testButtonContainer.style.gap = 'var(--size-2-2)';
 
-					const testButton = testButtonContainer.createEl('button', {
-						cls: 'clickable-icon-button'
-					});
-					testButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-					testButton.title = 'Test IDE command';
-					testButton.style.padding = 'var(--size-2-2)';
+				const testButton = testButtonContainer.createEl('button', {
+					cls: 'clickable-icon-button'
+				});
+				// 使用更合适的“play”图标表示“测试/运行”
+				testButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+				testButton.title = 'Test IDE command';
+				testButton.style.padding = 'var(--size-2-2)';
 
 					const testStatus = testButtonContainer.createSpan();
 					testStatus.style.fontSize = 'var(--font-ui-smaller)';
