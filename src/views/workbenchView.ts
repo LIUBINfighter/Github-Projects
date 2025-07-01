@@ -1,24 +1,8 @@
-import { ItemView, WorkspaceLeaf, Notice, setIcon, Platform } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, setIcon } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
-import { GitHubIssue } from './issueView';
+import { IssueTab } from './tabs/issueTab';
 
 export const WORKBENCH_VIEW_TYPE = 'github-workbench-view';
-
-interface WorkbenchStats {
-	totalIssues: number;
-	openIssues: number;
-	closedIssues: number;
-	assignedToMe: number;
-	recentlyUpdated: number;
-}
-
-interface RepositoryOverview {
-	name: string;
-	key: string;
-	stats: WorkbenchStats;
-	lastSync?: string;
-	issues: GitHubIssue[];
-}
 
 interface GitHubProject {
 	id: number;
@@ -48,7 +32,7 @@ type WorkbenchTab = 'issues' | 'projects';
 
 export class IssueWorkbenchView extends ItemView {
 	plugin: GithubProjectsPlugin;
-	private repositories: RepositoryOverview[] = [];
+	private issueTab: IssueTab;
 	private projects: ProjectsOverview = { projects: [] };
 	private isLoading = false;
 	private activeTab: WorkbenchTab = 'issues';
@@ -56,6 +40,7 @@ export class IssueWorkbenchView extends ItemView {
 	constructor(leaf: WorkspaceLeaf, plugin: GithubProjectsPlugin) {
 		super(leaf);
 		this.plugin = plugin;
+		this.issueTab = new IssueTab(plugin);
 	}
 
 	getViewType() {
@@ -182,16 +167,7 @@ export class IssueWorkbenchView extends ItemView {
 	}
 
 	private createIssuesContent(container: Element) {
-		if (this.repositories.length === 0) {
-			this.showEmptyState(container);
-			return;
-		}
-
-		// 创建统计概览
-		this.createStatsOverview(container);
-
-		// 创建仓库卡片网格
-		this.createRepositoryGrid(container);
+		this.issueTab.render(container);
 	}
 
 	private createProjectsContent(container: Element) {
@@ -208,306 +184,19 @@ export class IssueWorkbenchView extends ItemView {
 		loadingDiv.createEl('p', { text: 'Loading workbench data...' });
 	}
 
-	private showEmptyState(container: Element) {
-		// 创建一个包装容器，用于更好的布局控制
-		const emptyWrapper = container.createDiv('issues-empty-wrapper');
-		
-		const emptyDiv = emptyWrapper.createDiv('empty-state');
-		const iconDiv = emptyDiv.createDiv('empty-icon');
-		setIcon(iconDiv, 'folder-git-2');
-		
-		emptyDiv.createEl('h3', { text: 'No repositories configured' });
-		emptyDiv.createEl('p', { text: 'Add some repositories in the settings to get started.' });
-		
-		const settingsBtn = emptyDiv.createEl('button', {
-			cls: 'mod-cta',
-			text: 'Open Settings'
-		});
-		settingsBtn.addEventListener('click', () => {
-			// @ts-ignore
-			this.app.setting.open();
-			// @ts-ignore
-			this.app.setting.openTabById(this.plugin.manifest.id);
-		});
-	}
-
-	private createStatsOverview(container: Element) {
-		const statsSection = container.createDiv('stats-overview');
-		statsSection.createEl('h3', { text: 'Overview', cls: 'section-title' });
-
-		const statsGrid = statsSection.createDiv('stats-grid');
-
-		// 计算总体统计
-		const totalStats = this.repositories.reduce((acc, repo) => {
-			acc.totalIssues += repo.stats.totalIssues;
-			acc.openIssues += repo.stats.openIssues;
-			acc.closedIssues += repo.stats.closedIssues;
-			acc.assignedToMe += repo.stats.assignedToMe;
-			acc.recentlyUpdated += repo.stats.recentlyUpdated;
-			return acc;
-		}, {
-			totalIssues: 0,
-			openIssues: 0,
-			closedIssues: 0,
-			assignedToMe: 0,
-			recentlyUpdated: 0
-		});
-
-		// 创建统计卡片
-		this.createStatCard(statsGrid, 'Total Issues', totalStats.totalIssues, 'list');
-		this.createStatCard(statsGrid, 'Open Issues', totalStats.openIssues, 'circle-dot', 'open');
-		this.createStatCard(statsGrid, 'Closed Issues', totalStats.closedIssues, 'check-circle', 'closed');
-		this.createStatCard(statsGrid, 'Assigned to Me', totalStats.assignedToMe, 'user');
-		this.createStatCard(statsGrid, 'Recently Updated', totalStats.recentlyUpdated, 'clock');
-	}
-
-	private createStatCard(container: Element, title: string, value: number, icon: string, type?: string) {
-		const card = container.createDiv(`stat-card ${type ? `stat-${type}` : ''}`);
-		
-		const cardIcon = card.createDiv('stat-icon');
-		setIcon(cardIcon, icon);
-		
-		const cardContent = card.createDiv('stat-content');
-		cardContent.createEl('div', { text: value.toString(), cls: 'stat-value' });
-		cardContent.createEl('div', { text: title, cls: 'stat-title' });
-	}
-
-	private createRepositoryGrid(container: Element) {
-		const repoSection = container.createDiv('repository-section');
-		repoSection.createEl('h3', { text: 'Repositories', cls: 'section-title' });
-
-		const repoGrid = repoSection.createDiv('repository-grid');
-
-		this.repositories.forEach(repo => {
-			this.createRepositoryCard(repoGrid, repo);
-		});
-	}
-
-	private createRepositoryCard(container: Element, repo: RepositoryOverview) {
-		const card = container.createDiv('repository-card');
-
-		// 卡片头部
-		const cardHeader = card.createDiv('card-header');
-		const titleDiv = cardHeader.createDiv('card-title');
-		
-		const iconDiv = titleDiv.createDiv('repo-icon');
-		setIcon(iconDiv, 'folder-git-2');
-		
-		titleDiv.createEl('h4', { text: repo.name });
-
-		// 同步状态
-		const syncStatus = cardHeader.createDiv('sync-status');
-		if (repo.lastSync) {
-			const lastSyncDate = new Date(repo.lastSync);
-			const timeAgo = this.getTimeAgo(lastSyncDate);
-			syncStatus.createEl('span', { 
-				text: `Synced ${timeAgo}`,
-				cls: 'sync-time'
-			});
-		} else {
-			syncStatus.createEl('span', { 
-				text: 'Never synced',
-				cls: 'sync-time sync-never'
-			});
-		}
-
-		// 统计信息
-		const statsDiv = card.createDiv('card-stats');
-		this.createMiniStat(statsDiv, repo.stats.openIssues, 'Open', 'open');
-		this.createMiniStat(statsDiv, repo.stats.closedIssues, 'Closed', 'closed');
-		this.createMiniStat(statsDiv, repo.stats.assignedToMe, 'Assigned');
-
-		// 最近的 Issues（如果有的话）
-		if (repo.issues.length > 0) {
-			const recentIssues = card.createDiv('recent-issues');
-			recentIssues.createEl('h5', { text: 'Recent Issues' });
-
-			const issuesList = recentIssues.createDiv('issues-list');
-			repo.issues.slice(0, 3).forEach(issue => {
-				const issueItem = issuesList.createDiv('issue-item');
-				
-				const stateIcon = issueItem.createDiv(`issue-state issue-${issue.state}`);
-				setIcon(stateIcon, issue.state === 'open' ? 'circle-dot' : 'check-circle');
-				
-				const issueTitle = issueItem.createDiv('issue-title');
-				issueTitle.createEl('span', { text: `#${issue.number}` });
-				issueTitle.createEl('span', { text: issue.title });
-			});
-
-			if (repo.issues.length > 3) {
-				const moreLink = recentIssues.createDiv('more-issues');
-				moreLink.createEl('a', { 
-					text: `+${repo.issues.length - 3} more issues`,
-					href: '#'
-				});
-				moreLink.addEventListener('click', (e) => {
-					e.preventDefault();
-					this.openIssueView(repo.key);
-				});
-			}
-		}
-
-		// 卡片操作
-		const cardActions = card.createDiv('card-actions');
-		
-		const viewBtn = cardActions.createEl('button', {
-			cls: 'mod-cta',
-			text: 'View Issues'
-		});
-		viewBtn.addEventListener('click', () => this.openIssueView(repo.key));
-
-		const syncBtn = cardActions.createEl('button', {
-			text: 'Sync'
-		});
-		setIcon(syncBtn, 'refresh-cw');
-		syncBtn.addEventListener('click', () => this.syncRepository(repo.key));
-
-		// 添加 IDE 按钮（仅在桌面端显示）
-		if (!Platform.isMobile) {
-			// 查找这个仓库的配置
-			const repoConfig = this.plugin.settings.repositories.find(r => 
-				`${r.owner}/${r.repo}` === repo.key
-			);
-
-			// 只有配置了 IDE 命令的仓库才显示 IDE 按钮
-			if (repoConfig?.ideCommand) {
-				const ideBtn = cardActions.createEl('button', {
-					text: 'Open in IDE'
-				});
-				setIcon(ideBtn, 'code');
-				ideBtn.addEventListener('click', () => {
-					if (repoConfig.ideCommand) {
-						this.plugin.executeIdeCommand(repoConfig.ideCommand);
-					} else {
-						new Notice('IDE command is not configured.');
-					}
-				});
-			}
-		}
-	}
-
-	private createMiniStat(container: Element, value: number, label: string, type?: string) {
-		const stat = container.createDiv(`mini-stat ${type ? `stat-${type}` : ''}`);
-		stat.createEl('span', { text: value.toString(), cls: 'mini-stat-value' });
-		stat.createEl('span', { text: label, cls: 'mini-stat-label' });
-	}
-
 	private async loadWorkbenchData() {
 		this.isLoading = true;
 		this.renderView();
 
 		try {
-			// 确保用户信息已经加载
-			if (!this.plugin.getCurrentUser() && this.plugin.settings.githubToken) {
-				await this.plugin.validateAndUpdateUserInfo();
+			// 加载 Issues 数据
+			if (this.activeTab === 'issues') {
+				await this.issueTab.loadData();
 			}
 
-			const activeRepos = this.plugin.getActiveRepositories();
-			this.repositories = [];
-			this.projects = { projects: [] }; // 重置项目数据
-			const allProjects: GitHubProject[] = [];
-			let lastProjectSync: string | undefined;
-
-			for (const repo of activeRepos) {
-				const repoKey = `${repo.owner}/${repo.repo}`;
-				const cache = this.plugin.getRepositoryCache(repoKey);
-
-				if (cache) {
-					// 处理 Issues 数据
-					const stats = this.calculateStats(cache.issues || []);
-					this.repositories.push({
-						name: repo.name,
-						key: repoKey,
-						stats,
-						lastSync: cache.last_sync,
-						issues: (cache.issues || []).slice(0, 5)
-					});
-
-					// 聚合所有仓库的 Projects 数据
-					if (cache.projects && cache.projects.length > 0) {
-						// 为每个项目添加仓库信息
-						const projectsWithRepo = cache.projects.map(p => ({
-							...p,
-							repository: {
-								owner: repo.owner,
-								name: repo.repo
-							}
-						}));
-						allProjects.push(...projectsWithRepo);
-					}
-					
-					// 找到最近的同步时间
-					if (cache.last_sync && (!lastProjectSync || new Date(cache.last_sync) > new Date(lastProjectSync))) {
-						lastProjectSync = cache.last_sync;
-					}
-
-				} else {
-					// 没有缓存数据，创建空的统计
-					this.repositories.push({
-						name: repo.name,
-						key: repoKey,
-						stats: {
-							totalIssues: 0,
-							openIssues: 0,
-							closedIssues: 0,
-							assignedToMe: 0,
-							recentlyUpdated: 0
-						},
-						issues: []
-					});
-				}
-			}
-
-			// 更新总的项目数据
-			this.projects = {
-				projects: allProjects,
-				lastSync: lastProjectSync
-			};
-
-			// 加载项目数据
+			// 加载 Projects 数据
 			if (this.activeTab === 'projects') {
-				this.projects = { projects: [], lastSync: undefined };
-				let oldestSync: Date | undefined = undefined;
-
-				for (const repo of activeRepos) {
-					const repoKey = `${repo.owner}/${repo.repo}`;
-					const cache = this.plugin.getRepositoryCache(repoKey);
-
-					if (cache && cache.projects) {
-						// 为每个项目附加仓库信息，以便在卡片中显示
-						const projectsWithRepoInfo = cache.projects.map((p: {
-							id: number;
-							number: number;
-							title: string;
-							body: string;
-							state: 'open' | 'closed';
-							creator: {
-								login: string;
-								avatar_url: string;
-							};
-							created_at: string;
-							updated_at: string;
-							html_url: string;
-						}) => ({
-							...p,
-							repository: {
-								owner: repo.owner,
-								name: repo.repo
-							}
-						}));
-						this.projects.projects.push(...projectsWithRepoInfo);
-						
-						if (cache.last_sync) {
-							const syncDate = new Date(cache.last_sync);
-							if (!oldestSync || syncDate < oldestSync) {
-								oldestSync = syncDate;
-							}
-						}
-					}
-				}
-				if (oldestSync) {
-					this.projects.lastSync = oldestSync.toISOString();
-				}
+				await this.loadProjectsData();
 			}
 		} catch (error) {
 			console.error('Failed to load workbench data:', error);
@@ -518,21 +207,45 @@ export class IssueWorkbenchView extends ItemView {
 		}
 	}
 
-	private calculateStats(issues: GitHubIssue[]): WorkbenchStats {
-		const now = new Date();
-		const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-		const currentUser = this.plugin.getCurrentUser();
+	private async loadProjectsData() {
+		// 确保用户信息已经加载
+		if (!this.plugin.getCurrentUser() && this.plugin.settings.githubToken) {
+			await this.plugin.validateAndUpdateUserInfo();
+		}
 
-		return {
-			totalIssues: issues.length,
-			openIssues: issues.filter(issue => issue.state === 'open').length,
-			closedIssues: issues.filter(issue => issue.state === 'closed').length,
-			assignedToMe: issues.filter(issue => 
-				issue.assignee?.login === currentUser?.login
-			).length,
-			recentlyUpdated: issues.filter(issue => 
-				new Date(issue.updated_at) > oneDayAgo
-			).length
+		const activeRepos = this.plugin.getActiveRepositories();
+		const allProjects: GitHubProject[] = [];
+		let lastProjectSync: string | undefined;
+
+		for (const repo of activeRepos) {
+			const repoKey = `${repo.owner}/${repo.repo}`;
+			const cache = this.plugin.getRepositoryCache(repoKey);
+
+			if (cache) {
+				// 聚合所有仓库的 Projects 数据
+				if (cache.projects && cache.projects.length > 0) {
+					// 为每个项目添加仓库信息
+					const projectsWithRepo = cache.projects.map(p => ({
+						...p,
+						repository: {
+							owner: repo.owner,
+							name: repo.repo
+						}
+					}));
+					allProjects.push(...projectsWithRepo);
+				}
+				
+				// 找到最近的同步时间
+				if (cache.last_sync && (!lastProjectSync || new Date(cache.last_sync) > new Date(lastProjectSync))) {
+					lastProjectSync = cache.last_sync;
+				}
+			}
+		}
+
+		// 更新总的项目数据
+		this.projects = {
+			projects: allProjects,
+			lastSync: lastProjectSync
 		};
 	}
 
@@ -542,22 +255,18 @@ export class IssueWorkbenchView extends ItemView {
 
 		try {
 			await this.plugin.syncAllRepositories();
-			await this.loadWorkbenchData();
+			if (this.activeTab === 'issues') {
+				await this.issueTab.loadData();
+			} else {
+				await this.loadProjectsData();
+			}
 			new Notice('All repositories synced successfully');
 		} catch (error) {
 			console.error('Failed to sync repositories:', error);
 			new Notice('Failed to sync repositories');
-		}
-	}
-
-	private async syncRepository(repoKey: string) {
-		try {
-			await this.plugin.syncRepository(repoKey);
-			await this.loadWorkbenchData();
-			new Notice(`Repository ${repoKey} synced successfully`);
-		} catch (error) {
-			console.error(`Failed to sync repository ${repoKey}:`, error);
-			new Notice(`Failed to sync repository ${repoKey}`);
+		} finally {
+			this.isLoading = false;
+			this.renderView();
 		}
 	}
 
@@ -583,6 +292,17 @@ export class IssueWorkbenchView extends ItemView {
 		} else {
 			return 'Just now';
 		}
+	}
+
+	private createStatCard(container: Element, title: string, value: number, icon: string, type?: string) {
+		const card = container.createDiv(`stat-card ${type ? `stat-${type}` : ''}`);
+		
+		const cardIcon = card.createDiv('stat-icon');
+		setIcon(cardIcon, icon);
+		
+		const cardContent = card.createDiv('stat-content');
+		cardContent.createEl('div', { text: value.toString(), cls: 'stat-value' });
+		cardContent.createEl('div', { text: title, cls: 'stat-title' });
 	}
 
 	private createProjectsOverview(container: Element) {
