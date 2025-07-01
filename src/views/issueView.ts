@@ -119,7 +119,7 @@ export class IssueView extends ItemView {
 		const actions = header.createDiv('header-actions');
 
 		// 过滤按钮
-		const filterBtn = actions.createEl('button', { 
+		const filterBtn = actions.createEl('button', {
 			cls: `clickable-icon-button ${this.isFilterExpanded ? 'filter-active' : ''}`,
 			attr: { 'aria-label': 'Toggle filters' }
 		});
@@ -127,7 +127,7 @@ export class IssueView extends ItemView {
 		filterBtn.addEventListener('click', () => this.toggleFilters());
 
 		// 刷新按钮
-		const refreshBtn = actions.createEl('button', { 
+		const refreshBtn = actions.createEl('button', {
 			cls: 'clickable-icon-button',
 			attr: { 'aria-label': 'Sync all repositories from GitHub' }
 		});
@@ -135,12 +135,53 @@ export class IssueView extends ItemView {
 		refreshBtn.addEventListener('click', () => this.refreshIssues());
 
 		// 新建Issue按钮
-		const newIssueBtn = actions.createEl('button', { 
+		const newIssueBtn = actions.createEl('button', {
 			cls: 'clickable-icon-button',
 			attr: { 'aria-label': 'Create new issue' }
 		});
 		setIcon(newIssueBtn, 'plus');
 		newIssueBtn.addEventListener('click', () => this.createNewIssue());
+
+		// IDE 按钮（仅在桌面端显示）
+		if (!Platform.isMobile) {
+			const ideButton = actions.createEl('button', {
+				cls: 'clickable-icon-button ide-button',
+				attr: { 'aria-label': 'Open in IDE' }
+			});
+			setIcon(ideButton, 'monitor');
+			
+			// 更新 IDE 按钮状态
+			const updateIdeButton = () => {
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						ideButton.disabled = false;
+						ideButton.title = `Open in IDE: ${repo.ideCommand}`;
+					} else {
+						ideButton.disabled = true;
+						ideButton.title = 'No IDE command configured for this repository';
+					}
+				} else {
+					ideButton.disabled = true;
+					ideButton.title = 'Select a repository first';
+				}
+			};
+
+			// 初始化按钮状态
+			updateIdeButton();
+
+			// IDE 按钮点击事件
+			ideButton.addEventListener('click', async () => {
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						await this.plugin.executeIdeCommand(repo.ideCommand);
+					}
+				}
+			});
+		}
 	}
 
 	private createRepositorySelector(container: Element) {
@@ -194,49 +235,6 @@ export class IssueView extends ItemView {
 			select.value = '';
 		}
 
-		// 添加 IDE 按钮（仅在桌面端显示）
-		if (!Platform.isMobile) {
-			const ideButton = selectorContainer.createEl('button', {
-				cls: 'clickable-icon-button ide-button',
-				attr: { 'aria-label': 'Open in IDE' }
-			});
-			setIcon(ideButton, 'monitor');
-			
-			// 更新 IDE 按钮状态
-			const updateIdeButton = () => {
-				if (this.selectedRepo) {
-					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
-					if (repo?.ideCommand) {
-						ideButton.disabled = false;
-						ideButton.title = `Open in IDE: ${repo.ideCommand}`;
-					} else {
-						ideButton.disabled = true;
-						ideButton.title = 'No IDE command configured for this repository';
-					}
-				} else {
-					ideButton.disabled = true;
-					ideButton.title = 'Select a repository first';
-				}
-			};
-
-			// 初始化按钮状态
-			updateIdeButton();
-
-			// IDE 按钮点击事件
-			ideButton.addEventListener('click', async () => {
-				if (this.selectedRepo) {
-					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
-					if (repo?.ideCommand) {
-						await this.plugin.executeIdeCommand(repo.ideCommand);
-					}
-				}
-			});
-
-			// 当仓库选择变化时更新 IDE 按钮状态
-			select.addEventListener('change', () => {
-				updateIdeButton();
-			});
-		}
 
 		select.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
