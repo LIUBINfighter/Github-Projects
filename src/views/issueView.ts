@@ -448,6 +448,28 @@ export class IssueView extends ItemView {
 		
 		this.updateRepositorySelector();
 		await this.loadIssues();
+		// 最小可行修复：主动刷新IDE按钮状态
+		const header = this.containerEl.querySelector('.issues-header');
+		if (header) {
+			const ideButton = header.querySelector('.ide-button');
+			if (ideButton) {
+				const ideBtn = ideButton as HTMLButtonElement;
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						ideBtn.disabled = false;
+						ideBtn.title = `Open in IDE: ${repo.ideCommand}`;
+					} else {
+						ideBtn.disabled = true;
+						ideBtn.title = 'No IDE command configured for this repository';
+					}
+				} else {
+					ideBtn.disabled = true;
+					ideBtn.title = 'Select a repository first';
+				}
+			}
+		}
 	}
 
 	private async loadIssues() {
