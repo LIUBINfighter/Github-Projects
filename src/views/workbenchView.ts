@@ -163,13 +163,10 @@ export class IssueWorkbenchView extends ItemView {
 		this.renderView();
 
 		try {
-			// 加载 Issues 数据
+			// 根据当前活跃的标签页加载对应数据
 			if (this.activeTab === 'issues') {
 				await this.issueTab.loadData();
-			}
-
-			// 加载 Projects 数据
-			if (this.activeTab === 'projects') {
+			} else if (this.activeTab === 'projects') {
 				await this.projectsTab.loadData();
 			}
 		} catch (error) {
@@ -186,16 +183,23 @@ export class IssueWorkbenchView extends ItemView {
 		this.renderView();
 
 		try {
+			// 同步仓库数据
 			await this.plugin.syncAllRepositories();
+			
+			// 同步项目数据
+			await this.plugin.syncAllProjects();
+			
+			// 重新加载当前标签页的数据
 			if (this.activeTab === 'issues') {
 				await this.issueTab.loadData();
 			} else {
 				await this.projectsTab.loadData();
 			}
-			new Notice('All repositories synced successfully');
+			
+			new Notice('All data synced successfully');
 		} catch (error) {
 			console.error('Failed to sync repositories:', error);
-			new Notice('Failed to sync repositories');
+			new Notice('Failed to sync data');
 		} finally {
 			this.isLoading = false;
 			this.renderView();

@@ -58,9 +58,10 @@ export class ProjectsTab {
 				await this.plugin.validateAndUpdateUserInfo();
 			}
 
+			// 获取仓库关联的项目数据
 			const activeRepos = this.plugin.getActiveRepositories();
-			const allProjects: GitHubProject[] = [];
-			let lastProjectSync: string | undefined;
+			const allRepoProjects: GitHubProject[] = [];
+			let lastRepoProjectSync: string | undefined;
 
 			for (const repo of activeRepos) {
 				const repoKey = `${repo.owner}/${repo.repo}`;
@@ -70,27 +71,82 @@ export class ProjectsTab {
 					// 聚合所有仓库的 Projects 数据
 					if (cache.projects && cache.projects.length > 0) {
 						// 为每个项目添加仓库信息
-						const projectsWithRepo = cache.projects.map(p => ({
+						const projectsWithRepo = cache.projects.map((p: {
+							id: number;
+							number: number;
+							title: string;
+							body: string;
+							state: 'open' | 'closed';
+							creator: {
+								login: string;
+								avatar_url: string;
+							};
+							created_at: string;
+							updated_at: string;
+							html_url: string;
+						}) => ({
 							...p,
 							repository: {
 								owner: repo.owner,
 								name: repo.repo
 							}
 						}));
-						allProjects.push(...projectsWithRepo);
+						allRepoProjects.push(...projectsWithRepo);
 					}
 					
 					// 找到最近的同步时间
-					if (cache.last_sync && (!lastProjectSync || new Date(cache.last_sync) > new Date(lastProjectSync))) {
-						lastProjectSync = cache.last_sync;
+					if (cache.last_sync && (!lastRepoProjectSync || new Date(cache.last_sync) > new Date(lastRepoProjectSync))) {
+						lastRepoProjectSync = cache.last_sync;
 					}
 				}
 			}
 
+			// 获取配置的项目数据
+			const activeProjects = this.plugin.getActiveProjects();
+			const configuredProjects: GitHubProject[] = [];
+			let lastConfigProjectSync: string | undefined;
+
+			for (const projectConfig of activeProjects) {
+				const projectKey = `${projectConfig.type || 'org'}/${projectConfig.owner}/${projectConfig.projectNumber}`;
+				const projectCacheEntry = this.plugin.settings.projectCache[projectKey];
+
+				if (projectCacheEntry && projectCacheEntry.project) {
+					const project = projectCacheEntry.project;
+					configuredProjects.push({
+						id: project.id,
+						number: project.number,
+						title: project.title,
+						body: project.body || '',
+						state: project.state,
+						creator: project.creator,
+						created_at: project.created_at,
+						updated_at: project.updated_at,
+						html_url: project.html_url,
+						repository: {
+							owner: projectConfig.owner,
+							name: `Project ${projectConfig.projectNumber}`
+						}
+					});
+
+					// 找到最近的同步时间
+					if (projectCacheEntry.last_sync && (!lastConfigProjectSync || new Date(projectCacheEntry.last_sync) > new Date(lastConfigProjectSync))) {
+						lastConfigProjectSync = projectCacheEntry.last_sync;
+					}
+				}
+			}
+
+			// 合并所有项目数据
+			const allProjects = [...allRepoProjects, ...configuredProjects];
+
+			// 确定最后同步时间
+			const lastSync = lastRepoProjectSync && lastConfigProjectSync 
+				? (new Date(lastRepoProjectSync) > new Date(lastConfigProjectSync) ? lastRepoProjectSync : lastConfigProjectSync)
+				: lastRepoProjectSync || lastConfigProjectSync;
+
 			// 更新总的项目数据
 			this.projects = {
 				projects: allProjects,
-				lastSync: lastProjectSync
+				lastSync: lastSync
 			};
 		} catch (error) {
 			console.error('Failed to load projects data:', error);

@@ -37,6 +37,42 @@ export interface GitHubIssueCache {
 	[repoKey: string]: GitHubRepoCache; // repoKey 格式: "owner/repo"
 }
 
+export interface GitHubProjectCache {
+	[projectKey: string]: {
+		last_sync: string;
+		project: {
+			id: number;
+			number: number;
+			title: string;
+			body: string | null;
+			state: 'open' | 'closed';
+			creator: {
+				login: string;
+				avatar_url: string;
+			};
+			created_at: string;
+			updated_at: string;
+			html_url: string;
+		};
+	};
+}
+
+// GitHub API Project 响应类型定义
+interface GitHubApiProject {
+	id: number;
+	number: number;
+	name: string;
+	body: string | null;
+	state: 'open' | 'closed';
+	creator: {
+		login: string;
+		avatar_url: string;
+	};
+	created_at: string;
+	updated_at: string;
+	html_url: string;
+}
+
 // GitHub API Issue 响应类型定义
 interface GitHubApiIssue {
 	id: number;
@@ -382,89 +418,43 @@ export class GitHubDataSync {
 			const repoKey = this.getRepoKey(repo);
 			console.log(`Fetching projects for repository ${repoKey}`);
 			
-			// 构建GraphQL查询
-			const query = `
-				query {
-					repository(owner: "${repo.owner}", name: "${repo.repo}") {
-						projects(first: 20, states: [OPEN]) {
-							nodes {
-								id
-								number
-								title
-								body
-								state
-								creator {
-									login
-									avatarUrl
-								}
-								createdAt
-								updatedAt
-								url
-							}
-						}
-					}
-				}
-			`;
+			// GitHub Classic Projects API (仓库级项目)
+			const repoProjectsUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/projects`;
 			
-			// 发送查询请求
-			const response = await fetch('https://api.github.com/graphql', {
-				method: 'POST',
+			const response = await fetch(repoProjectsUrl, {
 				headers: {
-					'Authorization': `Bearer ${this.token}`,
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ query }),
+					'Authorization': `token ${this.token}`,
+					'User-Agent': 'Obsidian-GitHub-Projects',
+					'Accept': 'application/vnd.github.inertia-preview+json'
+				}
 			});
 			
-			const data = await response.json();
-			const rateLimitRemaining = parseInt(response.headers.get('x-ratelimit-remaining') || '0');
+			const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
 			
 			if (!response.ok) {
 				return {
 					success: false,
-					error: `Failed to fetch projects: ${data.message || response.statusText}`,
+					error: `Failed to fetch repository projects: ${response.status} ${response.statusText}`,
 					rateLimitRemaining
 				};
 			}
 			
-			if (data.errors) {
-				return {
-					success: false,
-					error: `GraphQL error: ${data.errors[0].message}`,
-					rateLimitRemaining
-				};
-			}
-			
-			// 从响应中提取项目数据
-			const projects = data.data?.repository?.projects?.nodes || [];
+			const projects = await response.json();
 			
 			// 格式化返回的项目数据
-			const formattedProjects = projects.map((project: {
-				id: string;
-				number: number;
-				title: string;
-				body: string;
-				state: string;
-				creator: {
-					login: string;
-					avatarUrl: string;
-				};
-				createdAt: string;
-				updatedAt: string;
-				url: string;
-			}) => ({
+			const formattedProjects = projects.map((project: GitHubApiProject) => ({
 				id: project.id,
 				number: project.number,
-				title: project.title,
-				body: project.body,
-				state: project.state.toLowerCase(),
+				title: project.name,
+				body: project.body || '',
+				state: project.state,
 				creator: {
 					login: project.creator.login,
-					avatar_url: project.creator.avatarUrl
+					avatar_url: project.creator.avatar_url
 				},
-				created_at: project.createdAt,
-				updated_at: project.updatedAt,
-				html_url: project.url
+				created_at: project.created_at,
+				updated_at: project.updated_at,
+				html_url: project.html_url
 			}));
 			
 			return {
@@ -474,6 +464,101 @@ export class GitHubDataSync {
 			};
 		} catch (error) {
 			console.error('Error fetching repository projects:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error'
+			};
+		}
+	}
+
+	/**
+	 * 获取GitHub组织或用户级项目数据
+	 * @param owner 组织或用户名
+	 * @param projectNumber 项目编号
+	 * @param type 项目类型 ('org' | 'user')
+	 * @returns 获取结果
+	 */
+	async fetchGitHubProject(owner: string, projectNumber: number, type: 'org' | 'user' = 'org'): Promise<{
+		success: boolean;
+		error?: string;
+		project?: {
+			id: number;
+			number: number;
+			title: string;
+			body: string;
+			state: 'open' | 'closed';
+			creator: {
+				login: string;
+				avatar_url: string;
+			};
+			created_at: string;
+			updated_at: string;
+			html_url: string;
+		};
+		rateLimitRemaining?: number;
+	}> {
+		try {
+			console.log(`Fetching ${type} project ${projectNumber} for ${owner}`);
+			
+			// GitHub Classic Projects API (组织或用户级项目)
+			const projectUrl = type === 'org' 
+				? `https://api.github.com/orgs/${owner}/projects`
+				: `https://api.github.com/users/${owner}/projects`;
+			
+			const response = await fetch(projectUrl, {
+				headers: {
+					'Authorization': `token ${this.token}`,
+					'User-Agent': 'Obsidian-GitHub-Projects',
+					'Accept': 'application/vnd.github.inertia-preview+json'
+				}
+			});
+			
+			const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
+			
+			if (!response.ok) {
+				return {
+					success: false,
+					error: `Failed to fetch ${type} projects: ${response.status} ${response.statusText}`,
+					rateLimitRemaining
+				};
+			}
+			
+			const projects = await response.json();
+			
+			// 查找指定编号的项目
+			const targetProject = projects.find((p: GitHubApiProject) => p.number === projectNumber);
+			
+			if (!targetProject) {
+				return {
+					success: false,
+					error: `Project #${projectNumber} not found in ${type}/${owner}`,
+					rateLimitRemaining
+				};
+			}
+			
+			// 格式化项目数据
+			const formattedProject = {
+				id: targetProject.id,
+				number: targetProject.number,
+				title: targetProject.name,
+				body: targetProject.body || '',
+				state: targetProject.state,
+				creator: {
+					login: targetProject.creator.login,
+					avatar_url: targetProject.creator.avatar_url
+				},
+				created_at: targetProject.created_at,
+				updated_at: targetProject.updated_at,
+				html_url: targetProject.html_url
+			};
+			
+			return {
+				success: true,
+				project: formattedProject,
+				rateLimitRemaining
+			};
+		} catch (error) {
+			console.error(`Error fetching ${type} project:`, error);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : 'Unknown error'
@@ -566,6 +651,57 @@ export class GitHubDataSync {
 				};
 				console.error(`Error syncing projects for repository ${repoKey}:`, error);
 			}
+		}
+		
+		return { cache: updatedCache, results };
+	}
+	
+	/**
+	 * 为配置的项目进行同步
+	 * @param projects 配置的项目列表  
+	 * @param existingCache 现有的项目缓存
+	 * @returns 更新后的项目缓存数据
+	 */
+	async syncConfiguredProjects(
+		projects: Array<{ owner: string; projectNumber: number; type: 'org' | 'user' }>,
+		existingCache: GitHubProjectCache = {}
+	): Promise<{ cache: GitHubProjectCache; results: Record<string, { success: boolean; error?: string }> }> {
+		const updatedCache: GitHubProjectCache = { ...existingCache };
+		const results: Record<string, { success: boolean; error?: string }> = {};
+		
+		for (const projectConfig of projects) {
+			const projectKey = `${projectConfig.type}/${projectConfig.owner}/${projectConfig.projectNumber}`;
+			
+			try {
+				const fetchResult = await this.fetchGitHubProject(
+					projectConfig.owner, 
+					projectConfig.projectNumber, 
+					projectConfig.type
+				);
+				
+				if (fetchResult.success && fetchResult.project) {
+					updatedCache[projectKey] = {
+						last_sync: new Date().toISOString(),
+						project: fetchResult.project
+					};
+					results[projectKey] = { success: true };
+				} else {
+					results[projectKey] = { 
+						success: false, 
+						error: fetchResult.error || 'Unknown error during project sync' 
+					};
+					console.error(`Failed to sync project ${projectKey}:`, fetchResult.error);
+				}
+			} catch (error) {
+				results[projectKey] = { 
+					success: false, 
+					error: error instanceof Error ? error.message : 'Unknown error' 
+				};
+				console.error(`Error syncing project ${projectKey}:`, error);
+			}
+			
+			// 在请求之间添加小延迟，避免触发 rate limit
+			await new Promise(resolve => setTimeout(resolve, 100));
 		}
 		
 		return { cache: updatedCache, results };

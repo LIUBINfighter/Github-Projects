@@ -2,7 +2,7 @@ import { Plugin, Menu, Platform, Notice } from 'obsidian';
 import { GithubProjectsSettingTab, GithubProjectsSettings, DEFAULT_SETTINGS } from './views/settingTab';
 import { IssueView, ISSUE_VIEW_TYPE } from './views/issueView';
 import { IssueWorkbenchView, WORKBENCH_VIEW_TYPE } from './views/workbenchView';
-import { GitHubDataSync, GitHubSyncResult } from './github/dataSync';
+import { GitHubDataSync, GitHubSyncResult, GitHubProjectCache } from './github/dataSync';
 import { IdeCommandTool } from './utils/ideCommandTool';
 
 export default class GithubProjectsPlugin extends Plugin {
@@ -48,6 +48,24 @@ export default class GithubProjectsPlugin extends Plugin {
 			name: 'Sync GitHub Issues',
 			callback: () => {
 				this.syncAllRepositories();
+			}
+		});
+
+		// 添加同步所有数据命令
+		this.addCommand({
+			id: 'sync-all-data',
+			name: 'Sync All GitHub Data',
+			callback: () => {
+				this.syncAllData();
+			}
+		});
+
+		// 添加同步项目命令
+		this.addCommand({
+			id: 'sync-github-projects',
+			name: 'Sync GitHub Projects',
+			callback: () => {
+				this.syncAllProjects();
 			}
 		});
 
@@ -202,7 +220,7 @@ export default class GithubProjectsPlugin extends Plugin {
 	}
 
 	/**
-	 * 同步所有配置的仓库
+	 * 同步所有配置的仓库（包括Issues和Projects）
 	 */
 	async syncAllRepositories(): Promise<Record<string, GitHubSyncResult>> {
 		if (!this.settings.githubToken) {
@@ -221,17 +239,28 @@ export default class GithubProjectsPlugin extends Plugin {
 		const sync = new GitHubDataSync(this.settings.githubToken);
 		
 		try {
+			// 同步仓库的Issues
 			const { cache, results } = await sync.syncAllRepositories(
 				activeRepositories,
 				this.settings.issueCache
 			);
 
-			// 更新缓存数据
+			// 更新Issues缓存数据
 			this.settings.issueCache = cache;
+
+			// 同步仓库关联的Projects
+			const { cache: projectCache } = await sync.syncAllRepositoriesProjects(
+				activeRepositories,
+				this.settings.issueCache
+			);
+
+			// 更新Projects缓存数据
+			this.settings.issueCache = projectCache;
 			await this.saveSettings();
 
-			// 通知 Issue 视图刷新数据
+			// 通知视图刷新数据
 			this.refreshIssueViews();
+			this.refreshWorkbenchViews();
 
 			console.log('Repository sync completed:', results);
 			return results;
@@ -281,7 +310,95 @@ export default class GithubProjectsPlugin extends Plugin {
 	}
 
 	/**
-	 * 获取指定仓库的缓存数据
+	 * 同步所有配置的项目
+	 */
+	async syncAllProjects(): Promise<Record<string, { success: boolean; error?: string }>> {
+		if (!this.settings.githubToken) {
+			console.error('GitHub token not configured');
+			return {};
+		}
+
+		// 获取所有配置的项目
+		const activeProjects = this.settings.projects.filter(project => !project.isDisabled);
+		
+		if (activeProjects.length === 0) {
+			console.warn('No active projects configured');
+			return {};
+		}
+
+		const sync = new GitHubDataSync(this.settings.githubToken);
+		
+		try {
+			const projectConfigs = activeProjects.map(project => ({
+				owner: project.owner,
+				projectNumber: project.projectNumber,
+				type: project.type || 'org' as 'org' | 'user'
+			}));
+
+			const { cache, results } = await sync.syncConfiguredProjects(
+				projectConfigs,
+				this.settings.projectCache
+			);
+
+			// 更新缓存数据
+			this.settings.projectCache = cache;
+			await this.saveSettings();
+
+			// 通知 Workbench 视图刷新数据
+			this.refreshWorkbenchViews();
+
+			console.log('Project sync completed:', results);
+			return results;
+		} catch (error) {
+			console.error('Failed to sync projects:', error);
+			return {};
+		}
+	}
+
+	/**
+	 * 同步所有数据（Issues 和 Projects）
+	 */
+	async syncAllData(): Promise<{
+		repositories: Record<string, GitHubSyncResult>;
+		projects: Record<string, { success: boolean; error?: string }>;
+	}> {
+		const [repoResults, projectResults] = await Promise.all([
+			this.syncAllRepositories(),
+			this.syncAllProjects()
+		]);
+
+		return {
+			repositories: repoResults,
+			projects: projectResults
+		};
+	}
+
+	/**
+	 * 获取所有活跃（未禁用）的仓库
+	 */
+	getActiveRepositories() {
+		return this.settings.repositories.filter(repo => !repo.isDisabled);
+	}
+
+	/**
+	 * 获取所有活跃（未禁用）的项目
+	 */
+	getActiveProjects() {
+		return this.settings.projects.filter(project => !project.isDisabled);
+	}
+
+	/**
+	 * 获取项目缓存数据
+	 */
+	getProjectCache(projectKey?: string) {
+		if (projectKey) {
+			return this.settings.projectCache[projectKey];
+		}
+		return this.settings.projectCache;
+	}
+
+	/**
+	 * 获取仓库缓存数据
 	 */
 	getRepositoryCache(repoKey: string) {
 		return this.settings.issueCache[repoKey];
@@ -299,8 +416,12 @@ export default class GithubProjectsPlugin extends Plugin {
 				view.refreshData();
 			}
 		});
+	}
 
-		// 刷新 Workbench 视图
+	/**
+	 * 刷新 Workbench 视图数据
+	 */
+	private refreshWorkbenchViews() {
 		const workbenchLeaves = this.app.workspace.getLeavesOfType(WORKBENCH_VIEW_TYPE);
 		workbenchLeaves.forEach(leaf => {
 			const view = leaf.view as IssueWorkbenchView;
@@ -346,13 +467,6 @@ export default class GithubProjectsPlugin extends Plugin {
 	restartAutoSync() {
 		this.stopAutoSync();
 		this.startAutoSync();
-	}
-
-	/**
-	 * 获取所有活跃（未禁用）的仓库
-	 */
-	getActiveRepositories() {
-		return this.settings.repositories.filter(repo => !repo.isDisabled);
 	}
 
 	/**
