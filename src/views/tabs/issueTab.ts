@@ -203,6 +203,12 @@ export class IssueTab {
 		);
 		this.createStatCard(
 			statsGrid,
+			"Assigned to Me",
+			totalStats.assignedToMe,
+			"user"
+		);
+		this.createStatCard(
+			statsGrid,
 			"Open Issues",
 			totalStats.openIssues,
 			"circle-dot",
@@ -214,12 +220,6 @@ export class IssueTab {
 			totalStats.closedIssues,
 			"check-circle",
 			"closed"
-		);
-		this.createStatCard(
-			statsGrid,
-			"Assigned to Me",
-			totalStats.assignedToMe,
-			"user"
 		);
 		// this.createStatCard(statsGrid, 'Recently Updated', totalStats.recentlyUpdated, 'clock');
 
