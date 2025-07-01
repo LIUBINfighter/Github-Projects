@@ -287,19 +287,20 @@ export class IssueTab {
 			);
 
 			// 只有配置了 IDE 命令的仓库才显示 IDE 按钮
-			if (repoConfig?.ideCommand) {
-				const ideBtn = cardActions.createEl('button', {
-					text: 'Open in IDE'
-				});
-				setIcon(ideBtn, 'code');
-				ideBtn.addEventListener('click', () => {
-					if (repoConfig.ideCommand) {
-						this.plugin.executeIdeCommand(repoConfig.ideCommand);
-					} else {
-						new Notice('IDE command is not configured.');
-					}
-				});
-			}
+				if (repoConfig?.ideCommand) {
+					const ideBtn = cardActions.createEl('button', {
+						text: 'Open in IDE'
+					});
+					// 统一使用“play”图标
+					ideBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+					ideBtn.addEventListener('click', () => {
+						if (repoConfig.ideCommand) {
+							this.plugin.executeIdeCommand(repoConfig.ideCommand);
+						} else {
+							new Notice('IDE command is not configured.');
+						}
+					});
+				}
 		}
 	}
 
