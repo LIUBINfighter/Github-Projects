@@ -736,26 +736,27 @@
 	background: var(--background-primary);
 }
 
-.workbench-header {
+/* 合并的头部导航样式 */
+.workbench-header-nav {
 	display: flex;
 	justify-content: space-between;
-	align-items: flex-start;
-	padding: var(--size-4-4) var(--size-4-3);
+	align-items: center;
+	padding: var(--size-4-2) var(--size-4-3);
 	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	background: var(--background-primary);
+	background: var(--background-secondary);
+	min-height: var(--input-height);
+	gap: var(--size-4-3);
 }
 
-.title-section .header-title {
-	margin: 0 0 var(--size-2-1) 0;
-	color: var(--text-normal);
-	font-size: var(--font-ui-medium);
-	font-weight: var(--font-bold);
+.workbench-title {
+	flex-shrink: 0;
 }
 
-.header-description {
+.workbench-title h3 {
 	margin: 0;
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
+	font-size: 1.1em;
+	font-weight: 600;
+	color: var(--text-normal);
 }
 
 .workbench-main {
@@ -1095,13 +1096,11 @@
 	gap: var(--size-2-1);
 }
 
-/* Workbench Tabs Styles */
+/* Workbench Tabs Styles - 作为头部导航的左侧部分 */
 .workbench-tab-nav {
 	display: flex;
 	gap: var(--size-2-2);
-	padding: var(--size-4-2) var(--size-4-3);
-	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	background: var(--background-secondary);
+	align-items: center;
 }
 
 .workbench-tab {

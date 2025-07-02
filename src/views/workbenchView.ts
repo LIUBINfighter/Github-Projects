@@ -54,54 +54,22 @@ export class IssueWorkbenchView extends ItemView {
 		container.empty();
 		container.addClass('github-workbench-view');
 
-		// 创建头部
-		this.createHeader(container);
-
-		// 创建标签页导航
-		this.createTabNavigation(container);
+		// 创建合并的头部导航
+		this.createHeaderNavigation(container);
 
 		// 创建主要内容区域
 		this.createMainContent(container);
 	}
 
-	private createHeader(container: Element) {
-		const header = container.createDiv('workbench-header');
+	private createHeaderNavigation(container: Element) {
+		const headerNav = container.createDiv('workbench-header-nav');
 
-		// 标题和描述
-		const titleSection = header.createDiv('title-section');
-		titleSection.createEl('h2', { text: 'GitHub Workbench', cls: 'header-title' });
-		titleSection.createEl('p', { 
-			text: 'Overview of all your GitHub repositories and issues',
-			cls: 'header-description'
-		});
+		// 最左侧标题
+		const title = headerNav.createDiv('workbench-title');
+		title.createEl('h3', { text: 'GitHub Workbench' });
 
-		// 操作按钮
-		const actions = header.createDiv('header-actions');
-
-		// 刷新按钮
-		const refreshBtn = actions.createEl('button', {
-			cls: 'mod-cta',
-			text: 'Sync All'
-		});
-		setIcon(refreshBtn, 'refresh-cw');
-		refreshBtn.addEventListener('click', () => this.syncAllRepositories());
-
-		// 设置按钮
-		const settingsBtn = actions.createEl('button', {
-			cls: 'clickable-icon-button',
-			attr: { 'aria-label': 'Open settings' }
-		});
-		setIcon(settingsBtn, 'settings');
-		settingsBtn.addEventListener('click', () => {
-			// @ts-ignore
-			this.app.setting.open();
-			// @ts-ignore
-			this.app.setting.openTabById(this.plugin.manifest.id);
-		});
-	}
-
-	private createTabNavigation(container: Element) {
-		const tabNav = container.createDiv('workbench-tab-nav');
+		// 左侧标签页导航
+		const tabNav = headerNav.createDiv('workbench-tab-nav');
 
 		const tabs = [
 			{ id: 'issues' as WorkbenchTab, name: 'Issues Overview', icon: 'list' },
@@ -123,6 +91,30 @@ export class IssueWorkbenchView extends ItemView {
 					this.renderView();
 				}
 			});
+		});
+
+		// 右侧操作按钮
+		const actions = headerNav.createDiv('header-actions');
+
+		// 刷新按钮
+		const refreshBtn = actions.createEl('button', {
+			cls: 'mod-cta',
+			text: 'Sync All'
+		});
+		setIcon(refreshBtn, 'refresh-cw');
+		refreshBtn.addEventListener('click', () => this.syncAllRepositories());
+
+		// 设置按钮
+		const settingsBtn = actions.createEl('button', {
+			cls: 'clickable-icon-button',
+			attr: { 'aria-label': 'Open settings' }
+		});
+		setIcon(settingsBtn, 'settings');
+		settingsBtn.addEventListener('click', () => {
+			// @ts-ignore
+			this.app.setting.open();
+			// @ts-ignore
+			this.app.setting.openTabById(this.plugin.manifest.id);
 		});
 	}
 
