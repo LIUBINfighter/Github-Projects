@@ -6,6 +6,35 @@
 
 这个插件是为了高效桥接 Obsidian 和 Github 而设计的
 
+
+## 开发状态 / Development Status
+
+**中文：**
+
+- 已实现：
+  - 插件设置页，支持引导用户配置 GitHub Token、管理多仓库、设置自动同步选项，并可测试 Token 有效性。
+  - 支持在 Obsidian 侧边栏以视图方式浏览 GitHub Issues，支持仓库切换、筛选（标题、状态、标签、里程碑、负责人）、刷新、展开详情。
+  - 支持通过命令和功能区图标快速打开 Issues 视图。
+  - 支持自动/手动同步远程仓库的 Issues，部分 Issue 支持显示相关提交数。
+- 计划中/未实现：
+  - 创建新 Issue（按钮已预留，功能待开发）。
+  - 将 Issue 转化为 Obsidian 笔记（按钮已预留，功能待开发）。
+  - 关闭 Issue、更多 Issue 操作。
+  - Issue 与本地笔记的深度联动、MCP 服务集成等高级功能。
+
+**English:**
+
+- Implemented:
+  - Settings tab for guiding users to set up GitHub Token, manage multiple repositories, configure auto-sync, and test token validity.
+  - GitHub Issues can be browsed in a dedicated Obsidian sidebar view, with repository switching, filtering (title, state, labels, milestone, assignee), refresh, and expandable details.
+  - Quick access to Issues view via command and ribbon icon.
+  - Supports auto/manual sync of remote repository issues, and displays related commit count for some issues.
+- Planned/Not yet implemented:
+  - Creating new Issues (UI present, logic not yet implemented).
+  - Converting Issues to Obsidian notes (UI present, logic not yet implemented).
+  - Closing Issues and more advanced issue operations.
+  - Deep integration between Issues and local notes, MCP service integration, and other advanced features.
+
 ## 哲学
 
 以远端仓库为唯一真相 Single source of truth
