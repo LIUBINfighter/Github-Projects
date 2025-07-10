@@ -175,7 +175,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		// 添加新仓库的输入框
 		const addRepoContainer = containerEl.createDiv({ cls: 'gp-add-repo-box' });
 
-		addRepoContainer.createEl("h4", { text: "Add new repository" });
+		// 用 setHeading() 替换 h4
+		new Setting(addRepoContainer).setName('Add new repository').setHeading();
 
 		// URL 输入框
 		const urlInput = addRepoContainer.createEl("input", {
@@ -321,7 +322,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 显示已添加的仓库列表
 		if (this.plugin.settings.repositories.length > 0) {
-			containerEl.createEl("h4", { text: "Configured repositories" });
+			new Setting(containerEl).setName('Configured repositories').setHeading();
 
 			this.plugin.settings.repositories.forEach((repository, index) => {
 				const repoDiv = containerEl.createDiv();
@@ -420,7 +421,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		// 同步说明
 		const syncHelpDiv = containerEl.createDiv();
 		syncHelpDiv.style.marginTop = "20px";
-		syncHelpDiv.createEl("h4", { text: "Sync information" });
+		new Setting(syncHelpDiv).setName('Sync information').setHeading();
 		syncHelpDiv.createEl("p", {
 			text: "Auto sync will periodically fetch issues from all configured repositories.",
 		});
