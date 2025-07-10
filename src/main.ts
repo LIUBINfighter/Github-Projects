@@ -139,12 +139,7 @@ export default class GithubProjectsPlugin extends Plugin {
 	}
 
 	onunload() {
-		// 清理视图
-		this.app.workspace.detachLeavesOfType(ISSUE_VIEW_TYPE);
-		this.app.workspace.detachLeavesOfType(WORKBENCH_VIEW_TYPE);
-		
-		// 清理自动同步定时器
-		this.stopAutoSync();
+		// 不再主动 detach leaves，遵循 Obsidian 官方插件规范
 	}
 
 	async activateView() {
