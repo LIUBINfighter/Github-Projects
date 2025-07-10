@@ -45,9 +45,9 @@ const tabNav = containerEl.createDiv();
 tabNav.classList.add("gp-tab-nav");
 
 		const tabs = [
-			{ id: "basic", name: "Token Setup" },
+			{ id: "basic", name: "Token setup" },
 			{ id: "repositories", name: "Repositories" },
-			{ id: "sync", name: "Sync Options" },
+			{ id: "sync", name: "Sync options" },
 		];
 
 	tabs.forEach((tab) => {
@@ -171,13 +171,14 @@ tabNav.classList.add("gp-tab-nav");
 	}
 
 	private displayRepositorySettings(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Repository Management" });
+		// 只在有多个部分时使用标题，这里只保留“Repository management”
+		containerEl.createEl("h3", { text: "Repository management" });
 
 		// 添加新仓库的输入框
 		const addRepoContainer = containerEl.createDiv();
 		addRepoContainer.classList.add("gp-add-repo-box");
 
-		addRepoContainer.createEl("h4", { text: "Add New Repository" });
+		addRepoContainer.createEl("h4", { text: "Add new repository" });
 
 		// URL 输入框
 		const urlInput = addRepoContainer.createEl("input", {
@@ -323,7 +324,7 @@ tabNav.classList.add("gp-tab-nav");
 
 		// 显示已添加的仓库列表
 		if (this.plugin.settings.repositories.length > 0) {
-			containerEl.createEl("h4", { text: "Configured Repositories" });
+			containerEl.createEl("h4", { text: "Configured repositories" });
 
 			this.plugin.settings.repositories.forEach((repository, index) => {
 				const repoDiv = containerEl.createDiv();
@@ -385,9 +386,11 @@ tabNav.classList.add("gp-tab-nav");
 	}
 
 	private displaySyncSettings(containerEl: HTMLElement): void {
-		// 自动同步设置
+		// 只在有多个部分时使用标题，这里不添加“设置”或“Sync settings”标题
+
+		// 自动同步
 		new Setting(containerEl)
-			.setName("Auto Sync")
+			.setName("Auto sync")
 			.setDesc("Automatically sync issues from GitHub")
 			.addToggle((toggle) =>
 				toggle
@@ -398,9 +401,9 @@ tabNav.classList.add("gp-tab-nav");
 					})
 			);
 
-		// 同步间隔设置
+		// 同步间隔
 		new Setting(containerEl)
-			.setName("Sync Interval")
+			.setName("Sync interval")
 			.setDesc("How often to sync issues (in minutes)")
 			.addSlider((slider) =>
 				slider
@@ -416,7 +419,7 @@ tabNav.classList.add("gp-tab-nav");
 		// 同步说明
 		const syncHelpDiv = containerEl.createDiv();
 		syncHelpDiv.style.marginTop = "20px";
-		syncHelpDiv.createEl("h4", { text: "Sync Information" });
+		syncHelpDiv.createEl("h4", { text: "Sync information" });
 		syncHelpDiv.createEl("p", {
 			text: "Auto sync will periodically fetch issues from all configured repositories.",
 		});
