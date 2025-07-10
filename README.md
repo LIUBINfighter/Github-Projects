@@ -1,6 +1,6 @@
 # Obsidian GitHub Projects
 
-Manage and view GitHub Issues and Projects directly within workspace.Jump to your ide. Gain insights from workbench in the main view.
+Manage and view GitHub Issues and Projects directly within workspace. Jump to your ide. Gain insights from workbench in the main view.
 
 ![beta-preview](./assets/beta.png)
 
