@@ -33,8 +33,7 @@ export default class GithubProjectsPlugin extends Plugin {
 	}
 
 	onunload() {
-		// 清理视图
-		this.app.workspace.detachLeavesOfType(ISSUE_VIEW_TYPE);
+		// 不再主动 detach leaves，遵循 Obsidian 官方插件规范
 	}
 
 	async activateView() {
