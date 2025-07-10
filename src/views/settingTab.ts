@@ -133,26 +133,40 @@ tabNav.classList.add("gp-tab-nav");
 		const tokenInfoDiv = containerEl.createDiv();
 		tokenInfoDiv.classList.add("gp-token-info-box");
 
+		// 替换 innerHTML: tokenLinkP
 		const tokenLinkP = tokenInfoDiv.createEl("p");
 		tokenLinkP.classList.add("gp-token-link");
-		tokenLinkP.innerHTML =
-			'Don\'t have a token? <a href="https://github.com/settings/tokens/new" target="_blank" class="gp-token-link-a">Create one here</a>';
-		// 权限说明
+		tokenLinkP.appendChild(document.createTextNode("Don't have a token? "));
+		const link = tokenLinkP.createEl("a", {
+			text: "Create one here",
+			href: "https://github.com/settings/tokens/new",
+		});
+		link.setAttr("target", "_blank");
+		link.addClass("gp-token-link-a");
+
+		// 权限说明（scopes）
 		const permissionHint = tokenInfoDiv.createEl("p");
 		permissionHint.classList.add("gp-token-permission-hint");
-		permissionHint.innerHTML =
-			"<strong>Required scopes:</strong> <code>repo</code> (for private repos) or <code>public_repo</code> (for public repos only)";
+		const strong1 = permissionHint.createEl("strong", { text: "Required scopes: " });
+		permissionHint.appendChild(strong1);
+		permissionHint.createEl("code", { text: "repo" });
+		permissionHint.appendChild(document.createTextNode(" (for private repos) or "));
+		permissionHint.createEl("code", { text: "public_repo" });
+		permissionHint.appendChild(document.createTextNode(" (for public repos only)"));
 
+		// 权限说明（permissions）
 		const permissionP = tokenInfoDiv.createEl("p");
 		permissionP.style.margin = "0";
-		permissionP.innerHTML =
-			"<strong>Required permissions:</strong> repo (for private repos) or public_repo (for public repos only)";
+		const strong2 = permissionP.createEl("strong", { text: "Required permissions: " });
+		permissionP.appendChild(strong2);
+		permissionP.appendChild(document.createTextNode("repo (for private repos) or public_repo (for public repos only)"));
 
-		// 添加令牌格式说明
+		// 令牌格式说明
 		const formatP = tokenInfoDiv.createEl("p");
 		formatP.style.margin = "8px 0 0 0";
-		formatP.innerHTML =
-			'<strong>Token format:</strong> Should start with "ghp_" followed by 36 characters';
+		const strong3 = formatP.createEl("strong", { text: "Token format: " });
+		formatP.appendChild(strong3);
+		formatP.appendChild(document.createTextNode('Should start with "ghp_" followed by 36 characters'));
 
 		// 添加说明文档
 		const helpDiv = containerEl.createDiv();
