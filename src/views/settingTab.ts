@@ -376,8 +376,12 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				});
 
 				// 仓库信息
-				const repoInfo = repoDiv.createDiv();
-				repoInfo.innerHTML = `<strong>Repository:</strong> ${repository.owner}/${repository.repo}`;
+				// 仓库信息（安全 DOM 构建，避免 innerHTML）
+				const repoInfo = repoDiv.createDiv({ cls: 'gp-repo-info' });
+				const strong = document.createElement('strong');
+				strong.textContent = 'Repository:';
+				repoInfo.appendChild(strong);
+				repoInfo.appendChild(document.createTextNode(` ${repository.owner}/${repository.repo}`));
 			});
 		}
 	}
