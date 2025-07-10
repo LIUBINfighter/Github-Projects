@@ -1,70 +1,70 @@
-# Obsidian Github Projects
+# Obsidian GitHub Projects
 
-愿景
+Manage and view GitHub Issues and Projects directly within workspace.Jump to your ide. Gain insights from workbench in the main view.
 
-“在 Obsidian 工作库中，将一个想法细化为带验收标准的任务笔记并一键创建为 GitHub Issue；接着在 VS Code 中，从 Issue 创建分支，编写一个失败的测试，然后调用 MCP 服务将 Issue 描述、相关 ADR 和代码自动打包成富上下文，驱动 Copilot 高效编码直至测试通过；最后，在 VS Code 内闭环完成 PR 的创建、自查和 CI 触发，通过标准化的发版脚本完成交付。”
+## Vision
 
-这个插件是为了高效桥接 Obsidian 和 Github 而设计的
+Authenticated by a GitHub token, this plugin currently focuses on two core capabilities:
 
+- **Pull**: Fetching issues and related information from GitHub, allowing you to conveniently browse, filter, and manage them within Obsidian.
+- **Jump**: Instantly jumping to the corresponding GitHub web page, so you can quickly view and operate on issues in your browser.
 
-## 开发状态 / Development Status
+In the future, the plugin plans to gradually support:
 
-**中文：**
+- **Push**: Creating new issues and posting comments directly within Obsidian, with the experience moving closer to VS Code’s GitHub integration.
 
-- 已实现：
-  - 插件设置页，支持引导用户配置 GitHub Token、管理多仓库、设置自动同步选项，并可测试 Token 有效性。
-  - 支持在 Obsidian 侧边栏以视图方式浏览 GitHub Issues，支持仓库切换、筛选（标题、状态、标签、里程碑、负责人）、刷新、展开详情。
-  - 支持通过命令和功能区图标快速打开 Issues 视图。
-  - 支持自动/手动同步远程仓库的 Issues，部分 Issue 支持显示相关提交数。
-- 计划中/未实现：
-  - 创建新 Issue（按钮已预留，功能待开发）。
-  - 将 Issue 转化为 Obsidian 笔记（按钮已预留，功能待开发）。
-  - 关闭 Issue、更多 Issue 操作。
-  - Issue 与本地笔记的深度联动、MCP 服务集成等高级功能。
+Our goal is to make Obsidian an efficient entry point for managing your GitHub projects—starting with “pull” and “jump,” and then gradually improving “push” and deeper interactive experiences.
 
-**English:**
+## Features
 
-- Implemented:
-  - Settings tab for guiding users to set up GitHub Token, manage multiple repositories, configure auto-sync, and test token validity.
-  - GitHub Issues can be browsed in a dedicated Obsidian sidebar view, with repository switching, filtering (title, state, labels, milestone, assignee), refresh, and expandable details.
-  - Quick access to Issues view via command and ribbon icon.
-  - Supports auto/manual sync of remote repository issues, and displays related commit count for some issues.
-- Planned/Not yet implemented:
-  - Creating new Issues (UI present, logic not yet implemented).
-  - Converting Issues to Obsidian notes (UI present, logic not yet implemented).
-  - Closing Issues and more advanced issue operations.
-  - Deep integration between Issues and local notes, MCP service integration, and other advanced features.
+### Implemented
 
-## 哲学
+- **Settings Management**: A comprehensive settings tab to guide you through configuring your GitHub Token, managing multiple repositories, and setting sync options. It also includes a feature to test the validity of your token.
+- **GitHub Issues View**: Browse your GitHub Issues in a dedicated sidebar view within Obsidian. This view supports:
+  - Switching between different repositories.
+  - Advanced filtering by title, state, labels, milestone, and assignee.
+  - A refresh button to fetch the latest updates.
+  - Expanding issues to see their full details.
+- **Quick Access**: Easily open the Issues view using a command from the palette or a ribbon icon in the sidebar.
+- **Synchronization**: Supports both automatic and manual synchronization of issues from your remote repositories. For some issues, it can even display the count of related commits.
 
-以远端仓库为唯一真相 Single source of truth
+### Planned Features
 
-本地增强管理能力和与obsidian的联动能力
+- **Create New Issue**: The UI button is in place, and the functionality is under development.
+- **Convert Issue to Note**: A button has been reserved for this feature, which will allow you to turn any GitHub issue into a new note in your vault.
+- **Advanced Issue Actions**: Functionality to close, edit, and perform other operations on issues directly from Obsidian.
+- **Deep Integration**: Stronger connections between issues and your local notes, including linking and context sharing.
 
-我们做什么：
+## Getting Started
 
-查看
+1.  Install the plugin from the Obsidian Community Plugins store.
+2.  Go to `Settings` -> `Community Plugins` and enable "GitHub Projects".
+3.  Open the plugin settings (`Settings` -> `GitHub Projects`).
+4.  **Token Setup**: Navigate to the "Token Setup" tab. Create a new GitHub Personal Access Token with the `repo` scope (for private repositories) or `public_repo` (for public repositories only). Paste it into the input field and click "Test Token" to verify it.
+5.  **Add Repositories**: Switch to the "Repositories" tab. Add the GitHub repositories you want to manage by providing their URL or manually entering the owner and repository name.
+6.  **Configure Sync (Optional)**: In the "Sync Options" tab, you can enable automatic synchronization and set the interval.
+7.  **Start Managing**: Click the GitHub icon in the ribbon or use the "GitHub Projects: Open Issues View" command to open the issues panel and start managing your projects!
 
-联系
+## Design Philosophy
 
-将issue转化为笔记
+This plugin is built on a few core principles:
 
-patch而非edit
+- **Remote-First**: The GitHub repository is treated as the single source of truth. The plugin provides a window into that truth.
+- **Local Enhancement**: It enhances your ability to manage projects and integrate them with your knowledge base, all from the comfort of Obsidian.
+- **Focused Actions**:
+  - **What this plugin does**: It allows you to **view** issues, **link** them to your notes, and **convert** them into new notes for further work.
+  - **What this plugin does NOT do**: It does not perform two-way synchronization between GitHub issue content and Obsidian Markdown files. The goal is to link and transform, not to create a mirror.
 
-我们不做什么
+## Inspired By
 
-双向同步
+- [Githobs](https://github.com/GabAlpha/obsidian-githobs)
+- [vscode-pull-request-github](https://github.com/microsoft/vscode-pull-request-github)
 
-github issue <-> obsidian markdown
+<!--## Vision(outdated)
 
+How do I want to use this plugin?
 
-## mvp阶段
+"Within an Obsidian workspace, an idea is refined into a task note with acceptance criteria and then created as a GitHub Issue with a single click. Subsequently, in VS Code, a branch is created from the Issue, a failing test is written, and then an MCP service is invoked to automatically package the Issue description, relevant ADRs, and code into a rich context, driving Copilot to efficiently code until the test passes. Finally, the creation, self-review, and CI triggering of a PR are completed within VS Code, and delivery is accomplished through a standardized release script."
 
-0.引导设置github token
-1.同步并查看远程仓库的 Issues
-2.编写issue并推送
-
-## Inspired by
-
-- githobs
-- vscode extension
+This plugin is designed to efficiently bridge the gap between Obsidian and GitHub.
+-->
