@@ -6,12 +6,12 @@ Manage and view GitHub Issues and Projects directly within workspace.Jump to you
 
 Authenticated by a GitHub token, this plugin currently focuses on two core capabilities:
 
-- **Pull**: Fetching issues and related information from GitHub, allowing you to conveniently browse, filter, and manage them within Obsidian.
-- **Jump**: Instantly jumping to the corresponding GitHub web page, so you can quickly view and operate on issues in your browser.
+-   **Pull**: Fetching issues and related information from GitHub, allowing you to conveniently browse, filter, and manage them within Obsidian.
+-   **Jump**: Instantly jumping to the corresponding GitHub web page, so you can quickly view and operate on issues in your browser.
 
 In the future, the plugin plans to gradually support:
 
-- **Push**: Creating new issues and posting comments directly within Obsidian, with the experience moving closer to VS Code’s GitHub integration.
+-   **Push**: Creating new issues and posting comments directly within Obsidian, with the experience moving closer to VS Code’s GitHub integration.
 
 Our goal is to make Obsidian an efficient entry point for managing your GitHub projects—starting with “pull” and “jump,” and then gradually improving “push” and deeper interactive experiences.
 
@@ -19,21 +19,21 @@ Our goal is to make Obsidian an efficient entry point for managing your GitHub p
 
 ### Implemented
 
-- **Settings Management**: A comprehensive settings tab to guide you through configuring your GitHub Token, managing multiple repositories, and setting sync options. It also includes a feature to test the validity of your token.
-- **GitHub Issues View**: Browse your GitHub Issues in a dedicated sidebar view within Obsidian. This view supports:
-  - Switching between different repositories.
-  - Advanced filtering by title, state, labels, milestone, and assignee.
-  - A refresh button to fetch the latest updates.
-  - Expanding issues to see their full details.
-- **Quick Access**: Easily open the Issues view using a command from the palette or a ribbon icon in the sidebar.
-- **Synchronization**: Supports both automatic and manual synchronization of issues from your remote repositories. For some issues, it can even display the count of related commits.
+-   **Settings Management**: A comprehensive settings tab to guide you through configuring your GitHub Token, managing multiple repositories, and setting sync options. It also includes a feature to test the validity of your token.
+-   **GitHub Issues View**: Browse your GitHub Issues in a dedicated sidebar view within Obsidian. This view supports:
+    -   Switching between different repositories.
+    -   Advanced filtering by title, state, labels, milestone, and assignee.
+    -   A refresh button to fetch the latest updates.
+    -   Expanding issues to see their full details.
+-   **Quick Access**: Easily open the Issues view using a command from the palette or a ribbon icon in the sidebar.
+-   **Synchronization**: Supports both automatic and manual synchronization of issues from your remote repositories. For some issues, it can even display the count of related commits.
 
 ### Planned Features
 
-- **Create New Issue**: The UI button is in place, and the functionality is under development.
-- **Convert Issue to Note**: A button has been reserved for this feature, which will allow you to turn any GitHub issue into a new note in your vault.
-- **Advanced Issue Actions**: Functionality to close, edit, and perform other operations on issues directly from Obsidian.
-- **Deep Integration**: Stronger connections between issues and your local notes, including linking and context sharing.
+-   **Create New Issue**: The UI button is in place, and the functionality is under development.
+-   **Convert Issue to Note**: A button has been reserved for this feature, which will allow you to turn any GitHub issue into a new note in your vault.
+-   **Advanced Issue Actions**: Functionality to close, edit, and perform other operations on issues directly from Obsidian.
+-   **Deep Integration**: Stronger connections between issues and your local notes, including linking and context sharing.
 
 ## Getting Started
 
@@ -49,16 +49,16 @@ Our goal is to make Obsidian an efficient entry point for managing your GitHub p
 
 This plugin is built on a few core principles:
 
-- **Remote-First**: The GitHub repository is treated as the single source of truth. The plugin provides a window into that truth.
-- **Local Enhancement**: It enhances your ability to manage projects and integrate them with your knowledge base, all from the comfort of Obsidian.
-- **Focused Actions**:
-  - **What this plugin does**: It allows you to **view** issues, **link** them to your notes, and **convert** them into new notes for further work.
-  - **What this plugin does NOT do**: It does not perform two-way synchronization between GitHub issue content and Obsidian Markdown files. The goal is to link and transform, not to create a mirror.
+-   **Remote-First**: The GitHub repository is treated as the single source of truth. The plugin provides a window into that truth.
+-   **Local Enhancement**: It enhances your ability to manage projects and integrate them with your knowledge base, all from the comfort of Obsidian.
+-   **Focused Actions**:
+    -   **What this plugin does**: It allows you to **view** issues, **link** them to your notes, and **convert** them into new notes for further work.
+    -   **What this plugin does NOT do**: It does not perform two-way synchronization between GitHub issue content and Obsidian Markdown files. The goal is to link and transform, not to create a mirror.
 
 ## Inspired By
 
-- [Githobs](https://github.com/GabAlpha/obsidian-githobs)
-- [vscode-pull-request-github](https://github.com/microsoft/vscode-pull-request-github)
+-   [Githobs](https://github.com/GabAlpha/obsidian-githobs)
+-   [vscode-pull-request-github](https://github.com/microsoft/vscode-pull-request-github)
 
 <!--## Vision(outdated)
 
