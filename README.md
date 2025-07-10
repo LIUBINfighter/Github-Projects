@@ -8,15 +8,16 @@ Manage and view GitHub Issues and Projects directly within workspace.Jump to you
 
 ## Roadmap
 
-| Module / Feature         |      **Pull**<br>*(View & Fetch)*                                      |  **Jump**<br>*(Navigate)*                                           |                    **Push**<br>*(Create/Edit)*                     |   **Link**<br>*(Note Integration)*                                     |
-| ------------------------ | :--------------------------------------------------------------------: | :-----------------------------------------------------------------: | :----------------------------------------------------------------: | :--------------------------------------------------------------------: |
-| **UI / UX & Core**       |    🚀 **Dashboard Workbench**<br>🚀 **Modern Card Layout**             |  🚀 **Tab Navigation**<br>✅ **Unified Header Bar**                  | 🚧 **Theme/Appearance Customization**<br>🚧 Drag & Drop            |                                   🤔                                   |
-| **Issues**               | ✅ Fetch & View Issues<br>✅ Filter, Expand, Sync<br>🚀 Cross-repo Stats | ✅ Jump to GitHub Issue<br>🚀 **Open Repo in IDE via Command**       |        🚧 Create New Issue<br>🚧 Comment, Close, Edit Issue        | 🚀 **Create Note from Issue (button exists)**<br>🚧 Link Existing Note |
-| **Projects**             |              🚀 **Fetch & View Projects (Repo/Org/User)**              |                 🚀 **Jump to GitHub Project Board**                 |     🚧 Create/Edit Project Item<br>🚧 Move Project Item State      |                        🚧 Link Project to Note                         |
-| **Workbench**            |     🚀 Multi-repo/Project Aggregation<br>🚀 Global Stats               |                      🚀 Quick Nav to Settings                       |                     🚧 Custom Workbench Layout                     |  🚧 Embed Stats Block in Note (like `wakatime` or `dataview.js`)       |
-| **Settings Tab**         |       ✅Repo Config <br>✅Token Testing<br>🚀 Projects Management        |                    🚀 Project/IDE Command Config                    | 🤔                                                                 |   🤔                                                                   |
 
-**Legend:** ✅ = Completed 🚀 = In-Dev/Beta 🚧 = Planned/Idea Wanted 🤔 = Idea Wanted
+| Module / Feature         |      **Pull**<br>*(View & Fetch)*                                      |  **Jump**<br>*(Navigate)*                                           |                                  **Push**<br>*(Create/Edit)*                                   |   **Link**<br>*(Note Integration)*                                      |
+| ------------------------ | :--------------------------------------------------------------------: | :-----------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------: |
+| **UI / UX & Core**       |    🚀 **Dashboard Workbench**<br>🚀 **Modern Card Layout**             |  🚀 **Tab Navigation**<br>✅ **Unified Header Bar**                  |                  🚧🤔 **Theme/Appearance Customization**<br>🚧🤔 Drag & Drop                   |                                    -                                    |
+| **Issues**               | ✅ Fetch & View Issues<br>✅ Filter, Expand, Sync<br>🚀 Cross-repo Stats | ✅ Jump to GitHub Issue<br>🚀 **Open Repo in IDE via Command**       | 🚧 Create New Issue<br>🚧 Comment, Close, Edit Issue <br>🚧 (vscode-like developer experience) | 🚀 **Create Note from Issue (button exists)**<br>🚧🤔Link Existing Note |
+| **Projects**             |             🚀🤔 **Fetch & View Projects (Repo/Org/User)**             |                 🚀 **Jump to GitHub Project Board**                 |                   🚧 Create/Edit Project Item<br>🚧 Move Project Item State                    |                        🚧🤔 Link Project to Note                        |
+| **Workbench**            |         🚀 Multi-repo/Project Aggregation<br>🚀🤔 Global Stats         |                      🚀 Quick Nav to Settings                       |                                  🚧🤔 Custom Workbench Layout                                  |    🚧🤔 Embed Stats Block in Note (like `wakatime` or `dataview.js`)    |
+| **Settings Tab**         |       ✅Repo Config <br>✅Token Testing<br>🚀 Projects Management        |                    🚀 Project/IDE Command Config                    |                                               -                                                |                                    -                                    |
+
+**Legend:** ✅ = Completed 🚀 = In-Dev/Beta 🚧 = Planned 🤔 = Idea Wanted
 
 > For developers, you can checkout branch `dev` to get a clear view of development. View issues for ideas and discussions!
 
@@ -58,7 +59,7 @@ To seamlessly bridge the gap between ideation and execution. We believe that a g
 
 ## License
 
-
+This project is licensed under the Mozilla Public License 2.0 (MPL-2.0). See the [LICENSE](./LICENSE) file for details.
 
 <!--## Vision(outdated)
 
