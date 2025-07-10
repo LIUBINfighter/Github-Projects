@@ -39,10 +39,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-
-// 创建标签页导航
-const tabNav = containerEl.createDiv();
-tabNav.classList.add("gp-tab-nav");
+		// 创建标签页导航
+		const tabNav = containerEl.createDiv();
+		tabNav.classList.add("gp-tab-nav");
 
 		const tabs = [
 			{ id: "basic", name: "Token setup" },
@@ -50,17 +49,17 @@ tabNav.classList.add("gp-tab-nav");
 			{ id: "sync", name: "Sync options" },
 		];
 
-	tabs.forEach((tab) => {
-		const tabButton = tabNav.createEl("button", { text: tab.name });
-		tabButton.classList.add("gp-tab-btn");
-		if (this.activeTab === tab.id) {
-			tabButton.classList.add("active");
-		}
-		tabButton.addEventListener("click", () => {
-			this.activeTab = tab.id;
-			this.display();
+		tabs.forEach((tab) => {
+			const tabButton = tabNav.createEl("button", { text: tab.name });
+			tabButton.classList.add("gp-tab-btn");
+			if (this.activeTab === tab.id) {
+				tabButton.classList.add("active");
+			}
+			tabButton.addEventListener("click", () => {
+				this.activeTab = tab.id;
+				this.display();
+			});
 		});
-	});
 
 		// 显示对应的标签页内容
 		this.displayTabContent(containerEl);
@@ -81,9 +80,7 @@ tabNav.classList.add("gp-tab-nav");
 	}
 
 	private displayBasicSettings(containerEl: HTMLElement): void {
-		// GitHub Token 设置容器
-		const tokenContainer = containerEl.createDiv();
-		tokenContainer.style.marginBottom = "20px";
+		const tokenContainer = containerEl.createDiv({ cls: 'gp-token-container' });
 
 		// GitHub Token 设置
 		new Setting(tokenContainer)
@@ -136,61 +133,47 @@ tabNav.classList.add("gp-tab-nav");
 		// 替换 innerHTML: tokenLinkP
 		const tokenLinkP = tokenInfoDiv.createEl("p");
 		tokenLinkP.classList.add("gp-token-link");
-		tokenLinkP.appendChild(document.createTextNode("Don't have a token? "));
-		const link = tokenLinkP.createEl("a", {
-			text: "Create one here",
-			href: "https://github.com/settings/tokens/new",
-		});
-		link.setAttr("target", "_blank");
-		link.addClass("gp-token-link-a");
+	tokenLinkP.appendChild(document.createTextNode("Don't have a token? "));
+		const link = tokenLinkP.createEl("a", { text: 'Create one here', href: 'https://github.com/settings/tokens/new' });
+		link.setAttr('target', '_blank'); link.addClass('gp-token-link-a');
 
 		// 权限说明（scopes）
 		const permissionHint = tokenInfoDiv.createEl("p");
 		permissionHint.classList.add("gp-token-permission-hint");
-		const strong1 = permissionHint.createEl("strong", { text: "Required scopes: " });
-		permissionHint.appendChild(strong1);
-		permissionHint.createEl("code", { text: "repo" });
-		permissionHint.appendChild(document.createTextNode(" (for private repos) or "));
-		permissionHint.createEl("code", { text: "public_repo" });
-		permissionHint.appendChild(document.createTextNode(" (for public repos only)"));
+		permissionHint.createEl('strong', { text: 'Required scopes: ' });
+		permissionHint.createEl('code', { text: 'repo' });
+		permissionHint.appendChild(document.createTextNode(' (for private repos) or '));
+		permissionHint.createEl('code', { text: 'public_repo' });
+		permissionHint.appendChild(document.createTextNode(' (for public repos only)'));
 
 		// 权限说明（permissions）
 		const permissionP = tokenInfoDiv.createEl("p");
-		permissionP.style.margin = "0";
-		const strong2 = permissionP.createEl("strong", { text: "Required permissions: " });
-		permissionP.appendChild(strong2);
-		permissionP.appendChild(document.createTextNode("repo (for private repos) or public_repo (for public repos only)"));
+		permissionP.classList.add('gp-token-permission');
+		permissionP.createEl('strong', { text: 'Required permissions: ' });
+		permissionP.appendChild(document.createTextNode('repo (for private repos) or public_repo (for public repos only)'));
 
-		// 令牌格式说明
+		// 添加令牌格式说明
 		const formatP = tokenInfoDiv.createEl("p");
-		formatP.style.margin = "8px 0 0 0";
-		const strong3 = formatP.createEl("strong", { text: "Token format: " });
-		formatP.appendChild(strong3);
+		formatP.classList.add('gp-token-format');
+		formatP.createEl('strong', { text: 'Token format: ' });
 		formatP.appendChild(document.createTextNode('Should start with "ghp_" followed by 36 characters'));
 
-		// 添加说明文档
-		const helpDiv = containerEl.createDiv();
-		helpDiv.style.marginTop = "30px";
-		helpDiv.createEl("h3", { text: "Setup Instructions" });
-		helpDiv.createEl("p", {
-			text: "1. Create a GitHub Personal Access Token with repo permissions",
-		});
-		helpDiv.createEl("p", { text: "2. Enter the token above and test it" });
-		helpDiv.createEl("p", {
-			text: "3. Switch to Repositories tab to add your repositories",
-		});
-		helpDiv.createEl("p", {
-			text: "4. Configure sync preferences in Sync Options tab",
-		});
+		// Setup instructions heading
+		new Setting(containerEl).setName('Setup instructions').setHeading();
+		[
+			'1. Create a GitHub Personal Access Token with repo permissions',
+		 '2. Enter the token above and test it',
+		 '3. Switch to repositories tab to add your repositories',
+		 '4. Configure sync preferences in sync options tab'
+		].forEach(text => containerEl.createEl('p', { text }));
 	}
 
 	private displayRepositorySettings(containerEl: HTMLElement): void {
-		// 只在有多个部分时使用标题，这里只保留“Repository management”
-		containerEl.createEl("h3", { text: "Repository management" });
+		// Section: add repositories and list configured ones
+		new Setting(containerEl).setName('Repositories').setHeading();
 
 		// 添加新仓库的输入框
-		const addRepoContainer = containerEl.createDiv();
-		addRepoContainer.classList.add("gp-add-repo-box");
+		const addRepoContainer = containerEl.createDiv({ cls: 'gp-add-repo-box' });
 
 		addRepoContainer.createEl("h4", { text: "Add new repository" });
 
@@ -559,8 +542,9 @@ tabNav.classList.add("gp-tab-nav");
 	}
 
 	private updateTokenStatus(containerEl: HTMLElement): void {
+		// 获取测试按钮容器，使用类选择器替代内联样式匹配
 		const testContainer = containerEl.querySelector(
-			'div[style*="display: flex"]'
+			'.gp-test-token-row'
 		) as HTMLElement;
 		if (!testContainer) return;
 

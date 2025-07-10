@@ -77,6 +77,15 @@
   font-size: 12px;
   color: var(--text-muted);
 }
+.gp-token-container {
+  margin-bottom: 20px;
+}
+.gp-token-permission {
+  margin: 0;
+}
+.gp-token-format {
+  margin: 8px 0 0 0;
+}
 .gp-token-link {
   margin: 0 0 8px 0;
 }
