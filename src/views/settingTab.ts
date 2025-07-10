@@ -39,11 +39,10 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		// 创建标签页导航
-		const tabNav = containerEl.createDiv();
-		tabNav.style.marginBottom = "20px";
-		tabNav.style.borderBottom =
-			"1px solid var(--background-modifier-border)";
+
+// 创建标签页导航
+const tabNav = containerEl.createDiv();
+tabNav.classList.add("gp-tab-nav");
 
 		const tabs = [
 			{ id: "basic", name: "Token Setup" },
@@ -51,27 +50,17 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			{ id: "sync", name: "Sync Options" },
 		];
 
-		tabs.forEach((tab) => {
-			const tabButton = tabNav.createEl("button", { text: tab.name });
-			tabButton.style.padding = "10px 20px";
-			tabButton.style.margin = "0 5px 0 0";
-			tabButton.style.border = "none";
-			tabButton.style.backgroundColor =
-				this.activeTab === tab.id
-					? "var(--interactive-accent)"
-					: "transparent";
-			tabButton.style.color =
-				this.activeTab === tab.id
-					? "var(--text-on-accent)"
-					: "var(--text-normal)";
-			tabButton.style.cursor = "pointer";
-			tabButton.style.borderRadius = "5px 5px 0 0";
-
-			tabButton.addEventListener("click", () => {
-				this.activeTab = tab.id;
-				this.display();
-			});
+	tabs.forEach((tab) => {
+		const tabButton = tabNav.createEl("button", { text: tab.name });
+		tabButton.classList.add("gp-tab-btn");
+		if (this.activeTab === tab.id) {
+			tabButton.classList.add("active");
+		}
+		tabButton.addEventListener("click", () => {
+			this.activeTab = tab.id;
+			this.display();
 		});
+	});
 
 		// 显示对应的标签页内容
 		this.displayTabContent(containerEl);
@@ -116,48 +105,21 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 测试按钮和状态指示器容器
 		const testContainer = tokenContainer.createDiv();
-		testContainer.style.display = "flex";
-		testContainer.style.alignItems = "center";
-		testContainer.style.marginTop = "10px";
-		testContainer.style.gap = "10px";
+		testContainer.classList.add("gp-test-token-row");
 
 		// 测试按钮
 		const testButton = testContainer.createEl("button", {
 			text: "Test Token",
 		});
-		testButton.style.padding = "6px 12px";
-		testButton.style.fontSize = "12px";
-		testButton.style.backgroundColor = "var(--interactive-accent)";
-		testButton.style.color = "var(--text-on-accent)";
-		testButton.style.border = "none";
-		testButton.style.borderRadius = "3px";
-		testButton.style.cursor = "pointer";
-		testButton.style.transition = "all 0.2s ease";
-
-		// 鼠标悬停效果
-		testButton.addEventListener("mouseenter", () => {
-			if (!testButton.disabled) {
-				testButton.style.backgroundColor =
-					"var(--interactive-accent-hover)";
-			}
-		});
-		testButton.addEventListener("mouseleave", () => {
-			if (!testButton.disabled) {
-				testButton.style.backgroundColor = "var(--interactive-accent)";
-			}
-		});
+		testButton.classList.add("gp-btn", "gp-btn-accent");
 
 		// 状态指示灯
 		const statusIndicator = testContainer.createDiv();
-		statusIndicator.style.width = "12px";
-		statusIndicator.style.height = "12px";
-		statusIndicator.style.borderRadius = "50%";
-		statusIndicator.style.flexShrink = "0";
+		statusIndicator.classList.add("gp-token-status-indicator");
 
 		// 状态文本
 		const statusText = testContainer.createDiv();
-		statusText.style.fontSize = "12px";
-		statusText.style.flex = "1";
+		statusText.classList.add("gp-token-status-text");
 
 		// 绑定测试按钮事件
 		testButton.addEventListener("click", async () => {
@@ -169,22 +131,15 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 添加创建token的链接和权限说明
 		const tokenInfoDiv = containerEl.createDiv();
-		tokenInfoDiv.style.marginTop = "10px";
-		tokenInfoDiv.style.marginBottom = "20px";
-		tokenInfoDiv.style.padding = "10px";
-		tokenInfoDiv.style.backgroundColor = "var(--background-secondary)";
-		tokenInfoDiv.style.borderRadius = "5px";
-		tokenInfoDiv.style.fontSize = "12px";
-		tokenInfoDiv.style.color = "var(--text-muted)";
+		tokenInfoDiv.classList.add("gp-token-info-box");
 
 		const tokenLinkP = tokenInfoDiv.createEl("p");
-		tokenLinkP.style.margin = "0 0 8px 0";
+		tokenLinkP.classList.add("gp-token-link");
 		tokenLinkP.innerHTML =
-			'Don\'t have a token? <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--text-accent);">Create one here</a>';
+			'Don\'t have a token? <a href="https://github.com/settings/tokens/new" target="_blank" class="gp-token-link-a">Create one here</a>';
 		// 权限说明
 		const permissionHint = tokenInfoDiv.createEl("p");
-		permissionHint.style.margin = "4px 0 0 0";
-		permissionHint.style.color = "var(--text-accent)";
+		permissionHint.classList.add("gp-token-permission-hint");
 		permissionHint.innerHTML =
 			"<strong>Required scopes:</strong> <code>repo</code> (for private repos) or <code>public_repo</code> (for public repos only)";
 
@@ -220,11 +175,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 添加新仓库的输入框
 		const addRepoContainer = containerEl.createDiv();
-		addRepoContainer.style.marginBottom = "20px";
-		addRepoContainer.style.padding = "15px";
-		addRepoContainer.style.border =
-			"1px solid var(--background-modifier-border)";
-		addRepoContainer.style.borderRadius = "5px";
+		addRepoContainer.classList.add("gp-add-repo-box");
 
 		addRepoContainer.createEl("h4", { text: "Add New Repository" });
 
@@ -234,46 +185,34 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 			placeholder:
 				"GitHub URL (e.g., https://github.com/username/reponame)",
 		});
-		urlInput.style.width = "100%";
-		urlInput.style.marginBottom = "10px";
-		urlInput.style.padding = "8px";
+		urlInput.classList.add("gp-input", "gp-input-full");
 
 		// 或分隔线
 		const orDiv = addRepoContainer.createDiv();
 		orDiv.textContent = "OR";
-		orDiv.style.textAlign = "center";
-		orDiv.style.margin = "10px 0";
-		orDiv.style.color = "var(--text-muted)";
-		orDiv.style.fontSize = "12px";
+		orDiv.classList.add("gp-or-divider");
 
 		// 手动输入区域
 		const manualDiv = addRepoContainer.createDiv();
-		manualDiv.style.marginTop = "10px";
+		manualDiv.classList.add("gp-manual-repo-fields");
 
 		const nameInput = manualDiv.createEl("input", {
 			type: "text",
 			placeholder: "Repository display name (e.g., My Project)",
 		});
-		nameInput.style.width = "100%";
-		nameInput.style.marginBottom = "10px";
-		nameInput.style.padding = "8px";
+		nameInput.classList.add("gp-input", "gp-input-full");
 
 		const ownerInput = manualDiv.createEl("input", {
 			type: "text",
 			placeholder: "Owner/Organization (e.g., username)",
 		});
-		ownerInput.style.width = "48%";
-		ownerInput.style.marginRight = "4%";
-		ownerInput.style.marginBottom = "10px";
-		ownerInput.style.padding = "8px";
+		ownerInput.classList.add("gp-input", "gp-input-half", "gp-input-owner");
 
 		const repoInput = manualDiv.createEl("input", {
 			type: "text",
 			placeholder: "Repository name (e.g., my-repo)",
 		});
-		repoInput.style.width = "48%";
-		repoInput.style.marginBottom = "10px";
-		repoInput.style.padding = "8px";
+		repoInput.classList.add("gp-input", "gp-input-half", "gp-input-repo");
 
 		// URL 自动解析功能
 		urlInput.addEventListener("input", () => {
@@ -317,12 +256,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		const addButton = addRepoContainer.createEl("button", {
 			text: "Add Repository",
 		});
-		addButton.style.padding = "8px 16px";
-		addButton.style.backgroundColor = "var(--interactive-accent)";
-		addButton.style.color = "var(--text-on-accent)";
-		addButton.style.border = "none";
-		addButton.style.borderRadius = "3px";
-		addButton.style.cursor = "pointer";
+		addButton.classList.add("gp-btn", "gp-btn-accent");
 
 		addButton.addEventListener("click", async () => {
 			let name = nameInput.value.trim();
@@ -352,9 +286,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				newErrorDiv.className = "error-message";
 				newErrorDiv.textContent =
 					"Please provide a valid GitHub URL or fill in all fields manually.";
-				newErrorDiv.style.color = "var(--text-error)";
-				newErrorDiv.style.fontSize = "12px";
-				newErrorDiv.style.marginTop = "5px";
+				newErrorDiv.classList.add("gp-error-message");
 
 				// 3秒后自动删除错误提示
 				setTimeout(() => {
@@ -395,26 +327,17 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 			this.plugin.settings.repositories.forEach((repository, index) => {
 				const repoDiv = containerEl.createDiv();
-				repoDiv.style.marginBottom = "15px";
-				repoDiv.style.padding = "15px";
-				repoDiv.style.border =
-					"1px solid var(--background-modifier-border)";
-				repoDiv.style.borderRadius = "5px";
-				repoDiv.style.backgroundColor = repository.isDefault
-					? "var(--background-modifier-hover)"
-					: "transparent";
+				repoDiv.classList.add("gp-repo-item");
+				if (repository.isDefault) repoDiv.classList.add("default");
 
 				const repoHeader = repoDiv.createDiv();
-				repoHeader.style.display = "flex";
-				repoHeader.style.justifyContent = "space-between";
-				repoHeader.style.alignItems = "center";
-				repoHeader.style.marginBottom = "10px";
+				repoHeader.classList.add("gp-repo-header");
 
 				const repoTitle = repoHeader.createEl("h5");
 				repoTitle.textContent = `${repository.name} ${
 					repository.isDefault ? "(Default)" : ""
 				}`;
-				repoTitle.style.margin = "0";
+				repoTitle.classList.add("gp-repo-title");
 
 				const actionsDiv = repoHeader.createDiv();
 
@@ -423,9 +346,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 					const setDefaultButton = actionsDiv.createEl("button", {
 						text: "Set Default",
 					});
-					setDefaultButton.style.marginRight = "10px";
-					setDefaultButton.style.padding = "4px 8px";
-					setDefaultButton.style.fontSize = "12px";
+					setDefaultButton.classList.add("gp-btn", "gp-btn-default");
 					setDefaultButton.addEventListener("click", async () => {
 						// 取消其他仓库的默认状态
 						this.plugin.settings.repositories.forEach(
@@ -442,13 +363,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				const deleteButton = actionsDiv.createEl("button", {
 					text: "×",
 				});
-				deleteButton.style.padding = "4px 8px";
-				deleteButton.style.fontSize = "12px";
-				deleteButton.style.backgroundColor = "var(--text-error)";
-				deleteButton.style.color = "white";
-				deleteButton.style.border = "none";
-				deleteButton.style.borderRadius = "3px";
-				deleteButton.style.cursor = "pointer";
+				deleteButton.classList.add("gp-btn", "gp-btn-danger");
 				deleteButton.addEventListener("click", async () => {
 					this.plugin.settings.repositories.splice(index, 1);
 					// 如果删除的是默认仓库且还有其他仓库，设置第一个为默认
