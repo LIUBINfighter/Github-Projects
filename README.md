@@ -4,7 +4,7 @@ Manage and view GitHub Issues and Projects directly within workspace. Jump to yo
 
 <!-- ![beta-preview](./assets/beta.png) -->
 
-![v0.1.0](./assets/0.1.0.png)
+![v0.1.0](./assets/v0.1.0.png)
 
 <!-- > A Note on the Screenshot: The image above showcases the beta vision for this plugin, including the main workbench view. The initial release focuses on the powerful sidebar functionality (shown on the right). The workbench and other features are already in development(branch:dev) and will be rolled out in upcoming versions! -->
 
