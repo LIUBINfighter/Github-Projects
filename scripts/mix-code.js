@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 const srcDir = path.join(__dirname, '../src');
 const stylesFile = path.join(__dirname, '../styles.css');
+const readmeFile = path.join(__dirname, '../README.md');
 
 // 生成简短的时间戳文件名
 function getShortTimestamp() {
@@ -54,6 +55,14 @@ function getAllTsFiles(dir) {
 function mergeFiles() {
     const files = getAllTsFiles(srcDir);
     let merged = '';
+    
+    // 合并 README.md (放在最前面)
+    if (fs.existsSync(readmeFile)) {
+        const relPath = path.relative(process.cwd(), readmeFile).replace(/\\/g, '/');
+        merged += `// <-- ./${relPath} -->\n`;
+        merged += fs.readFileSync(readmeFile, 'utf-8') + '\n';
+    }
+    
     files.forEach(file => {
         const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
         merged += `// <-- ./${relPath} -->\n`;
@@ -68,7 +77,7 @@ function mergeFiles() {
     }
 
     fs.writeFileSync(outputFile, merged, 'utf-8');
-    console.log(`Merged ${files.length} ts files${fs.existsSync(stylesFile) ? ' and styles.css' : ''} into ${outputFile}`);
+    console.log(`Merged ${files.length} ts files${fs.existsSync(stylesFile) ? ' and styles.css' : ''}${fs.existsSync(readmeFile) ? ' and README.md' : ''} into ${outputFile}`);
 }
 
 mergeFiles();
