@@ -874,7 +874,8 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 		// 删除按钮
 		const deleteBtn = actions.createEl('button', { cls: 'mod-warning' });
-		deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+		deleteBtn.innerHTML = '';
+		setIcon(deleteBtn, 'x');
 		deleteBtn.title = 'Delete project';
 		deleteBtn.addEventListener('click', async () => {
 			this.plugin.settings.projects.splice(index, 1);
