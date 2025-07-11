@@ -403,8 +403,25 @@ export class IssueView extends ItemView {
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueContent.createDiv('issue-labels');
 				issue.labels.forEach(label => {
-					const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
-					labelSpan.classList.add(`issue-label-color-${label.color}`);
+						const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
+						// 直接设置标签背景色，兼容 GitHub 标签色彩
+						if (label.color) {
+							labelSpan.style.backgroundColor = `#${label.color}`;
+							labelSpan.style.borderRadius = '4px';
+							labelSpan.style.padding = '2px 8px';
+							labelSpan.style.fontSize = '12px';
+							// 判断颜色亮度，亮色用深色字体，暗色用白色字体
+							const hex = label.color.replace('#', '');
+							if (hex.length === 6) {
+								const r = parseInt(hex.substring(0,2), 16);
+								const g = parseInt(hex.substring(2,4), 16);
+								const b = parseInt(hex.substring(4,6), 16);
+								const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+								labelSpan.style.color = brightness > 180 ? '#222' : '#fff';
+							} else {
+								labelSpan.style.color = '#fff';
+							}
+						}
 				});
 			}
 
