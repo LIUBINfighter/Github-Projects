@@ -303,32 +303,22 @@ export class IssueView extends ItemView {
 
 	private renderEmptyState(container: Element) {
 		container.empty();
-		const empty = container.createDiv('empty-state');
-		
-		const emptyContent = empty.createDiv('empty-content');
-		
+		// 统一用 issue-item-container 和 issue-content 包裹空内容
+		const emptyItem = container.createDiv('issue-item-container');
+		const emptyContent = emptyItem.createDiv('issue-content');
 		const iconDiv = emptyContent.createDiv('empty-icon');
-		
 		const messageDiv = emptyContent.createDiv('empty-message');
-		
 		if (!this.selectedRepo) {
 			setIcon(iconDiv, 'folder-open');
 			messageDiv.createEl('h3', { text: 'Select a repository' });
 			messageDiv.createEl('p', { text: 'Choose a repository from the dropdown above to view its issues.' });
 		} else {
-			// GitHub 风格的空状态
 			setIcon(iconDiv, 'check-circle');
 			iconDiv.addClass('empty-icon-success');
-			
 			const titleEl = messageDiv.createEl('h3', { text: 'You\'re all set!' });
 			titleEl.addClass('empty-title-success');
-			
-			const descEl = messageDiv.createEl('p', { 
-				text: 'No issues found in this repository. That\'s a good thing!' 
-			});
+			const descEl = messageDiv.createEl('p', { text: 'No issues found in this repository. Cool!' });
 			descEl.addClass('empty-desc');
-			
-			// 如果有过滤器激活，显示不同的消息
 			if (this.hasActiveFilters()) {
 				titleEl.textContent = 'No issues match your filters';
 				descEl.textContent = 'Try adjusting your search criteria or clearing the filters.';
