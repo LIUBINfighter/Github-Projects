@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice, Platform } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice, Platform, setIcon } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 import { GitHubIssueCache, GitHubDataSync } from '../github/dataSync';
 
@@ -495,31 +495,23 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 
 				// 按钮容器
 				const buttonContainer = repoInfo.createDiv();
-				buttonContainer.style.display = 'flex';
-				buttonContainer.style.gap = 'var(--size-2-1)';
-				buttonContainer.style.flexShrink = '0';
+				buttonContainer.classList.add('gp-button-container');
 
 				// 添加复制图标按钮
-				const copyIcon = buttonContainer.createEl('button', {
-					cls: 'clickable-icon'
-				});
-				copyIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+				const copyIcon = buttonContainer.createEl('button', { cls: 'clickable-icon' });
+				// 使用内置复制图标
+				setIcon(copyIcon, 'copy');
 				copyIcon.title = 'Copy repository URL';
 				copyIcon.addEventListener('click', () => {
-					navigator.clipboard.writeText(repoUrl).then(() => {
-						new Notice('Repository URL copied to clipboard');
-					});
+					navigator.clipboard.writeText(repoUrl).then(() => new Notice('Repository URL copied to clipboard'));
 				});
 
 				// 添加外部链接图标（在新标签页打开）
-				const externalIcon = buttonContainer.createEl('button', {
-					cls: 'clickable-icon'
-				});
-				externalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+				const externalIcon = buttonContainer.createEl('button', { cls: 'clickable-icon' });
+				// 使用内置外部链接图标
+				setIcon(externalIcon, 'external-link');
 				externalIcon.title = 'Open in GitHub';
-				externalIcon.addEventListener('click', () => {
-					window.open(repoUrl, '_blank');
-				});
+				externalIcon.addEventListener('click', () => window.open(repoUrl, '_blank'));
 
 				// IDE 命令配置区域（仅在桌面端显示）
 				if (!Platform.isMobile) {
@@ -565,11 +557,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 					testButtonContainer.style.alignItems = 'center';
 					testButtonContainer.style.gap = 'var(--size-2-2)';
 
-				const testButton = testButtonContainer.createEl('button', {
-					cls: 'clickable-icon-button'
-				});
-				// 使用更合适的“play”图标表示“测试/运行”
-				testButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+				const testButton = testButtonContainer.createEl('button', { cls: 'clickable-icon-button' });
+				// 使用 Obsidian 内置 lucide "play" 图标
+				setIcon(testButton, 'play');
 				testButton.title = 'Test IDE command';
 				testButton.style.padding = 'var(--size-2-2)';
 
