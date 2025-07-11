@@ -1491,3 +1491,25 @@
 	flex-grow: 0;
 	flex-shrink: 0;
 }
+
+/* 动态标签颜色样式（自动生成，支持主题自定义覆盖） */
+.issue-label[class*="issue-label-color-"] {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+}
+/* 示例：可用脚本批量生成更多颜色 */
+.issue-label-color-ff0000 { background-color: #ff000015; color: #ff0000; border-color: #ff000030; }
+.issue-label-color-00ff00 { background-color: #00ff0015; color: #00ff00; border-color: #00ff0030; }
+.issue-label-color-0000ff { background-color: #0000ff15; color: #0000ff; border-color: #0000ff30; }
+/* ...更多颜色可自动生成... */
+
+/* Issue 展开动画 */
+.issue-expanded {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.issue-expanded.expanded {
+  max-height: 500px;
+}

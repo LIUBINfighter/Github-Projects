@@ -403,21 +403,19 @@ export class IssueView extends ItemView {
 			// 标签
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueContent.createDiv('issue-labels');
-
 				issue.labels.forEach(label => {
 					const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
-					labelSpan.style.backgroundColor = `#${label.color}15`;
-					labelSpan.style.color = `#${label.color}`;
-					labelSpan.style.borderColor = `#${label.color}30`;
+					labelSpan.classList.add(`issue-label-color-${label.color}`);
 				});
 			}
 
 			// 创建展开区域
 			const expandedArea = issueItem.createDiv('issue-expanded');
-			expandedArea.style.maxHeight = isExpanded ? '500px' : '0';
-
 			if (isExpanded) {
+				expandedArea.classList.add('expanded');
 				this.renderExpandedContent(expandedArea, issue);
+			} else {
+				expandedArea.classList.remove('expanded');
 			}
 
 			// 点击事件 - 切换展开/收起
@@ -564,18 +562,17 @@ export class IssueView extends ItemView {
 
 	private toggleIssueExpanded(issue: GitHubIssue, expandIcon: HTMLElement, expandedArea: HTMLElement) {
 		const isExpanded = this.expandedIssues.has(issue.id);
-		
 		if (isExpanded) {
 			// 收起
 			this.expandedIssues.delete(issue.id);
 			expandIcon.removeClass('expanded');
-			expandedArea.style.maxHeight = '0';
+			expandedArea.classList.remove('expanded');
 			expandedArea.empty();
 		} else {
 			// 展开
 			this.expandedIssues.add(issue.id);
 			expandIcon.addClass('expanded');
-			expandedArea.style.maxHeight = '500px';
+			expandedArea.classList.add('expanded');
 			this.renderExpandedContent(expandedArea, issue);
 		}
 	}
