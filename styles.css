@@ -1,423 +1,4 @@
-/* 仓库信息样式 */
-.gp-repo-info {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 2px;
-  word-break: break-all;
-}
-.gp-repo-info strong {
-  color: var(--text-normal);
-  font-weight: 500;
-  margin-right: 4px;
-}
-/* Github Projects Plugin SettingsTab Custom Styles */
-.gp-tab-nav {
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--background-modifier-border);
-}
-.gp-tab-btn {
-  padding: 10px 20px;
-  margin: 0 5px 0 0;
-  border: none;
-  background: transparent;
-  color: var(--text-normal);
-  cursor: pointer;
-  border-radius: 5px 5px 0 0;
-  transition: background 0.2s, color 0.2s;
-}
-.gp-tab-btn.active {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-}
-
-.gp-test-token-row {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  gap: 10px;
-}
-.gp-btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.gp-btn-accent {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-}
-.gp-btn-accent:hover:not(:disabled) {
-  background: var(--interactive-accent-hover);
-}
-.gp-btn-default {
-  margin-right: 10px;
-  padding: 4px 8px;
-  font-size: 12px;
-  background: var(--background-primary);
-  color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border);
-}
-.gp-btn-danger {
-  padding: 4px 8px;
-  font-size: 12px;
-  background: var(--text-error);
-  color: white;
-  border: none;
-}
-.gp-btn-danger:hover {
-  background: #c62828;
-}
-
-.gp-token-status-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.gp-token-status-text {
-  font-size: 12px;
-  flex: 1;
-}
-.gp-token-info-box {
-  margin-top: 10px;
-  margin-bottom: 20px;
-  padding: 10px;
-  background: var(--background-secondary);
-  border-radius: 5px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.gp-token-container {
-  margin-bottom: 20px;
-}
-.gp-token-permission {
-  margin: 0;
-}
-.gp-token-format {
-  margin: 8px 0 0 0;
-}
-.gp-token-link {
-  margin: 0 0 8px 0;
-}
-.gp-token-link-a {
-  color: var(--text-accent);
-}
-.gp-token-permission-hint {
-  margin: 4px 0 0 0;
-  color: var(--text-accent);
-}
-.gp-add-repo-box {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-}
-.gp-input {
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 3px;
-  box-sizing: border-box;
-}
-.gp-input-full {
-  width: 100%;
-  margin-bottom: 10px;
-}
-.gp-input-half {
-  width: 48%;
-  margin-bottom: 10px;
-}
-.gp-input-owner {
-  margin-right: 4%;
-}
-.gp-or-divider {
-  text-align: center;
-  margin: 10px 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-.gp-manual-repo-fields {
-  margin-top: 10px;
-}
-.gp-error-message {
-  color: var(--text-error);
-  font-size: 12px;
-  margin-top: 5px;
-}
-.gp-repo-item {
-  margin-bottom: 15px;
-  padding: 15px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  background: transparent;
-}
-.gp-repo-item.default {
-  background: var(--background-modifier-hover);
-}
-.gp-repo-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.gp-repo-title {
-  margin: 0;
-}
-/* GitHub Issues View Styles - VSCode-like */
-.github-issues-view {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	font-size: var(--font-ui-small);
-}
-
-.issues-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: var(--size-4-2) var(--size-4-3);
-	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	background: var(--background-primary);
-	min-height: var(--input-height);
-}
-
-.header-actions {
-	display: flex;
-	gap: var(--size-2-1);
-}
-
-.repo-selector-container {
-	padding: var(--size-4-2) var(--size-4-3);
-	background: var(--background-secondary);
-	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	display: flex;
-	align-items: center;
-	gap: var(--size-4-2);
-}
-
-.issues-list-container {
-	flex: 1;
-	overflow-y: auto;
-	padding: var(--size-4-2);
-}
-
-.issue-item {
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	margin-bottom: var(--size-2-1);
-	background: var(--background-primary);
-	cursor: pointer;
-	transition: all 0.2s ease;
-	font-size: var(--font-ui-small);
-	overflow: hidden;
-}
-
-.issue-content {
-	padding: var(--size-4-2);
-}
-
-.issue-expanded {
-	border-top: var(--border-width) solid var(--background-modifier-border);
-	background: var(--background-secondary);
-	overflow: hidden;
-	transition: max-height 0.3s ease;
-}
-
-.issue-item:hover {
-	background: var(--background-modifier-hover);
-	border-color: var(--background-modifier-border-hover);
-}
-
-.issue-header {
-	display: flex;
-	align-items: center;
-	gap: var(--size-2-3);
-	margin-bottom: var(--size-2-1);
-}
-
-.issue-meta {
-	display: flex;
-	align-items: center;
-	gap: var(--size-4-3);
-	color: var(--text-muted);
-	margin-bottom: var(--size-2-1);
-}
-
-.issue-labels {
-	display: flex;
-	gap: var(--size-2-1);
-	flex-wrap: wrap;
-}
-
-.loading-state,
-.empty-state {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: var(--size-4-6);
-	color: var(--text-muted);
-	text-align: center;
-}
-
-/* 图标按钮样式 */
-.github-issues-view .clickable-icon {
-	width: var(--icon-size);
-	height: var(--icon-size);
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: transparent;
-	border: none;
-	border-radius: var(--radius-s);
-	cursor: pointer;
-	color: var(--icon-color);
-	transition: all 0.1s ease;
-}
-
-.github-issues-view .clickable-icon:hover {
-	background: var(--background-modifier-hover);
-	color: var(--icon-color-hover);
-}
-
-/* 旋转动画 */
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-/* 选择框样式 */
-.repo-selector-container select {
-	flex: 1;
-	padding: var(--size-2-1) var(--size-2-3);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-size: var(--font-ui-small);
-	height: var(--input-height);
-}
-
-.repo-selector-container select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-}
-
-/* 过滤工具栏样式 */
-.filter-toolbar {
-	background: var(--background-secondary);
-	border-bottom: var(--border-width) solid var(--background-modifier-border);
-	overflow: hidden;
-	transition: max-height 0.3s ease;
-}
-
-.filter-content {
-	padding: var(--size-4-3);
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: var(--size-4-3);
-}
-
-.filter-group {
-	display: flex;
-	flex-direction: column;
-	gap: var(--size-2-1);
-}
-
-.filter-group label {
-	font-size: var(--font-ui-small);
-	font-weight: var(--font-medium);
-	color: var(--text-normal);
-}
-
-.filter-group input,
-.filter-group select {
-	padding: var(--size-2-1) var(--size-2-3);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-size: var(--font-ui-small);
-}
-
-.filter-group input:focus,
-.filter-group select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-}
-
-/* 移除多选样式，现在所有过滤器都使用单选 */
-/* .filter-group select[multiple] {
-	min-height: 80px;
-} */
-
-.filter-group button {
-	padding: var(--size-2-1) var(--size-2-3);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	cursor: pointer;
-	font-size: var(--font-ui-small);
-	transition: all 0.1s ease;
-}
-
-.filter-group button:hover {
-	background: var(--background-modifier-hover);
-	border-color: var(--background-modifier-border-hover);
-}
-
-/* 过滤按钮活跃状态 */
-.header-actions .clickable-icon.filter-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-/* 响应式设计 */
-@media (max-width: 600px) {
-	.issues-header {
-		padding: var(--size-2-3) var(--size-4-2);
-	}
-	
-	.repo-selector-container {
-		padding: var(--size-2-3) var(--size-4-2);
-	}
-	
-	.issues-list-container {
-		padding: var(--size-2-3);
-	}
-	
-	.issue-content {
-		padding: var(--size-2-3);
-	}
-	
-	.issue-meta {
-		flex-wrap: wrap;
-		gap: var(--size-4-2);
-	}
-	
-	.issue-expanded {
-		font-size: var(--font-ui-smaller);
-	}
-}
-
-/* 展开/收起动画 */
-.issue-item .issue-header div:first-child {
-	transition: transform 0.2s ease;
-}
-
-/* 展开内容中的操作按钮样式 */
-.issue-expanded button:hover {
-	transform: translateY(-1px);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
+/* --- common.css --- */
 /* 以下是从 TypeScript 文件中提取的内联样式，转换为CSS类 */
 
 /* Header styles */
@@ -429,28 +10,48 @@
 }
 
 .clickable-icon-button {
-	width: var(--icon-size);
-	height: var(--icon-size);
+	width: 32px;
+	height: 32px;
 	padding: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: transparent;
-	border: none;
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
 	cursor: pointer;
-	color: var(--icon-color);
+	color: var(--text-normal);
 	transition: all 0.1s ease;
 }
 
 .clickable-icon-button:hover {
 	background: var(--background-modifier-hover);
-	color: var(--icon-color-hover);
+	border-color: var(--background-modifier-border-hover);
+	color: var(--text-normal);
 }
 
 .clickable-icon-button.filter-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* Header button icon styles */
+.header-button-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+	flex-shrink: 0;
+}
+
+/* Loading state for buttons */
+.clickable-icon-button.is-loading {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading .header-button-icon {
+	animation: spin 1s linear infinite;
 }
 
 /* Repository selector styles */
@@ -474,6 +75,21 @@
 .repo-select:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
+}
+
+/* 仓库选择器样式 */
+.repo-select option:disabled {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.repo-select:invalid {
+	color: var(--text-faint);
+}
+
+/* 确保选择器在没有有效选择时显示占位符样式 */
+.repo-select option[value=""] {
+	color: var(--text-faint);
 }
 
 /* Loading and empty states */
@@ -684,43 +300,11 @@
 	flex-wrap: wrap;
 }
 
-.issue-action-button {
-	padding: var(--size-2-1) var(--size-2-3);
-	font-size: var(--font-ui-small);
-	border: var(--border-width) solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	cursor: pointer;
+/* Issue action buttons - 现在使用 Obsidian 标准按钮类 */
+.mod-secondary, .mod-cta {
 	display: flex;
 	align-items: center;
 	gap: var(--size-2-1);
-	transition: all 0.1s ease;
-}
-
-.issue-action-button:hover {
-	background: var(--background-modifier-hover);
-}
-
-.issue-action-button.primary {
-	border-color: var(--interactive-accent);
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.issue-action-button.primary:hover {
-	background: var(--interactive-accent-hover);
-}
-
-.issue-action-button.danger {
-	border-color: var(--text-error);
-	background: transparent;
-	color: var(--text-error);
-}
-
-.issue-action-button.danger:hover {
-	background: var(--text-error);
-	color: var(--text-on-accent);
 }
 
 .issue-action-icon {
@@ -802,3 +386,1220 @@
 	background: var(--background-modifier-hover);
 	border-color: var(--background-modifier-border-hover);
 }
+
+/* 仓库输入框样式增强 */
+.repo-selector-container input {
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.repo-selector-container input[style*="border-color: var(--color-green)"] {
+	border-width: 2px;
+	box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2);
+}
+
+/* 仓库卡片样式 */
+.repo-info {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.repo-info a {
+	transition: color 0.2s ease;
+}
+
+.repo-info a:hover {
+	color: var(--text-accent-hover);
+	text-decoration: underline;
+}
+
+/* 加载状态样式 */
+.clickable-icon-button.is-loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading svg {
+	animation: spin 1s linear infinite;
+}
+
+/* --- inline.css --- */
+/* Obsidian Issue View Filter Styles */
+.filter-content {
+	padding: var(--size-4-3);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.filter-group label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.filter-group input,
+.filter-option-select {
+	padding: var(--size-2-1);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+/* Additional filter action button reset */
+.filter-action-btn {
+	/* Ensure component integration per Obsidian theme */
+}
+
+/* --- issue.css --- */
+/* GitHub Issues View Styles - VSCode-like */
+@import url('ide-button.css');
+
+.github-issues-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	font-size: var(--font-ui-small);
+}
+
+.issues-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--size-4-2) var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-primary);
+	min-height: var(--input-height);
+}
+
+.header-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.repo-selector-container {
+	padding: var(--size-4-2) var(--size-4-3);
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.issues-list-container {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-4-2);
+}
+
+.issue-item {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin-bottom: var(--size-2-1);
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: var(--font-ui-small);
+	overflow: hidden;
+}
+
+.issue-content {
+	padding: var(--size-4-2);
+}
+
+.issue-expanded {
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.issue-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.issue-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-3);
+	margin-bottom: var(--size-2-1);
+}
+
+.issue-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-3);
+	color: var(--text-muted);
+	margin-bottom: var(--size-2-1);
+}
+
+.issue-labels {
+	display: flex;
+	gap: var(--size-2-1);
+	flex-wrap: wrap;
+}
+
+.loading-state,
+.empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: var(--size-4-6);
+	color: var(--text-muted);
+	text-align: center;
+	min-height: 300px;
+}
+
+.empty-content {
+	max-width: 400px;
+}
+
+.empty-icon {
+	margin-bottom: var(--size-4-3);
+	color: var(--text-faint);
+}
+
+.empty-icon svg {
+	width: var(--icon-size-xl);
+	height: var(--icon-size-xl);
+}
+
+.empty-icon-success {
+	color: var(--color-green);
+}
+
+.empty-message h3 {
+	margin: 0 0 var(--size-4-2) 0;
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-weight-medium);
+}
+
+.empty-title-success {
+	color: var(--color-green) !important;
+}
+
+.empty-message p {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+}
+
+/* 图标按钮样式 */
+.github-issues-view .clickable-icon {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	color: var(--icon-color);
+	transition: all 0.1s ease;
+	text-decoration: underline; /* 添加修复 */
+}
+
+.github-issues-view .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+	color: var(--icon-color-hover);
+}
+
+/* 旋转动画 */
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* 选择框样式 */
+.repo-selector-container select {
+	flex: 1;
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	height: var(--input-height);
+}
+
+.repo-selector-container select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* 仓库选择器样式 */
+.repo-select option:disabled {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.repo-select:invalid {
+	color: var(--text-faint);
+}
+
+/* 确保选择器在没有有效选择时显示占位符样式 */
+.repo-select option[value=""] {
+	color: var(--text-faint);
+}
+
+/* 过滤工具栏样式 */
+.filter-toolbar {
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.filter-content {
+	padding: var(--size-4-3);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.filter-group label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.filter-group input,
+.filter-group select {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* 移除多选样式，现在所有过滤器都使用单选 */
+/* .filter-group select[multiple] {
+	min-height: 80px;
+} */
+
+.filter-group button {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.1s ease;
+}
+
+.filter-group button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+/* 过滤按钮活跃状态 - 已移除，使用统一的 clickable-icon-button.filter-active */
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+	.issues-header {
+		padding: var(--size-2-3) var(--size-4-2);
+	}
+	
+	.repo-selector-container {
+		padding: var(--size-2-3) var(--size-4-2);
+	}
+	
+	.issues-list-container {
+		padding: var(--size-2-3);
+	}
+	
+	.issue-content {
+		padding: var(--size-2-3);
+	}
+	
+	.issue-meta {
+		flex-wrap: wrap;
+		gap: var(--size-4-2);
+	}
+	
+	.issue-expanded {
+		font-size: var(--font-ui-smaller);
+	}
+}
+
+/* 展开/收起动画 */
+.issue-item .issue-header div:first-child {
+	transition: transform 0.2s ease;
+}
+
+/* 展开内容中的操作按钮样式 */
+.issue-expanded button:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* --- repo.css --- */
+/* 仓库信息样式 */
+.gp-repo-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  word-break: break-all;
+}
+.gp-repo-info strong {
+  color: var(--text-normal);
+  font-weight: 500;
+  margin-right: 4px;
+}
+/* Github Projects Plugin SettingsTab Custom Styles */
+.gp-tab-nav {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.gp-tab-btn {
+  padding: 10px 20px;
+  margin: 0 5px 0 0;
+  border: none;
+  background: transparent;
+  color: var(--text-normal);
+  cursor: pointer;
+  border-radius: 5px 5px 0 0;
+  transition: background 0.2s, color 0.2s;
+}
+.gp-tab-btn.active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.gp-test-token-row {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+.gp-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gp-btn-accent {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.gp-btn-accent:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
+}
+.gp-btn-default {
+  margin-right: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+.gp-btn-danger {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--text-error);
+  color: white;
+  border: none;
+}
+.gp-btn-danger:hover {
+  background: #c62828;
+}
+
+.gp-token-status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gp-token-status-text {
+  font-size: 12px;
+  flex: 1;
+}
+.gp-token-info-box {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: var(--background-secondary);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.gp-token-container {
+  margin-bottom: 20px;
+}
+.gp-token-permission {
+  margin: 0;
+}
+.gp-token-format {
+  margin: 8px 0 0 0;
+}
+.gp-token-link {
+  margin: 0 0 8px 0;
+}
+.gp-token-link-a {
+  color: var(--text-accent);
+}
+.gp-token-permission-hint {
+  margin: 4px 0 0 0;
+  color: var(--text-accent);
+}
+.gp-add-repo-box {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+}
+.gp-input {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.gp-input-full {
+  width: 100%;
+  margin-bottom: 10px;
+}
+.gp-input-half {
+  width: 48%;
+  margin-bottom: 10px;
+}
+.gp-input-owner {
+  margin-right: 4%;
+}
+.gp-or-divider {
+  text-align: center;
+  margin: 10px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.gp-manual-repo-fields {
+  margin-top: 10px;
+}
+.gp-error-message {
+  color: var(--text-error);
+  font-size: 12px;
+  margin-top: 5px;
+}
+.gp-repo-item {
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: transparent;
+}
+.gp-repo-item.default {
+  background: var(--background-modifier-hover);
+}
+.gp-repo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.gp-repo-title {
+  margin: 0;
+}
+
+/* --- settingtab.css --- */
+/* Styles for settingTab view */
+.gp-repo-actions {
+  display: flex;
+  gap: var(--size-2-2);
+}
+
+.gp-repo-info {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-2);
+}
+
+.gp-repo-label {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  min-width: fit-content;
+}
+
+/* --- workbench.css --- */
+
+
+
+/* GitHub Workbench View Styles */
+.github-workbench-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	font-size: var(--font-ui-small);
+	background: var(--background-primary);
+}
+
+/* 合并的头部导航样式 */
+.workbench-header-nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--size-4-2) var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	min-height: var(--input-height);
+	gap: var(--size-4-3);
+}
+
+.workbench-title {
+	flex-shrink: 0;
+}
+
+.workbench-title h3 {
+	margin: 0;
+	font-size: 1.1em;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.workbench-main {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-4-3);
+}
+
+/* Loading and Empty States */
+.loading-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 200px;
+	color: var(--text-muted);
+}
+
+.loading-spinner {
+	width: 24px;
+	height: 24px;
+	border: 2px solid var(--background-modifier-border);
+	border-top: 2px solid var(--interactive-accent);
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-bottom: var(--size-4-2);
+}
+
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	padding: var(--size-4-4) var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	min-height: 200px;
+}
+
+.empty-icon {
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--size-4-3);
+	opacity: 0.6;
+}
+
+.empty-state h3 {
+	margin: 0 0 var(--size-2-2) 0;
+	color: var(--text-normal);
+}
+
+.empty-state p {
+	margin: 0 0 var(--size-4-3) 0;
+	max-width: 300px;
+}
+
+/* Stats Overview */
+.stats-overview {
+	margin-bottom: var(--size-4-4);
+}
+
+.section-title {
+	margin: 0 0 var(--size-4-2) 0;
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+}
+
+.stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.stat-card {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	padding: var(--size-4-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+	border-color: var(--background-modifier-border-hover);
+}
+
+.stat-icon {
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-form-field);
+}
+
+.stat-card.stat-open .stat-icon {
+	background: var(--color-green-rgb);
+	background: rgba(var(--color-green-rgb), 0.1);
+	color: var(--color-green);
+}
+
+.stat-card.stat-closed .stat-icon {
+	background: rgba(var(--color-red-rgb), 0.1);
+	color: var(--color-red);
+}
+
+.stat-content {
+	flex: 1;
+}
+
+.stat-value {
+	font-size: var(--font-ui-large);
+	font-weight: var(--font-bold);
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.stat-title {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+/* Repository Section */
+.repository-section {
+	margin-bottom: var(--size-4-4);
+}
+
+.repository-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.repository-card {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.repository-card:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: var(--shadow-s);
+}
+
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	flex-wrap: wrap;
+}
+
+.card-title {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.repo-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+}
+
+.card-title h4 {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.sync-status {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	word-break: break-all;
+	max-width: 100%;
+}
+
+.sync-time {
+	padding: var(--size-2-1) var(--size-2-2);
+	background: var(--background-modifier-form-field);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	display: inline-block;
+	word-break: break-all;
+	max-width: 100%;
+}
+@media (max-width: 400px) {
+  .card-header {
+	flex-direction: column;
+	align-items: flex-start;
+  }
+  .sync-status {
+	margin-top: var(--size-2-2);
+	width: 100%;
+  }
+}
+
+.sync-never {
+	color: var(--text-warning);
+}
+
+.card-stats {
+	display: flex;
+	gap: var(--size-4-2);
+	padding: var(--size-4-2) var(--size-4-3);
+}
+
+.mini-stat {
+	text-align: center;
+	flex: 1;
+}
+
+.mini-stat-value {
+	display: block;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-bold);
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.mini-stat-label {
+	display: block;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+.mini-stat.stat-open .mini-stat-value {
+	color: var(--color-green);
+}
+
+.mini-stat.stat-closed .mini-stat-value {
+	color: var(--color-red);
+}
+
+.recent-issues {
+	padding: var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+}
+
+.recent-issues h5 {
+	margin: 0 0 var(--size-2-2) 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.issues-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.issue-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	padding: var(--size-2-1);
+	border-radius: var(--radius-s);
+	transition: background 0.2s ease;
+}
+
+.issue-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.issue-state {
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.issue-state.issue-open {
+	color: var(--color-green);
+}
+
+.issue-state.issue-closed {
+	color: var(--color-red);
+}
+
+.issue-title {
+	flex: 1;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	overflow: hidden;
+}
+
+.issue-title span:first-child {
+	color: var(--text-muted);
+	margin-right: var(--size-2-1);
+}
+
+.more-issues {
+	margin-top: var(--size-2-2);
+	text-align: center;
+}
+
+.more-issues a {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-accent);
+	text-decoration: none;
+}
+
+.more-issues a:hover {
+	text-decoration: underline;
+}
+
+.card-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	padding: var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-primary);
+	margin-top: auto;
+}
+
+.card-actions button {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--size-2-1);
+}
+
+/* Workbench Tabs Styles - 作为头部导航的左侧部分 */
+.workbench-tab-nav {
+	display: flex;
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.workbench-tab {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	padding: var(--size-4-2) var(--size-4-3);
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.workbench-tab:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.workbench-tab.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.tab-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+}
+
+/* Projects List Styles */
+.projects-section {
+	margin-bottom: var(--size-4-4);
+}
+
+.projects-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.project-card {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: all 0.2s ease;
+}
+
+.project-card:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: var(--shadow-s);
+}
+
+.project-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+}
+
+.project-status {
+	display: flex;
+	align-items: center;
+}
+
+.status-badge {
+	padding: var(--size-2-1) var(--size-2-2);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-medium);
+}
+
+.status-badge.status-open {
+	background: rgba(var(--color-green-rgb), 0.1);
+	color: var(--color-green);
+}
+
+.status-badge.status-closed {
+	background: rgba(var(--color-red-rgb), 0.1);
+	color: var(--color-red);
+}
+
+.project-info {
+	padding: var(--size-4-2);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+}
+
+.project-meta-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	margin-bottom: var(--size-2-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.project-meta-icon {
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.project-description {
+	padding: var(--size-4-2);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.project-description p {
+	margin: 0;
+	line-height: 1.5;
+}
+
+.sync-info {
+	text-align: right;
+	padding: var(--size-2-2) 0;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.sync-time-info {
+	padding: var(--size-2-1) var(--size-2-2);
+	background: var(--background-modifier-form-field);
+	border-radius: var(--radius-s);
+}
+
+/* Issues Empty State Wrapper */
+.issues-empty-wrapper {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-height: 60vh;
+}
+
+/* Projects section specific empty state */
+.projects-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: var(--size-4-4) var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	margin-top: var(--size-4-2);
+}
+
+.projects-empty-state .empty-icon {
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--size-4-3);
+	opacity: 0.6;
+}
+
+.projects-empty-state h3 {
+	margin: 0 0 var(--size-2-2) 0;
+	color: var(--text-normal);
+}
+
+.projects-empty-state p {
+	margin: 0 0 var(--size-4-3) 0;
+	max-width: 300px;
+}
+
+.ide-button {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	padding: var(--size-2-2) var(--size-4-2);
+	background-color: var(--interactive-normal);
+	color: var(--text-normal);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.2s ease;
+}
+
+.ide-button:hover:not(:disabled) {
+	background-color: var(--interactive-hover);
+	color: var(--text-on-accent);
+}
+
+.ide-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ide-button svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* 仓库选择器中的 IDE 按钮 */
+.repo-selector-container .ide-button {
+	margin-left: var(--size-2-2);
+}
+
+/* 卡片中的 IDE 按钮 */
+.card-actions .ide-button {
+	display: inline-flex;
+}
+
+/* 样式：仓库卡片按钮排列 */
+.repository-card .card-actions {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px; /* 按钮之间的间距 */
+}
+
+.repository-card .card-actions button {
+	width: auto;
+	padding: 6px 12px; /* 按钮的内边距 */
+	white-space: nowrap; /* 防止按钮内容换行 */
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+/* 动态标签颜色样式（自动生成，支持主题自定义覆盖） */
+.issue-label[class*="issue-label-color-"] {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+}
+/* 示例：可用脚本批量生成更多颜色 */
+.issue-label-color-ff0000 { background-color: #ff000015; color: #ff0000; border-color: #ff000030; }
+.issue-label-color-00ff00 { background-color: #00ff0015; color: #00ff00; border-color: #00ff0030; }
+.issue-label-color-0000ff { background-color: #0000ff15; color: #0000ff; border-color: #0000ff30; }
+/* ...更多颜色可自动生成... */
+
+/* Issue 展开动画 */
+.issue-expanded {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.issue-expanded.expanded {
+  max-height: 500px;
+}
+/* New button styles */
+.button-refresh {
+    display: inline-block;
+    padding: var(--size-2-2) var(--size-4-2);
+    background-color: var(--interactive-normal);
+    color: var(--text-normal);
+    border: var(--border-width) solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+    transition: all 0.2s ease;
+}
+.button-refresh:hover:not(:disabled) {
+    background-color: var(--interactive-hover);
+    color: var(--text-on-accent);
+}
+.settings-icon {
+    display: flex;
+    align-items: center;
+    gap: var(--size-2-1);
+    padding: var(--size-2-2) var(--size-4-2);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+}
+

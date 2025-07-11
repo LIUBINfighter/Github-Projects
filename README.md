@@ -67,5 +67,56 @@ How do I want to use this plugin?
 
 "Within an Obsidian workspace, an idea is refined into a task note with acceptance criteria and then created as a GitHub Issue with a single click. Subsequently, in VS Code, a branch is created from the Issue, a failing test is written, and then an MCP service is invoked to automatically package the Issue description, relevant ADRs, and code into a rich context, driving Copilot to efficiently code until the test passes. Finally, the creation, self-review, and CI triggering of a PR are completed within VS Code, and delivery is accomplished through a standardized release script."
 
-This plugin is designed to efficiently bridge the gap between Obsidian and GitHub.
--->
+0.引导设置github token
+1.同步并查看远程仓库的 Issues
+2.编写issue并推送
+
+## Inspired by
+
+- githobs
+- vscode extension
+
+## 功能特性
+
+### 🎯 GitHub Workbench (主工作界面)
+- **统计概览** - 查看所有仓库的 Issue 总体情况
+- **仓库卡片** - 每个仓库的详细状态和快速操作
+- **一键同步** - 批量同步所有配置的仓库
+- **快速导航** - 便捷访问详细 Issue 视图和设置
+
+### 📋 Issue 管理
+- **多仓库支持** - 同时管理多个 GitHub 仓库
+- **智能过滤** - 按状态、标签、里程碑、被分配人筛选
+- **实时同步** - 自动或手动同步 GitHub 数据
+- **离线查看** - 缓存数据支持离线使用
+
+### ⚙️ 配置管理
+- **Token 验证** - 安全的 GitHub 访问令牌管理
+- **仓库配置** - 灵活的多仓库配置选项
+- **同步设置** - 可自定义的自动同步策略
+
+## 使用指南
+
+### 1. 初始设置
+1. 在插件设置中配置 GitHub Personal Access Token
+2. 添加要管理的仓库
+3. 选择同步偏好设置
+
+### 2. 使用 Workbench
+
+Workbench 提供两个主要标签页：
+
+#### Issues Overview
+- 显示所有仓库的 Issue 统计概览
+- 按仓库分类查看最新 Issues
+- 快速访问和同步功能
+
+#### GitHub Projects
+- 查看所有项目看板
+- 项目状态和进度追踪
+- 快速访问项目详情
+
+### 3. 快捷操作
+- 点击功能区的 GitHub 图标 → "Open Workbench"
+- 使用命令面板：`GitHub Projects: Open GitHub Workbench`
+- 在任意视图中通过设置图标快速访问配置

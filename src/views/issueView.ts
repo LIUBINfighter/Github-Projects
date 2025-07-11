@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, setIcon, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 
 export const ISSUE_VIEW_TYPE = 'github-issues-view';
@@ -119,7 +119,7 @@ export class IssueView extends ItemView {
 		const actions = header.createDiv('header-actions');
 
 		// 过滤按钮
-		const filterBtn = actions.createEl('button', { 
+		const filterBtn = actions.createEl('button', {
 			cls: `clickable-icon-button ${this.isFilterExpanded ? 'filter-active' : ''}`,
 			attr: { 'aria-label': 'Toggle filters' }
 		});
@@ -127,20 +127,61 @@ export class IssueView extends ItemView {
 		filterBtn.addEventListener('click', () => this.toggleFilters());
 
 		// 刷新按钮
-		const refreshBtn = actions.createEl('button', { 
+		const refreshBtn = actions.createEl('button', {
 			cls: 'clickable-icon-button',
-			attr: { 'aria-label': 'Refresh issues' }
+			attr: { 'aria-label': 'Sync all repositories from GitHub' }
 		});
 		setIcon(refreshBtn, 'refresh-cw');
 		refreshBtn.addEventListener('click', () => this.refreshIssues());
 
 		// 新建Issue按钮
-		const newIssueBtn = actions.createEl('button', { 
+		const newIssueBtn = actions.createEl('button', {
 			cls: 'clickable-icon-button',
 			attr: { 'aria-label': 'Create new issue' }
 		});
 		setIcon(newIssueBtn, 'plus');
 		newIssueBtn.addEventListener('click', () => this.createNewIssue());
+
+		// IDE 按钮（仅在桌面端显示）
+		if (!Platform.isMobile) {
+			const ideButton = actions.createEl('button', {
+				cls: 'clickable-icon-button ide-button',
+				attr: { 'aria-label': 'Open in IDE' }
+			});
+			// 统一使用 Obsidian 内置 lucide "play" 图标
+			setIcon(ideButton, 'play');
+			// 更新 IDE 按钮状态
+			const updateIdeButton = () => {
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						ideButton.disabled = false;
+						ideButton.title = `Open in IDE: ${repo.ideCommand}`;
+					} else {
+						ideButton.disabled = true;
+						ideButton.title = 'No IDE command configured for this repository';
+					}
+				} else {
+					ideButton.disabled = true;
+					ideButton.title = 'Select a repository first';
+				}
+			};
+
+			// 初始化按钮状态
+			updateIdeButton();
+
+			// IDE 按钮点击事件
+			ideButton.addEventListener('click', async () => {
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						await this.plugin.executeIdeCommand(repo.ideCommand);
+					}
+				}
+			});
+		}
 	}
 
 	private createRepositorySelector(container: Element) {
@@ -151,29 +192,72 @@ export class IssueView extends ItemView {
 
 		const select = selectorContainer.createEl('select', { cls: 'repo-select' });
 
-		// 添加默认选项
-		select.createEl('option', { 
+		// 添加默认选项（不可选）
+		const defaultOption = select.createEl('option', { 
 			text: 'Select a repository...',
 			value: ''
 		});
+		defaultOption.disabled = true;
 
-		// 填充仓库选项
-		this.plugin.settings.repositories.forEach(repo => {
-			const option = select.createEl('option', {
-				text: `${repo.owner}/${repo.repo}`,
-				value: `${repo.owner}/${repo.repo}`
+		// 填充仓库选项（只显示活跃的仓库）
+		const activeRepositories = this.plugin.getActiveRepositories();
+		activeRepositories.forEach(repo => {
+			const repoKey = `${repo.owner}/${repo.repo}`;
+			select.createEl('option', {
+				text: `${repo.name || repo.repo} (${repoKey})`,
+				value: repoKey
 			});
-			if (repo.isDefault) {
-				option.selected = true;
-				this.selectedRepo = `${repo.owner}/${repo.repo}`;
-			}
 		});
+
+		// 设置当前选中的仓库，如果没有选中的仓库则使用第一个可用仓库
+		if (this.selectedRepo) {
+			// 检查当前选中的仓库是否仍然活跃
+			const selectedRepoExists = activeRepositories.some(repo => 
+				`${repo.owner}/${repo.repo}` === this.selectedRepo
+			);
+			if (selectedRepoExists) {
+				select.value = this.selectedRepo;
+			} else {
+				// 如果当前选中的仓库被禁用了，重置选择
+				this.selectedRepo = '';
+				select.value = '';
+			}
+		}
+		
+		if (!this.selectedRepo && activeRepositories.length > 0) {
+			// 如果没有选中的仓库，默认选择第一个活跃仓库
+			const firstRepo = activeRepositories[0];
+			const firstRepoKey = `${firstRepo.owner}/${firstRepo.repo}`;
+			this.selectedRepo = firstRepoKey;
+			select.value = firstRepoKey;
+		} else if (activeRepositories.length === 0) {
+			// 如果没有活跃的仓库，选中默认选项但保持禁用状态
+			select.value = '';
+		}
+
 
 		select.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
-			this.selectedRepo = target.value;
-			if (this.selectedRepo) {
+			const newRepo = target.value;
+			
+			// 防止选择到空值
+			if (!newRepo) {
+				// 如果尝试选择空值，恢复到之前的选择
+				if (this.selectedRepo) {
+					target.value = this.selectedRepo;
+				}
+				return;
+			}
+			
+			if (newRepo !== this.selectedRepo) {
+				this.selectedRepo = newRepo;
+				
+				// 重置过滤器和状态
 				this.resetFilters();
+				this.issues = [];
+				this.filteredIssues = [];
+				
+				// 加载新仓库的 Issues
 				this.loadIssues();
 			}
 		});
@@ -229,18 +313,28 @@ export class IssueView extends ItemView {
 		
 		if (!this.selectedRepo) {
 			setIcon(iconDiv, 'folder-open');
-			messageDiv.textContent = 'Select a repository to view issues';
+			messageDiv.createEl('h3', { text: 'Select a repository' });
+			messageDiv.createEl('p', { text: 'Choose a repository from the dropdown above to view its issues.' });
 		} else {
-			setIcon(iconDiv, 'inbox');
-			messageDiv.textContent = 'No issues found in this repository';
+			// GitHub 风格的空状态
+			setIcon(iconDiv, 'check-circle');
+			iconDiv.addClass('empty-icon-success');
 			
-			const createBtn = emptyContent.createEl('button', { cls: 'empty-create-button' });
+			const titleEl = messageDiv.createEl('h3', { text: 'You\'re all set!' });
+			titleEl.addClass('empty-title-success');
 			
-			const btnIcon = createBtn.createDiv('empty-button-icon');
-			setIcon(btnIcon, 'plus');
+			const descEl = messageDiv.createEl('p', { 
+				text: 'No issues found in this repository. That\'s a good thing!' 
+			});
+			descEl.addClass('empty-desc');
 			
-			createBtn.createSpan({ text: 'Create First Issue' });
-			createBtn.addEventListener('click', () => this.createNewIssue());
+			// 如果有过滤器激活，显示不同的消息
+			if (this.hasActiveFilters()) {
+				titleEl.textContent = 'No issues match your filters';
+				descEl.textContent = 'Try adjusting your search criteria or clearing the filters.';
+				setIcon(iconDiv, 'search');
+				iconDiv.removeClass('empty-icon-success');
+			}
 		}
 	}
 
@@ -308,21 +402,19 @@ export class IssueView extends ItemView {
 			// 标签
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueContent.createDiv('issue-labels');
-
 				issue.labels.forEach(label => {
 					const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
-					labelSpan.style.backgroundColor = `#${label.color}15`;
-					labelSpan.style.color = `#${label.color}`;
-					labelSpan.style.borderColor = `#${label.color}30`;
+					labelSpan.classList.add(`issue-label-color-${label.color}`);
 				});
 			}
 
 			// 创建展开区域
 			const expandedArea = issueItem.createDiv('issue-expanded');
-			expandedArea.style.maxHeight = isExpanded ? '500px' : '0';
-
 			if (isExpanded) {
+				expandedArea.classList.add('expanded');
 				this.renderExpandedContent(expandedArea, issue);
+			} else {
+				expandedArea.classList.remove('expanded');
 			}
 
 			// 点击事件 - 切换展开/收起
@@ -334,10 +426,46 @@ export class IssueView extends ItemView {
 	}
 
 	private async loadDefaultRepository() {
-		const defaultRepo = this.plugin.settings.repositories.find(repo => repo.isDefault);
+		// 首先尝试找到默认且活跃的仓库
+		const activeRepositories = this.plugin.getActiveRepositories();
+		const defaultRepo = activeRepositories.find(repo => repo.isDefault);
+		
 		if (defaultRepo) {
 			this.selectedRepo = `${defaultRepo.owner}/${defaultRepo.repo}`;
-			await this.loadIssues();
+		} else if (activeRepositories.length > 0) {
+			// 如果没有默认仓库，选择第一个可用的活跃仓库
+			const firstRepo = activeRepositories[0];
+			this.selectedRepo = `${firstRepo.owner}/${firstRepo.repo}`;
+		} else {
+			// 如果没有任何活跃仓库，清空选择
+			this.selectedRepo = '';
+			this.updateRepositorySelector();
+			return;
+		}
+		
+		this.updateRepositorySelector();
+		await this.loadIssues();
+		// 最小可行修复：主动刷新IDE按钮状态
+		const header = this.containerEl.querySelector('.issues-header');
+		if (header) {
+			const ideButton = header.querySelector('.ide-button');
+			if (ideButton) {
+				const ideBtn = ideButton as HTMLButtonElement;
+				const activeRepositories = this.plugin.getActiveRepositories();
+				if (this.selectedRepo) {
+					const repo = activeRepositories.find(r => `${r.owner}/${r.repo}` === this.selectedRepo);
+					if (repo?.ideCommand) {
+						ideBtn.disabled = false;
+						ideBtn.title = `Open in IDE: ${repo.ideCommand}`;
+					} else {
+						ideBtn.disabled = true;
+						ideBtn.title = 'No IDE command configured for this repository';
+					}
+				} else {
+					ideBtn.disabled = true;
+					ideBtn.title = 'Select a repository first';
+				}
+			}
 		}
 	}
 
@@ -351,30 +479,25 @@ export class IssueView extends ItemView {
 		this.updateIssuesList(); // 只更新Issues列表部分，不重新渲染整个视图
 
 		try {
-			const [owner, repo] = this.selectedRepo.split('/');
-			const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`, {
-				headers: {
-					'Authorization': `Bearer ${this.plugin.settings.githubToken}`,
-					'Accept': 'application/vnd.github.v3+json',
-					'User-Agent': 'Obsidian-GitHub-Projects'
-				}
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch issues: ${response.status} ${response.statusText}`);
-			}
-
-			this.issues = await response.json();
-			// 添加仓库信息到每个issue
-			this.issues.forEach(issue => {
-				issue.repository = { owner, name: repo };
-			});
-
-			// 提取过滤数据
-			this.extractFilterData();
+			// 首先尝试从缓存加载
+			this.loadIssuesFromCache();
 			
-			// 应用当前过滤器
-			this.applyFilters();
+			// 如果缓存为空或者用户明确要求刷新，则从服务器同步
+			const cache = this.plugin.getRepositoryCache(this.selectedRepo);
+			const shouldSync = !cache || cache.issues.length === 0;
+			
+			if (shouldSync) {
+				new Notice('Syncing issues from GitHub...');
+				const syncResult = await this.plugin.syncRepository(this.selectedRepo);
+				
+				if (syncResult && syncResult.success) {
+					// 同步成功后，从缓存重新加载
+					this.loadIssuesFromCache();
+					new Notice(`Loaded ${syncResult.issuesCount || 0} issues from GitHub`);
+				} else {
+					throw new Error(syncResult?.error || 'Failed to sync repository');
+				}
+			}
 			
 			// 异步加载提交数（不阻塞主要显示）
 			this.loadCommitCounts();
@@ -390,8 +513,45 @@ export class IssueView extends ItemView {
 	}
 
 	private async refreshIssues() {
-		await this.loadIssues();
-		new Notice('Issues refreshed');
+		// 同步所有活跃仓库并刷新整个视图
+		const refreshBtn = this.containerEl.querySelector('button[aria-label*="Sync all repositories"]') as HTMLButtonElement;
+		
+		// 禁用按钮并显示加载状态
+		if (refreshBtn) {
+			refreshBtn.disabled = true;
+			refreshBtn.classList.add('is-loading');
+		}
+		
+		new Notice('Syncing all repositories from GitHub...');
+		
+		try {
+			const results = await this.plugin.syncAllRepositories();
+			const successCount = Object.values(results).filter(r => r.success).length;
+			const totalCount = Object.keys(results).length;
+			
+			if (totalCount === 0) {
+				new Notice('No active repositories to sync');
+				return;
+			}
+			
+			if (successCount === totalCount) {
+				const totalIssues = Object.values(results).reduce((sum, r) => sum + (r.issuesCount || 0), 0);
+				new Notice(`Successfully synced all ${totalCount} repositories (${totalIssues} issues)`);
+			} else {
+				new Notice(`Synced ${successCount}/${totalCount} repositories. Check console for errors.`);
+			}
+			
+			// 注意：不需要手动调用 refreshData()，因为 syncAllRepositories 完成后会自动调用 refreshIssueViews()
+			
+		} catch (error) {
+			new Notice(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		} finally {
+			// 恢复按钮状态
+			if (refreshBtn) {
+				refreshBtn.disabled = false;
+				refreshBtn.classList.remove('is-loading');
+			}
+		}
 	}
 
 	private createNewIssue() {
@@ -401,18 +561,17 @@ export class IssueView extends ItemView {
 
 	private toggleIssueExpanded(issue: GitHubIssue, expandIcon: HTMLElement, expandedArea: HTMLElement) {
 		const isExpanded = this.expandedIssues.has(issue.id);
-		
 		if (isExpanded) {
 			// 收起
 			this.expandedIssues.delete(issue.id);
 			expandIcon.removeClass('expanded');
-			expandedArea.style.maxHeight = '0';
+			expandedArea.classList.remove('expanded');
 			expandedArea.empty();
 		} else {
 			// 展开
 			this.expandedIssues.add(issue.id);
 			expandIcon.addClass('expanded');
-			expandedArea.style.maxHeight = '500px';
+			expandedArea.classList.add('expanded');
 			this.renderExpandedContent(expandedArea, issue);
 		}
 	}
@@ -488,7 +647,7 @@ export class IssueView extends ItemView {
 		const actionsSection = content.createDiv('issue-actions');
 
 		// 在浏览器中打开按钮
-		const openButton = actionsSection.createEl('button', { cls: 'issue-action-button' });
+		const openButton = actionsSection.createEl('button', { cls: 'mod-secondary' });
 
 		const openIcon = openButton.createDiv('issue-action-icon');
 		setIcon(openIcon, 'external-link');
@@ -500,7 +659,7 @@ export class IssueView extends ItemView {
 		});
 
 		// 创建 Obsidian 笔记按钮
-		const createNoteButton = actionsSection.createEl('button', { cls: 'issue-action-button primary' });
+		const createNoteButton = actionsSection.createEl('button', { cls: 'mod-cta' });
 
 		const noteIcon = createNoteButton.createDiv('issue-action-icon');
 		setIcon(noteIcon, 'file-plus');
@@ -656,6 +815,7 @@ export class IssueView extends ItemView {
 			color: var(--text-normal);
 		`;
 
+		// const select = filterGroup.createEl('select');
 		const select = filterGroup.createEl('select');
 		select.style.cssText = `
 			padding: var(--size-2-1) var(--size-2-3);
@@ -868,17 +1028,10 @@ export class IssueView extends ItemView {
 			justify-content: flex-end;
 		`;
 
-		const resetBtn = filterGroup.createEl('button', { text: 'Reset Filters' });
-		resetBtn.style.cssText = `
-			padding: var(--size-2-1) var(--size-2-3);
-			border: var(--border-width) solid var(--background-modifier-border);
-			border-radius: var(--radius-s);
-			background: var(--background-primary);
-			color: var(--text-normal);
-			cursor: pointer;
-			font-size: var(--font-ui-small);
-			margin-top: auto;
-		`;
+		const resetBtn = filterGroup.createEl('button', { 
+			text: 'Reset Filters',
+			cls: 'mod-cta'
+		});
 
 		resetBtn.addEventListener('click', () => {
 			this.resetFilters();
@@ -1037,5 +1190,56 @@ export class IssueView extends ItemView {
 
 		// 更新显示
 		this.updateIssuesList();
+	}
+
+	/**
+	 * 从缓存刷新数据（当数据同步完成时调用）
+	 */
+	refreshData() {
+		// 更新仓库选择器状态
+		this.updateRepositorySelector();
+		
+		if (this.selectedRepo) {
+			this.loadIssuesFromCache();
+		}
+	}
+
+	/**
+	 * 从本地缓存加载 Issues
+	 */
+	private loadIssuesFromCache() {
+		if (!this.selectedRepo) {
+			this.issues = [];
+			this.filteredIssues = [];
+			this.updateIssuesList();
+			return;
+		}
+
+		const cache = this.plugin.getRepositoryCache(this.selectedRepo);
+		if (cache && cache.issues) {
+			this.issues = cache.issues;
+			this.extractFilterData();
+			this.applyFilters();
+		} else {
+			this.issues = [];
+			this.filteredIssues = [];
+		}
+		
+		this.updateIssuesList();
+	}
+
+	/**
+	 * 更新仓库选择器的选中状态
+	 */
+	private updateRepositorySelector() {
+		const select = this.containerEl.querySelector('.repo-select') as HTMLSelectElement;
+		if (select) {
+			if (this.selectedRepo) {
+				select.value = this.selectedRepo;
+			} else {
+				// 如果没有选中的仓库，确保选择器显示默认的不可选选项
+				select.value = '';
+			}
+		}
 	}
 }
