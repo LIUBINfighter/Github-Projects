@@ -303,32 +303,22 @@ export class IssueView extends ItemView {
 
 	private renderEmptyState(container: Element) {
 		container.empty();
-		const empty = container.createDiv('empty-state');
-		
-		const emptyContent = empty.createDiv('empty-content');
-		
+		// 统一用 issue-item-container 和 issue-content 包裹空内容
+		const emptyItem = container.createDiv('issue-item-container');
+		const emptyContent = emptyItem.createDiv('issue-content');
 		const iconDiv = emptyContent.createDiv('empty-icon');
-		
 		const messageDiv = emptyContent.createDiv('empty-message');
-		
 		if (!this.selectedRepo) {
 			setIcon(iconDiv, 'folder-open');
 			messageDiv.createEl('h3', { text: 'Select a repository' });
 			messageDiv.createEl('p', { text: 'Choose a repository from the dropdown above to view its issues.' });
 		} else {
-			// GitHub 风格的空状态
 			setIcon(iconDiv, 'check-circle');
 			iconDiv.addClass('empty-icon-success');
-			
 			const titleEl = messageDiv.createEl('h3', { text: 'You\'re all set!' });
 			titleEl.addClass('empty-title-success');
-			
-			const descEl = messageDiv.createEl('p', { 
-				text: 'No issues found in this repository. That\'s a good thing!' 
-			});
+			const descEl = messageDiv.createEl('p', { text: 'No issues found in this repository. Cool!' });
 			descEl.addClass('empty-desc');
-			
-			// 如果有过滤器激活，显示不同的消息
 			if (this.hasActiveFilters()) {
 				titleEl.textContent = 'No issues match your filters';
 				descEl.textContent = 'Try adjusting your search criteria or clearing the filters.';
@@ -403,8 +393,25 @@ export class IssueView extends ItemView {
 			if (issue.labels && issue.labels.length > 0) {
 				const labelsContainer = issueContent.createDiv('issue-labels');
 				issue.labels.forEach(label => {
-					const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
-					labelSpan.classList.add(`issue-label-color-${label.color}`);
+						const labelSpan = labelsContainer.createEl('span', { text: label.name, cls: 'issue-label' });
+						// 直接设置标签背景色，兼容 GitHub 标签色彩
+						if (label.color) {
+							labelSpan.style.backgroundColor = `#${label.color}`;
+							labelSpan.style.borderRadius = '4px';
+							labelSpan.style.padding = '2px 8px';
+							labelSpan.style.fontSize = '12px';
+							// 判断颜色亮度，亮色用深色字体，暗色用白色字体
+							const hex = label.color.replace('#', '');
+							if (hex.length === 6) {
+								const r = parseInt(hex.substring(0,2), 16);
+								const g = parseInt(hex.substring(2,4), 16);
+								const b = parseInt(hex.substring(4,6), 16);
+								const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+								labelSpan.style.color = brightness > 180 ? '#222' : '#fff';
+							} else {
+								labelSpan.style.color = '#fff';
+							}
+						}
 				});
 			}
 

@@ -1,5 +1,6 @@
 import { GitHubIssue } from '../views/issueView';
 import { GithubRepository } from '../views/settingTab';
+import { requestUrl } from 'obsidian';
 
 export interface GitHubSyncResult {
 	success: boolean;
@@ -123,16 +124,16 @@ export class GitHubDataSync {
 	 */
 	async validateToken(): Promise<GitHubSyncResult> {
 		try {
-			const response = await fetch('https://api.github.com/user', {
+			const response = await requestUrl({
+				url: 'https://api.github.com/user',
 				headers: {
 					'Authorization': `token ${this.token}`,
 					'User-Agent': 'Obsidian-GitHub-Projects'
 				}
 			});
-
-			if (response.ok) {
-				const userData = await response.json();
-				const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
+			if (response.status === 200) {
+				const userData = response.json;
+				const rateLimitRemaining = parseInt(response.headers['x-ratelimit-remaining'] || '0');
 				return {
 					success: true,
 					rateLimitRemaining,
@@ -144,8 +145,8 @@ export class GitHubDataSync {
 				};
 			} else {
 				return {
-					success: false,
-					error: `Token validation failed: ${response.status} ${response.statusText}`
+				success: false,
+				error: `Token validation failed: ${response.status} ${(response.json?.message || '')}`
 				};
 			}
 		} catch (error) {
@@ -178,23 +179,22 @@ export class GitHubDataSync {
 
 			url += `?${params.toString()}`;
 
-			const response = await fetch(url, {
+			const response = await requestUrl({
+				url,
 				headers: {
 					'Authorization': `token ${this.token}`,
 					'User-Agent': 'Obsidian-GitHub-Projects',
 					'Accept': 'application/vnd.github.v3+json'
 				}
 			});
-
-			if (!response.ok) {
+			if (response.status !== 200) {
 				return {
 					success: false,
-					error: `Failed to fetch issues: ${response.status} ${response.statusText}`
+					error: `Failed to fetch issues: ${response.status} ${(response.json?.message || '')}`
 				};
 			}
-
-			const issues = await response.json() as GitHubApiIssue[];
-			const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
+			const issues = response.json as GitHubApiIssue[];
+			const rateLimitRemaining = parseInt(response.headers['x-ratelimit-remaining'] || '0');
 
 			// 转换 GitHub API 响应到我们的 Issue 格式
 			const transformedIssues: GitHubIssue[] = issues
@@ -370,19 +370,18 @@ export class GitHubDataSync {
 			const searchQuery = `repo:${repo.owner}/${repo.repo} ${issueNumber}`;
 			const url = `https://api.github.com/search/commits?q=${encodeURIComponent(searchQuery)}`;
 
-			const response = await fetch(url, {
+			const response = await requestUrl({
+				url,
 				headers: {
 					'Authorization': `token ${this.token}`,
 					'User-Agent': 'Obsidian-GitHub-Projects',
 					'Accept': 'application/vnd.github.cloak-preview'
 				}
 			});
-
-			if (response.ok) {
-				const data = await response.json();
+			if (response.status === 200) {
+				const data = response.json;
 				return data.total_count || 0;
 			}
-			
 			return 0;
 		} catch (error) {
 			console.error(`Failed to fetch commits for issue #${issueNumber}:`, error);
@@ -421,25 +420,23 @@ export class GitHubDataSync {
 			// GitHub Classic Projects API (仓库级项目)
 			const repoProjectsUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/projects`;
 			
-			const response = await fetch(repoProjectsUrl, {
+			const response = await requestUrl({
+				url: repoProjectsUrl,
 				headers: {
 					'Authorization': `token ${this.token}`,
 					'User-Agent': 'Obsidian-GitHub-Projects',
 					'Accept': 'application/vnd.github.inertia-preview+json'
 				}
 			});
-			
-			const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
-			
-			if (!response.ok) {
+			const rateLimitRemaining = parseInt(response.headers['x-ratelimit-remaining'] || '0');
+			if (response.status !== 200) {
 				return {
 					success: false,
-					error: `Failed to fetch repository projects: ${response.status} ${response.statusText}`,
+					error: `Failed to fetch repository projects: ${response.status} ${(response.json?.message || '')}`,
 					rateLimitRemaining
 				};
 			}
-			
-			const projects = await response.json();
+			const projects = response.json;
 			
 			// 格式化返回的项目数据
 			const formattedProjects = projects.map((project: GitHubApiProject) => ({
@@ -505,25 +502,23 @@ export class GitHubDataSync {
 				? `https://api.github.com/orgs/${owner}/projects`
 				: `https://api.github.com/users/${owner}/projects`;
 			
-			const response = await fetch(projectUrl, {
+			const response = await requestUrl({
+				url: projectUrl,
 				headers: {
 					'Authorization': `token ${this.token}`,
 					'User-Agent': 'Obsidian-GitHub-Projects',
 					'Accept': 'application/vnd.github.inertia-preview+json'
 				}
 			});
-			
-			const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0');
-			
-			if (!response.ok) {
+			const rateLimitRemaining = parseInt(response.headers['x-ratelimit-remaining'] || '0');
+			if (response.status !== 200) {
 				return {
 					success: false,
-					error: `Failed to fetch ${type} projects: ${response.status} ${response.statusText}`,
+					error: `Failed to fetch ${type} projects: ${response.status} ${(response.json?.message || '')}`,
 					rateLimitRemaining
 				};
 			}
-			
-			const projects = await response.json();
+			const projects = response.json;
 			
 			// 查找指定编号的项目
 			const targetProject = projects.find((p: GitHubApiProject) => p.number === projectNumber);
