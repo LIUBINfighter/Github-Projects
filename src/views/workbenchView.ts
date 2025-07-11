@@ -97,18 +97,18 @@ export class IssueWorkbenchView extends ItemView {
 		const actions = headerNav.createDiv('header-actions');
 
 		// 刷新按钮
-		const refreshBtn = actions.createEl('button', {
-			cls: 'mod-cta',
-			text: 'Sync All'
-		});
+        const refreshBtn = actions.createEl('button', {
+            cls: 'button-refresh',
+            text: 'Sync All'
+        });
 		setIcon(refreshBtn, 'refresh-cw');
 		refreshBtn.addEventListener('click', () => this.syncAllRepositories());
 
 		// 设置按钮
-		const settingsBtn = actions.createEl('button', {
-			cls: 'clickable-icon-button',
-			attr: { 'aria-label': 'Open settings' }
-		});
+        const settingsBtn = actions.createEl('button', {
+            cls: 'settings-icon',
+            attr: { 'aria-label': 'Open settings' }
+        });
 		setIcon(settingsBtn, 'settings');
 		settingsBtn.addEventListener('click', () => {
 			// @ts-ignore

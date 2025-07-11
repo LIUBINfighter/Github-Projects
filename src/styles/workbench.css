@@ -620,3 +620,29 @@
 .issue-expanded.expanded {
   max-height: 500px;
 }
+/* New button styles */
+.button-refresh {
+    display: inline-block;
+    padding: var(--size-2-2) var(--size-4-2);
+    background-color: var(--interactive-normal);
+    color: var(--text-normal);
+    border: var(--border-width) solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+    transition: all 0.2s ease;
+}
+.button-refresh:hover:not(:disabled) {
+    background-color: var(--interactive-hover);
+    color: var(--text-on-accent);
+}
+.settings-icon {
+    display: flex;
+    align-items: center;
+    gap: var(--size-2-1);
+    padding: var(--size-2-2) var(--size-4-2);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+}
