@@ -1,7 +1,6 @@
 import { App, PluginSettingTab, Setting, Notice, Platform } from 'obsidian';
 import type GithubProjectsPlugin from '../main';
 import { GitHubIssueCache, GitHubDataSync } from '../github/dataSync';
-import { IdeCommandTool } from '../utils/ideCommandTool';
 
 export interface GithubRepository {
 	name: string; // 显示名称
@@ -214,9 +213,9 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName('Setup instructions').setHeading();
 		[
 			'1. Create a GitHub Personal Access Token with repo permissions',
-		 '2. Enter the token above and test it',
-		 '3. Switch to repositories tab to add your repositories',
-		 '4. Configure sync preferences in sync options tab'
+			'2. Enter the token above and test it',
+			'3. Switch to repositories tab to add your repositories',
+			'4. Configure sync preferences in sync options tab'
 		].forEach(text => containerEl.createEl('p', { text }));
 	}
 
@@ -395,8 +394,7 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				repoTitle.classList.add("gp-repo-title");
 
 				const actionsDiv = repoHeader.createDiv();
-				actionsDiv.style.display = 'flex';
-				actionsDiv.style.gap = 'var(--size-2-2)';
+				actionsDiv.classList.add('gp-repo-actions');
 
 				// 设为默认按钮
 				if (!repository.isDefault) {
@@ -459,15 +457,11 @@ export class GithubProjectsSettingTab extends PluginSettingTab {
 				// 仓库信息
 				const repoInfo = repoDiv.createDiv();
 				repoInfo.addClass('repo-info');
-				repoInfo.style.display = 'flex';
-				repoInfo.style.alignItems = 'center';
-				repoInfo.style.gap = 'var(--size-2-2)';
+				repoInfo.classList.add('gp-repo-info');
 
 				const repoLabel = repoInfo.createSpan();
 				repoLabel.innerHTML = '<strong>Repository:</strong>';
-				repoLabel.style.fontSize = 'var(--font-ui-smaller)';
-				repoLabel.style.color = 'var(--text-muted)';
-				repoLabel.style.minWidth = 'fit-content';
+				repoLabel.classList.add('gp-repo-label');
 
 				// 显示完整的可复制链接
 				const repoUrl = `https://github.com/${repository.owner}/${repository.repo}`;
