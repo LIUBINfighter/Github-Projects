@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const stylesDir = path.join(process.cwd(), './styles');
+const stylesDir = path.join(process.cwd(), './src/styles');
 const outputFile = path.join(process.cwd(), './styles.css');
 
 if (!fs.existsSync(stylesDir)) {

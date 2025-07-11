@@ -1,0 +1,622 @@
+
+
+
+/* GitHub Workbench View Styles */
+.github-workbench-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	font-size: var(--font-ui-small);
+	background: var(--background-primary);
+}
+
+/* 合并的头部导航样式 */
+.workbench-header-nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--size-4-2) var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	min-height: var(--input-height);
+	gap: var(--size-4-3);
+}
+
+.workbench-title {
+	flex-shrink: 0;
+}
+
+.workbench-title h3 {
+	margin: 0;
+	font-size: 1.1em;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.workbench-main {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--size-4-3);
+}
+
+/* Loading and Empty States */
+.loading-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 200px;
+	color: var(--text-muted);
+}
+
+.loading-spinner {
+	width: 24px;
+	height: 24px;
+	border: 2px solid var(--background-modifier-border);
+	border-top: 2px solid var(--interactive-accent);
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-bottom: var(--size-4-2);
+}
+
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	padding: var(--size-4-4) var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	min-height: 200px;
+}
+
+.empty-icon {
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--size-4-3);
+	opacity: 0.6;
+}
+
+.empty-state h3 {
+	margin: 0 0 var(--size-2-2) 0;
+	color: var(--text-normal);
+}
+
+.empty-state p {
+	margin: 0 0 var(--size-4-3) 0;
+	max-width: 300px;
+}
+
+/* Stats Overview */
+.stats-overview {
+	margin-bottom: var(--size-4-4);
+}
+
+.section-title {
+	margin: 0 0 var(--size-4-2) 0;
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+}
+
+.stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.stat-card {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	padding: var(--size-4-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+	border-color: var(--background-modifier-border-hover);
+}
+
+.stat-icon {
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-form-field);
+}
+
+.stat-card.stat-open .stat-icon {
+	background: var(--color-green-rgb);
+	background: rgba(var(--color-green-rgb), 0.1);
+	color: var(--color-green);
+}
+
+.stat-card.stat-closed .stat-icon {
+	background: rgba(var(--color-red-rgb), 0.1);
+	color: var(--color-red);
+}
+
+.stat-content {
+	flex: 1;
+}
+
+.stat-value {
+	font-size: var(--font-ui-large);
+	font-weight: var(--font-bold);
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.stat-title {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+/* Repository Section */
+.repository-section {
+	margin-bottom: var(--size-4-4);
+}
+
+.repository-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.repository-card {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.repository-card:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: var(--shadow-s);
+}
+
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: var(--size-4-3);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	flex-wrap: wrap;
+}
+
+.card-title {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.repo-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+}
+
+.card-title h4 {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.sync-status {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	word-break: break-all;
+	max-width: 100%;
+}
+
+.sync-time {
+	padding: var(--size-2-1) var(--size-2-2);
+	background: var(--background-modifier-form-field);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	display: inline-block;
+	word-break: break-all;
+	max-width: 100%;
+}
+@media (max-width: 400px) {
+  .card-header {
+	flex-direction: column;
+	align-items: flex-start;
+  }
+  .sync-status {
+	margin-top: var(--size-2-2);
+	width: 100%;
+  }
+}
+
+.sync-never {
+	color: var(--text-warning);
+}
+
+.card-stats {
+	display: flex;
+	gap: var(--size-4-2);
+	padding: var(--size-4-2) var(--size-4-3);
+}
+
+.mini-stat {
+	text-align: center;
+	flex: 1;
+}
+
+.mini-stat-value {
+	display: block;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-bold);
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.mini-stat-label {
+	display: block;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+.mini-stat.stat-open .mini-stat-value {
+	color: var(--color-green);
+}
+
+.mini-stat.stat-closed .mini-stat-value {
+	color: var(--color-red);
+}
+
+.recent-issues {
+	padding: var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+}
+
+.recent-issues h5 {
+	margin: 0 0 var(--size-2-2) 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.issues-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.issue-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	padding: var(--size-2-1);
+	border-radius: var(--radius-s);
+	transition: background 0.2s ease;
+}
+
+.issue-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.issue-state {
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.issue-state.issue-open {
+	color: var(--color-green);
+}
+
+.issue-state.issue-closed {
+	color: var(--color-red);
+}
+
+.issue-title {
+	flex: 1;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	overflow: hidden;
+}
+
+.issue-title span:first-child {
+	color: var(--text-muted);
+	margin-right: var(--size-2-1);
+}
+
+.more-issues {
+	margin-top: var(--size-2-2);
+	text-align: center;
+}
+
+.more-issues a {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-accent);
+	text-decoration: none;
+}
+
+.more-issues a:hover {
+	text-decoration: underline;
+}
+
+.card-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	padding: var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	background: var(--background-primary);
+	margin-top: auto;
+}
+
+.card-actions button {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--size-2-1);
+}
+
+/* Workbench Tabs Styles - 作为头部导航的左侧部分 */
+.workbench-tab-nav {
+	display: flex;
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.workbench-tab {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	padding: var(--size-4-2) var(--size-4-3);
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.workbench-tab:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.workbench-tab.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.tab-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+}
+
+/* Projects List Styles */
+.projects-section {
+	margin-bottom: var(--size-4-4);
+}
+
+.projects-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.project-card {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	overflow: hidden;
+	transition: all 0.2s ease;
+}
+
+.project-card:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: var(--shadow-s);
+}
+
+.project-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+}
+
+.project-status {
+	display: flex;
+	align-items: center;
+}
+
+.status-badge {
+	padding: var(--size-2-1) var(--size-2-2);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-medium);
+}
+
+.status-badge.status-open {
+	background: rgba(var(--color-green-rgb), 0.1);
+	color: var(--color-green);
+}
+
+.status-badge.status-closed {
+	background: rgba(var(--color-red-rgb), 0.1);
+	color: var(--color-red);
+}
+
+.project-info {
+	padding: var(--size-4-2);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+}
+
+.project-meta-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	margin-bottom: var(--size-2-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.project-meta-icon {
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.project-description {
+	padding: var(--size-4-2);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.project-description p {
+	margin: 0;
+	line-height: 1.5;
+}
+
+.sync-info {
+	text-align: right;
+	padding: var(--size-2-2) 0;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.sync-time-info {
+	padding: var(--size-2-1) var(--size-2-2);
+	background: var(--background-modifier-form-field);
+	border-radius: var(--radius-s);
+}
+
+/* Issues Empty State Wrapper */
+.issues-empty-wrapper {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-height: 60vh;
+}
+
+/* Projects section specific empty state */
+.projects-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: var(--size-4-4) var(--size-4-2);
+	text-align: center;
+	color: var(--text-muted);
+	margin-top: var(--size-4-2);
+}
+
+.projects-empty-state .empty-icon {
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--size-4-3);
+	opacity: 0.6;
+}
+
+.projects-empty-state h3 {
+	margin: 0 0 var(--size-2-2) 0;
+	color: var(--text-normal);
+}
+
+.projects-empty-state p {
+	margin: 0 0 var(--size-4-3) 0;
+	max-width: 300px;
+}
+
+.ide-button {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	padding: var(--size-2-2) var(--size-4-2);
+	background-color: var(--interactive-normal);
+	color: var(--text-normal);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.2s ease;
+}
+
+.ide-button:hover:not(:disabled) {
+	background-color: var(--interactive-hover);
+	color: var(--text-on-accent);
+}
+
+.ide-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ide-button svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* 仓库选择器中的 IDE 按钮 */
+.repo-selector-container .ide-button {
+	margin-left: var(--size-2-2);
+}
+
+/* 卡片中的 IDE 按钮 */
+.card-actions .ide-button {
+	display: inline-flex;
+}
+
+/* 样式：仓库卡片按钮排列 */
+.repository-card .card-actions {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px; /* 按钮之间的间距 */
+}
+
+.repository-card .card-actions button {
+	width: auto;
+	padding: 6px 12px; /* 按钮的内边距 */
+	white-space: nowrap; /* 防止按钮内容换行 */
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+/* 动态标签颜色样式（自动生成，支持主题自定义覆盖） */
+.issue-label[class*="issue-label-color-"] {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+}
+/* 示例：可用脚本批量生成更多颜色 */
+.issue-label-color-ff0000 { background-color: #ff000015; color: #ff0000; border-color: #ff000030; }
+.issue-label-color-00ff00 { background-color: #00ff0015; color: #00ff00; border-color: #00ff0030; }
+.issue-label-color-0000ff { background-color: #0000ff15; color: #0000ff; border-color: #0000ff30; }
+/* ...更多颜色可自动生成... */
+
+/* Issue 展开动画 */
+.issue-expanded {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.issue-expanded.expanded {
+  max-height: 500px;
+}

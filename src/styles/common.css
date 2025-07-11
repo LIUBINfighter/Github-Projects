@@ -1,0 +1,423 @@
+/* 以下是从 TypeScript 文件中提取的内联样式，转换为CSS类 */
+
+/* Header styles */
+.header-title {
+	margin: 0;
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.clickable-icon-button {
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	color: var(--text-normal);
+	transition: all 0.1s ease;
+}
+
+.clickable-icon-button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+	color: var(--text-normal);
+}
+
+.clickable-icon-button.filter-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* Header button icon styles */
+.header-button-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+	flex-shrink: 0;
+}
+
+/* Loading state for buttons */
+.clickable-icon-button.is-loading {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading .header-button-icon {
+	animation: spin 1s linear infinite;
+}
+
+/* Repository selector styles */
+.repo-icon-container {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	color: var(--icon-color);
+}
+
+.repo-select {
+	flex: 1;
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	height: var(--input-height);
+}
+
+.repo-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* 仓库选择器样式 */
+.repo-select option:disabled {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.repo-select:invalid {
+	color: var(--text-faint);
+}
+
+/* 确保选择器在没有有效选择时显示占位符样式 */
+.repo-select option[value=""] {
+	color: var(--text-faint);
+}
+
+/* Loading and empty states */
+.loading-content {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	font-size: var(--font-ui-small);
+}
+
+.loading-icon {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	color: var(--icon-color);
+	animation: spin 1s linear infinite;
+}
+
+.empty-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--size-4-3);
+}
+
+.empty-icon {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+	color: var(--icon-color-hover);
+}
+
+.empty-message {
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+}
+
+.empty-create-button {
+	padding: var(--size-2-1) var(--size-4-2);
+	font-size: var(--font-ui-small);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	transition: all 0.1s ease;
+}
+
+.empty-create-button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.empty-button-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+/* Issue item styles */
+.issue-item-container {
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin-bottom: var(--size-2-1);
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: var(--font-ui-small);
+	overflow: hidden;
+}
+
+.issue-item-container:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.issue-content {
+	padding: var(--size-4-2);
+}
+
+.issue-expand-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+	flex-shrink: 0;
+	color: var(--icon-color);
+	transition: transform 0.2s ease;
+}
+
+.issue-expand-icon.expanded {
+	transform: rotate(90deg);
+}
+
+.issue-status-icon {
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	flex-shrink: 0;
+}
+
+.issue-status-icon.open {
+	color: var(--color-green);
+}
+
+.issue-status-icon.closed {
+	color: var(--color-red);
+}
+
+.issue-title-container {
+	flex: 1;
+	min-width: 0;
+}
+
+.issue-title {
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+	line-height: var(--line-height-tight);
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.issue-number {
+	color: var(--text-muted);
+	font-weight: normal;
+	flex-shrink: 0;
+}
+
+.issue-meta-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+}
+
+.issue-meta-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+.issue-label {
+	padding: var(--size-2-1) var(--size-2-1);
+	font-size: var(--font-ui-smaller);
+	border-radius: var(--radius-xs);
+	line-height: 1;
+}
+
+.issue-expanded-content {
+	padding: var(--size-4-3);
+}
+
+.issue-section {
+	margin-bottom: var(--size-4-3);
+}
+
+.issue-section-header {
+	margin: 0 0 var(--size-2-2) 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.issue-section-content {
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+	color: var(--text-normal);
+	font-weight: var(--font-small);
+	word-wrap: break-word;
+}
+
+.issue-description-content {
+	background: var(--background-primary);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	max-height: 200px;
+	overflow-y: auto;
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-normal);
+	color: var(--text-muted);
+	white-space: pre-wrap;
+}
+
+.issue-meta-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--size-4-2);
+	font-size: var(--font-ui-small);
+}
+
+.issue-meta-item-detail {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	color: var(--text-muted);
+}
+
+.issue-meta-icon-detail {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+.issue-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	flex-wrap: wrap;
+}
+
+/* Issue action buttons - 现在使用 Obsidian 标准按钮类 */
+.mod-secondary, .mod-cta {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+}
+
+.issue-action-icon {
+	width: var(--icon-size-xs);
+	height: var(--icon-size-xs);
+}
+
+/* Filter toolbar styles */
+.filter-toolbar-container {
+	background: var(--background-secondary);
+	border-bottom: var(--border-width) solid var(--background-modifier-border);
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.filter-toolbar-container.collapsed {
+	max-height: 0;
+}
+
+.filter-toolbar-container.expanded {
+	max-height: 300px;
+}
+
+.filter-content-grid {
+	padding: var(--size-4-3);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.filter-group-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.filter-group-label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.filter-input,
+.filter-select {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.filter-input:focus,
+.filter-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.filter-group-actions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+	justify-content: flex-end;
+}
+
+.filter-reset-button {
+	padding: var(--size-2-1) var(--size-2-3);
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	margin-top: auto;
+	transition: all 0.1s ease;
+}
+
+.filter-reset-button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+/* 仓库输入框样式增强 */
+.repo-selector-container input {
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.repo-selector-container input[style*="border-color: var(--color-green)"] {
+	border-width: 2px;
+	box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2);
+}
+
+/* 仓库卡片样式 */
+.repo-info {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.repo-info a {
+	transition: color 0.2s ease;
+}
+
+.repo-info a:hover {
+	color: var(--text-accent-hover);
+	text-decoration: underline;
+}
+
+/* 加载状态样式 */
+.clickable-icon-button.is-loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.clickable-icon-button.is-loading svg {
+	animation: spin 1s linear infinite;
+}
