@@ -1,7 +1,7 @@
 {
 	"id": "github-projects",
 	"name": "Github Projects",
-	"version": "0.0.2",
+	"version": "0.1.0",
 	"minAppVersion": "1.18.0",
 	"description": "Manage Github issue and projects in your workspace. Jump to your ide. Gain insights from workbench.",
 	"author": "Jay Bridge",
